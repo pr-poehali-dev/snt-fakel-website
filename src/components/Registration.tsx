@@ -163,11 +163,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       // ownerMiddleName необязательное
     }
 
-    // Если флажок установлен, проверяем документы
-    if (formData.ownerIsSame || (!formData.ownerIsSame && formData.ownerLastName)) {
-      if (!formData.landDocNumber.trim()) newErrors.landDocNumber = 'Обязательное поле';
-      if (!formData.houseDocNumber.trim()) newErrors.houseDocNumber = 'Обязательное поле';
-    }
+    // Документы теперь необязательные
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -358,7 +354,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
               {(formData.ownerIsSame || formData.ownerLastName) && (
                 <div className="grid md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="landDocNumber">Номер документа на собственность земли <span className="text-red-500">*</span></Label>
+                    <Label htmlFor="landDocNumber">Номер документа на собственность земли</Label>
                     <Input
                       id="landDocNumber"
                       placeholder="12-34/567-890"
@@ -369,7 +365,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
                     {errors.landDocNumber && <p className="text-xs text-red-500">{errors.landDocNumber}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="houseDocNumber">Номер документа на собственность дома <span className="text-red-500">*</span></Label>
+                    <Label htmlFor="houseDocNumber">Номер документа на собственность дома</Label>
                     <Input
                       id="houseDocNumber"
                       placeholder="12-34/567-891"
