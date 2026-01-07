@@ -12,9 +12,10 @@ interface LoginProps {
   onSuccess: (email: string, role: UserRole) => void;
   onCancel: () => void;
   onRegisterClick: () => void;
+  onPasswordResetClick: () => void;
 }
 
-const Login = ({ onSuccess, onCancel, onRegisterClick }: LoginProps) => {
+const Login = ({ onSuccess, onCancel, onRegisterClick, onPasswordResetClick }: LoginProps) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -136,6 +137,18 @@ const Login = ({ onSuccess, onCancel, onRegisterClick }: LoginProps) => {
                 disabled={isLoading}
               >
                 Отмена
+              </Button>
+            </div>
+
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="link"
+                onClick={onPasswordResetClick}
+                className="text-sm text-blue-600 hover:text-blue-800"
+                disabled={isLoading}
+              >
+                Забыли пароль?
               </Button>
             </div>
 

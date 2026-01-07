@@ -6,6 +6,7 @@ import ContentSections from '@/components/ContentSections';
 import Footer from '@/components/Footer';
 import Registration from '@/components/Registration';
 import Login from '@/components/Login';
+import PasswordReset from '@/components/PasswordReset';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -17,6 +18,7 @@ const Index = () => {
   const [votes, setVotes] = useState<{ [key: number]: number }>({});
   const [showRegistration, setShowRegistration] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -96,6 +98,18 @@ const Index = () => {
     setShowLogin(false);
     setShowRegistration(true);
     setActiveSection('registration');
+  };
+
+  const handlePasswordResetClick = () => {
+    setShowLogin(false);
+    setShowPasswordReset(true);
+    setActiveSection('password-reset');
+  };
+
+  const handlePasswordResetCancel = () => {
+    setShowPasswordReset(false);
+    setShowLogin(true);
+    setActiveSection('login');
   };
 
   const polls = [
@@ -179,6 +193,11 @@ const Index = () => {
             onSuccess={handleLogin}
             onCancel={handleLoginCancel}
             onRegisterClick={handleLoginToRegister}
+            onPasswordResetClick={handlePasswordResetClick}
+          />
+        ) : showPasswordReset ? (
+          <PasswordReset 
+            onCancel={handlePasswordResetCancel}
           />
         ) : (
           <>

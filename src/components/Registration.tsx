@@ -165,9 +165,19 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     const usersJSON = localStorage.getItem('snt_users');
     const users = usersJSON ? JSON.parse(usersJSON) : [];
     
-    const existingUser = users.find((u: any) => u.email === formData.email);
-    if (existingUser) {
+    const existingUserByEmail = users.find((u: any) => u.email === formData.email);
+    if (existingUserByEmail) {
       toast.error('Пользователь с таким email уже зарегистрирован');
+      return;
+    }
+
+    const existingUserByName = users.find((u: any) => 
+      u.lastName === formData.lastName && 
+      u.firstName === formData.firstName && 
+      u.middleName === formData.middleName
+    );
+    if (existingUserByName) {
+      toast.error('Пользователь с такими ФИО уже зарегистрирован');
       return;
     }
 
