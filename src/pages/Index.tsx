@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import HomePage from '@/components/HomePage';
@@ -17,6 +17,33 @@ const Index = () => {
   const [votes, setVotes] = useState<{ [key: number]: number }>({});
   const [showRegistration, setShowRegistration] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+
+  useEffect(() => {
+    const usersJSON = localStorage.getItem('snt_users');
+    const users = usersJSON ? JSON.parse(usersJSON) : [];
+    
+    const adminExists = users.find((u: any) => u.email === 'admin@sntfakel.ru');
+    
+    if (!adminExists) {
+      const adminUser = {
+        lastName: 'Администратор',
+        firstName: 'Системный',
+        middleName: '',
+        email: 'admin@sntfakel.ru',
+        password: 'Admin123!',
+        phone: '79999999999',
+        plotNumber: '1',
+        role: 'admin',
+        status: 'active',
+        registeredAt: new Date().toISOString(),
+        ownerIsSame: true,
+        birthDate: '1980-01-01'
+      };
+      
+      users.push(adminUser);
+      localStorage.setItem('snt_users', JSON.stringify(users));
+    }
+  }, []);
 
   const handleVote = (pollId: number, option: number) => {
     setVotes({ ...votes, [pollId]: option });
