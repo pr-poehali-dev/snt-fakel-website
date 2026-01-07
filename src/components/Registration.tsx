@@ -246,11 +246,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
           setEmailVerified(true);
           setShowEmailVerification(false);
           toast.success('Email подтверждён');
-          if (!phoneVerified) {
-            setShowPhoneVerification(true);
-          } else {
-            handleSubmit(new Event('submit') as any);
-          }
+          handleSubmit(new Event('submit') as any);
         }}
         onCancel={() => setShowEmailVerification(false)}
       />
