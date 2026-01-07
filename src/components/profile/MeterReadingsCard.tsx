@@ -107,9 +107,12 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+        <div className={`${canSubmit ? 'bg-green-50 border-green-200 text-green-800' : 'bg-blue-50 border-blue-200 text-blue-800'} border rounded-lg p-3 text-sm`}>
           <Icon name="Info" size={16} className="inline mr-2" />
-          Показания принимаются с 22 по 25 число каждого месяца
+          {canSubmit 
+            ? `Сегодня ${new Date().getDate()} число — период приёма показаний открыт!` 
+            : 'Показания принимаются с 22 по 25 число каждого месяца'
+          }
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import MeterReadingsNotification from './MeterReadingsNotification';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -154,6 +155,10 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
 
   return (
     <>
+      {isLoggedIn && userRole !== 'guest' && (
+        <MeterReadingsNotification onNavigateToProfile={() => setActiveSection('profile')} />
+      )}
+
       {content.blockOrder.map((blockId) => {
         const renderBlock = blockComponents[blockId];
         return renderBlock ? renderBlock() : null;
