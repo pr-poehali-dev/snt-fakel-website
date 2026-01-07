@@ -171,6 +171,12 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       return;
     }
 
+    const existingUserByPhone = users.find((u: any) => u.phone === formData.phone);
+    if (existingUserByPhone) {
+      toast.error('Пользователь с таким номером телефона уже зарегистрирован');
+      return;
+    }
+
     const existingUserByName = users.find((u: any) => 
       u.lastName === formData.lastName && 
       u.firstName === formData.firstName && 
