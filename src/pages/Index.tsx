@@ -2,11 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
@@ -20,8 +16,7 @@ const Index = () => {
     toast.success('Ваш голос учтён!');
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = () => {
     setIsLoggedIn(true);
     toast.success('Добро пожаловать в СНТ Факел!');
   };
@@ -120,35 +115,13 @@ const Index = () => {
               ))}
             </nav>
             {!isLoggedIn ? (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
-                    <Icon name="LogIn" size={18} className="mr-2" />
-                    Войти
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Вход в личный кабинет</DialogTitle>
-                    <DialogDescription>
-                      Введите данные для доступа к функциям товарищества
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div>
-                      <Label htmlFor="email">Email или номер участка</Label>
-                      <Input id="email" type="text" placeholder="user@example.com" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="password">Пароль</Label>
-                      <Input id="password" type="password" required />
-                    </div>
-                    <Button type="submit" className="w-full bg-gradient-to-r from-orange-500 to-pink-500">
-                      Войти
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button 
+                className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+                onClick={handleLogin}
+              >
+                <Icon name="LogIn" size={18} className="mr-2" />
+                Войти
+              </Button>
             ) : (
               <Button variant="outline" onClick={() => setActiveSection('profile')}>
                 <Icon name="User" size={18} className="mr-2" />
@@ -238,7 +211,12 @@ const Index = () => {
                               <span className="text-sm font-medium">{option.text}</span>
                               <span className="text-sm text-muted-foreground">{percentage}%</span>
                             </div>
-                            <Progress value={percentage} className="h-2" />
+                            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+                              <div 
+                                className="bg-gradient-to-r from-orange-500 to-pink-500 h-full transition-all duration-500" 
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-muted-foreground">{option.votes} голосов</span>
                               {isLoggedIn && !isVoted && (
