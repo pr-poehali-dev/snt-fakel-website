@@ -30,7 +30,7 @@ const Index = () => {
         firstName: 'Системный',
         middleName: '',
         email: 'admin@sntfakel.ru',
-        password: 'Admin123!',
+        password: 'Админ123!',
         phone: '79999999999',
         plotNumber: '1',
         role: 'admin',
