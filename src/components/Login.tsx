@@ -38,25 +38,27 @@ const Login = ({ onSuccess, onCancel, onRegisterClick, onPasswordResetClick }: L
 
     setIsLoading(true);
 
-    // Получаем зарегистрированных пользователей из localStorage
-    const usersJSON = localStorage.getItem('snt_users');
-    const users = usersJSON ? JSON.parse(usersJSON) : [];
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const data = await response.json();
+      
+      const user = data.users?.find(
+        (u: any) => u.email === formData.email && u.password === formData.password
+      );
 
-    // Ищем пользователя по email и паролю
-    const user = users.find(
-      (u: any) => u.email === formData.email && u.password === formData.password
-    );
-
-    setTimeout(() => {
       setIsLoading(false);
 
       if (user) {
-        toast.success(`Добро пожаловать, ${user.firstName}!`);
+        toast.success(`Добро пожаловать, ${user.first_name}!`);
         onSuccess(user.email, user.role || 'member');
       } else {
         toast.error('Неверный email или пароль');
       }
-    }, 500);
+    } catch (error) {
+      console.error('Ошибка входа:', error);
+      setIsLoading(false);
+      toast.error('Ошибка подключения к серверу');
+    }
   };
 
   return (

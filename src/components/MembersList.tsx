@@ -33,16 +33,39 @@ const MembersList = () => {
   const [sortBy, setSortBy] = useState<'name' | 'plot' | 'date'>('name');
 
   useEffect(() => {
-    const usersJSON = localStorage.getItem('snt_users');
-    if (usersJSON) {
-      const storedUsers = JSON.parse(usersJSON);
-      const usersWithPayment = storedUsers.map((user: User) => ({
-        ...user,
-        paymentStatus: user.paymentStatus || (Math.random() > 0.3 ? 'paid' : 'unpaid')
-      }));
-      setUsers(usersWithPayment);
-      localStorage.setItem('snt_users', JSON.stringify(usersWithPayment));
-    }
+    const loadUsers = async () => {
+      try {
+        const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        const data = await response.json();
+        
+        if (data.users) {
+          const usersWithPayment = data.users.map((user: any) => ({
+            lastName: user.last_name,
+            firstName: user.first_name,
+            middleName: user.middle_name || '',
+            email: user.email,
+            phone: user.phone,
+            plotNumber: user.plot_number,
+            role: user.role,
+            status: user.status,
+            registeredAt: user.registered_at,
+            paymentStatus: user.payment_status as 'paid' | 'unpaid' | 'partial'
+          }));
+          setUsers(usersWithPayment);
+          localStorage.setItem('snt_users', JSON.stringify(usersWithPayment));
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки пользователей:', error);
+        
+        const usersJSON = localStorage.getItem('snt_users');
+        if (usersJSON) {
+          const storedUsers = JSON.parse(usersJSON);
+          setUsers(storedUsers);
+        }
+      }
+    };
+    
+    loadUsers();
   }, []);
 
   const filteredUsers = users.filter(user => {

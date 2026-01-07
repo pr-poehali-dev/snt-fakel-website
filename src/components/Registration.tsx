@@ -215,19 +215,30 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     users.push(newUser);
     localStorage.setItem('snt_users', JSON.stringify(users));
 
-    fetch('https://functions.poehali.dev/cf474001-23d9-421d-a5b8-99244efdddfc', {
+    fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_data: newUser
-      })
-    }).catch(error => {
-      console.warn('Ошибка отправки уведомления администратору:', error);
+      body: JSON.stringify(newUser)
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Пользователь сохранен в БД:', data);
+      
+      fetch('https://functions.poehali.dev/cf474001-23d9-421d-a5b8-99244efdddfc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.dumps({ user_data: newUser })
+      }).catch(error => {
+        console.warn('Ошибка отправки уведомления администратору:', error);
+      });
+      
+      toast.success('Регистрация успешно завершена! Теперь вы можете войти в личный кабинет.');
+      onSuccess();
+    })
+    .catch(error => {
+      console.error('Ошибка сохранения пользователя в БД:', error);
+      toast.error('Ошибка регистрации. Попробуйте позже.');
     });
-
-    console.log('Регистрация:', newUser);
-    toast.success('Регистрация успешно завершена! Теперь вы можете войти в личный кабинет.');
-    onSuccess();
   };
 
   const passwordStrength = validatePassword(formData.password);

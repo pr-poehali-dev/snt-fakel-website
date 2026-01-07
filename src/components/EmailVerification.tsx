@@ -17,33 +17,9 @@ const EmailVerification = ({ email, onVerified, onCancel }: EmailVerificationPro
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
 
-  const generateCode = () => {
+  const generateCode = async () => {
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedCode(newCode);
-
-    console.log(`
-===========================================
-ПИСЬМО С КОДОМ ПОДТВЕРЖДЕНИЯ EMAIL
-===========================================
-Кому: ${email}
-Тема: Подтверждение email - СНТ Факел
-
-Здравствуйте!
-
-Ваш код подтверждения email:
-
-${newCode}
-
-Введите этот код на сайте для подтверждения адреса электронной почты.
-
-Код действителен в течение 10 минут.
-
-Если вы не запрашивали подтверждение, проигнорируйте это письмо.
-
-С уважением,
-Администрация СНТ Факел
-===========================================
-    `);
 
     const verificationData = {
       email: email,
@@ -53,7 +29,65 @@ ${newCode}
     };
     localStorage.setItem(`email_verification_${email}`, JSON.stringify(verificationData));
 
-    toast.success('Код отправлен на вашу почту');
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #f97316;">Подтверждение email - СНТ Факел</h2>
+        <p>Здравствуйте!</p>
+        <p>Ваш код подтверждения email:</p>
+        <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
+          ${newCode}
+        </div>
+        <p>Введите этот код на сайте для подтверждения адреса электронной почты.</p>
+        <p style="color: #ef4444;">Код действителен в течение 10 минут.</p>
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          Если вы не запрашивали подтверждение, проигнорируйте это письмо.
+        </p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+        <p style="color: #6b7280; font-size: 12px;">
+          С уважением,<br>
+          Администрация СНТ Факел
+        </p>
+      </div>
+    `;
+
+    const textContent = `
+Здравствуйте!
+
+Ваш код подтверждения email: ${newCode}
+
+Введите этот код на сайте для подтверждения адреса электронной почты.
+
+Код действителен в течение 10 минут.
+
+Если вы не запрашивали подтверждение, проигнорируйте это письмо.
+
+С уважением,
+Администрация СНТ Факел
+    `;
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/2672fb97-4151-4228-bb1c-4d0b3a502216', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to_email: email,
+          subject: 'Подтверждение email - СНТ Факел',
+          html_content: htmlContent,
+          text_content: textContent
+        })
+      });
+
+      if (response.ok) {
+        toast.success('Код отправлен на вашу почту');
+      } else {
+        const error = await response.json();
+        console.error('Ошибка отправки email:', error);
+        toast.error('Не удалось отправить код. Проверьте почту или попробуйте позже');
+      }
+    } catch (error) {
+      console.error('Ошибка отправки email:', error);
+      toast.error('Не удалось отправить код. Проверьте почту или попробуйте позже');
+    }
   };
 
   const handleSendCode = () => {

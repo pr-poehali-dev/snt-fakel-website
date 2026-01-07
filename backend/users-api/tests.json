@@ -1,0 +1,40 @@
+{
+  "tests": [
+    {
+      "name": "Get all users",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "users": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create new user",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "email": "test@example.com",
+        "password": "TestПароль1!",
+        "firstName": "Иван",
+        "lastName": "Тестов",
+        "middleName": "Петрович",
+        "phone": "79991234567",
+        "plotNumber": "42",
+        "birthDate": "1990-01-01",
+        "role": "member",
+        "ownerIsSame": true,
+        "emailVerified": true,
+        "phoneVerified": true,
+        "registeredAt": "2026-01-07T00:00:00.000Z"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "success": true,
+        "id": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

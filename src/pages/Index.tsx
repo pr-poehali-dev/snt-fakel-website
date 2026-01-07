@@ -21,35 +21,45 @@ const Index = () => {
   const [showPasswordReset, setShowPasswordReset] = useState(false);
 
   useEffect(() => {
-    const usersJSON = localStorage.getItem('snt_users');
-    const users = usersJSON ? JSON.parse(usersJSON) : [];
+    const initAdmin = async () => {
+      try {
+        const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        const data = await response.json();
+        
+        const adminExists = data.users?.find((u: any) => u.email === 'assapan-nn@yandex.ru');
+        
+        if (!adminExists) {
+          const adminUser = {
+            lastName: 'Администратор',
+            firstName: 'Системный',
+            middleName: '',
+            email: 'assapan-nn@yandex.ru',
+            password: 'Admin1#',
+            phone: '79999999999',
+            plotNumber: '1',
+            role: 'admin',
+            status: 'active',
+            registeredAt: new Date().toISOString(),
+            ownerIsSame: true,
+            birthDate: '1980-01-01',
+            emailVerified: true,
+            phoneVerified: true
+          };
+          
+          await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(adminUser)
+          });
+          
+          console.log('Админ создан в БД');
+        }
+      } catch (error) {
+        console.error('Ошибка инициализации админа:', error);
+      }
+    };
     
-    const oldAdminIndex = users.findIndex((u: any) => u.email === 'admin@sntfakel.ru');
-    if (oldAdminIndex !== -1) {
-      users.splice(oldAdminIndex, 1);
-    }
-    
-    const adminExists = users.find((u: any) => u.email === 'assapan-nn@yandex.ru');
-    
-    if (!adminExists) {
-      const adminUser = {
-        lastName: 'Администратор',
-        firstName: 'Системный',
-        middleName: '',
-        email: 'assapan-nn@yandex.ru',
-        password: 'Admin1#',
-        phone: '79999999999',
-        plotNumber: '1',
-        role: 'admin',
-        status: 'active',
-        registeredAt: new Date().toISOString(),
-        ownerIsSame: true,
-        birthDate: '1980-01-01'
-      };
-      
-      users.push(adminUser);
-      localStorage.setItem('snt_users', JSON.stringify(users));
-    }
+    initAdmin();
   }, []);
 
   const handleVote = (pollId: number, option: number) => {
