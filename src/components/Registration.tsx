@@ -198,18 +198,13 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       return;
     }
 
-    if (!phoneVerified) {
-      setShowPhoneVerification(true);
-      return;
-    }
-
     const newUser = {
       ...formData,
       role: 'member',
       registeredAt: new Date().toISOString(),
       status: 'active',
       emailVerified: true,
-      phoneVerified: true
+      phoneVerified: false
     };
 
     users.push(newUser);
