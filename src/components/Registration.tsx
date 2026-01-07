@@ -12,7 +12,7 @@ import EmailVerification from './EmailVerification';
 import PhoneVerification from './PhoneVerification';
 
 interface RegistrationProps {
-  onSuccess: () => void;
+  onSuccess: (email: string, role: string) => void;
   onCancel: () => void;
 }
 
@@ -227,8 +227,8 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
         console.warn('Ошибка отправки уведомления администратору:', error);
       });
       
-      toast.success('Регистрация успешно завершена! Теперь вы можете войти в личный кабинет.');
-      onSuccess();
+      toast.success('Регистрация успешно завершена! Добро пожаловать в личный кабинет!');
+      onSuccess(formData.email, 'member');
     })
     .catch(error => {
       console.error('Ошибка сохранения пользователя в БД:', error);

@@ -93,10 +93,12 @@ const Index = () => {
     setActiveSection('registration');
   };
 
-  const handleRegistrationSuccess = () => {
+  const handleRegistrationSuccess = (email: string, role: UserRole) => {
     setShowRegistration(false);
-    setShowLogin(true);
-    setActiveSection('login');
+    setIsLoggedIn(true);
+    setUserRole(role);
+    setCurrentUserEmail(email);
+    setActiveSection('home');
   };
 
   const handleRegistrationCancel = () => {
