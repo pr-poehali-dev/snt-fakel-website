@@ -11,13 +11,12 @@ interface HeaderProps {
   userRole: UserRole;
   activeSection: string;
   setActiveSection: (section: string) => void;
-  handleLogin: (role: UserRole) => void;
   handleLogout: () => void;
   onRegisterClick: () => void;
+  onLoginClick: () => void;
 }
 
-const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleLogin, handleLogout, onRegisterClick }: HeaderProps) => {
-  const [showLoginMenu, setShowLoginMenu] = useState(false);
+const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleLogout, onRegisterClick, onLoginClick }: HeaderProps) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const roleNames = {
@@ -76,80 +75,11 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
                 </Button>
                 <Button 
                   className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
-                  onClick={() => setShowLoginMenu(!showLoginMenu)}
+                  onClick={onLoginClick}
                 >
                   <Icon name="LogIn" size={18} className="mr-2" />
                   Войти
                 </Button>
-                {showLoginMenu && (
-                  <Card className="absolute right-0 top-full mt-2 w-72 shadow-2xl border-2 z-50">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Выберите роль для входа</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start h-auto py-3"
-                        onClick={() => { handleLogin('member'); setShowLoginMenu(false); }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Icon name="User" className="text-white" size={20} />
-                          </div>
-                          <div className="text-left">
-                            <div className="font-semibold">Член СНТ</div>
-                            <div className="text-xs text-muted-foreground">Голосование, чат, документы</div>
-                          </div>
-                        </div>
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start h-auto py-3"
-                        onClick={() => { handleLogin('board_member'); setShowLoginMenu(false); }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Icon name="Users" className="text-white" size={20} />
-                          </div>
-                          <div className="text-left">
-                            <div className="font-semibold">Член правления</div>
-                            <div className="text-xs text-muted-foreground">Управление + контроль</div>
-                          </div>
-                        </div>
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start h-auto py-3"
-                        onClick={() => { handleLogin('chairman'); setShowLoginMenu(false); }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Icon name="Crown" className="text-white" size={20} />
-                          </div>
-                          <div className="text-left">
-                            <div className="font-semibold">Председатель</div>
-                            <div className="text-xs text-muted-foreground">Управление СНТ</div>
-                          </div>
-                        </div>
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start h-auto py-3"
-                        onClick={() => { handleLogin('admin'); setShowLoginMenu(false); }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Icon name="Shield" className="text-white" size={20} />
-                          </div>
-                          <div className="text-left">
-                            <div className="font-semibold">Администратор</div>
-                            <div className="text-xs text-muted-foreground">Полный доступ + управление ролями</div>
-                          </div>
-                        </div>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
               </>
             ) : (
               <>

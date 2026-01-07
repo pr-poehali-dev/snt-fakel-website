@@ -182,9 +182,30 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       return;
     }
 
-    // Здесь будет отправка данных на сервер
-    console.log('Регистрация:', formData);
-    toast.success('Регистрация успешно завершена! Ожидайте подтверждения от администратора.');
+    // Сохраняем пользователя в localStorage
+    const usersJSON = localStorage.getItem('snt_users');
+    const users = usersJSON ? JSON.parse(usersJSON) : [];
+    
+    // Проверяем, не существует ли уже пользователь с таким email
+    const existingUser = users.find((u: any) => u.email === formData.email);
+    if (existingUser) {
+      toast.error('Пользователь с таким email уже зарегистрирован');
+      return;
+    }
+
+    // Добавляем нового пользователя
+    const newUser = {
+      ...formData,
+      role: 'member', // По умолчанию все новые пользователи - члены СНТ
+      registeredAt: new Date().toISOString(),
+      status: 'pending' // Ожидает подтверждения администратора
+    };
+
+    users.push(newUser);
+    localStorage.setItem('snt_users', JSON.stringify(users));
+
+    console.log('Регистрация:', newUser);
+    toast.success('Регистрация успешно завершена! Теперь вы можете войти в личный кабинет.');
     onSuccess();
   };
 

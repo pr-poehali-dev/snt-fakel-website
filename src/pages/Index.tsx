@@ -5,37 +5,41 @@ import HomePage from '@/components/HomePage';
 import ContentSections from '@/components/ContentSections';
 import Footer from '@/components/Footer';
 import Registration from '@/components/Registration';
+import Login from '@/components/Login';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>('guest');
+  const [currentUserEmail, setCurrentUserEmail] = useState('');
   const [activeSection, setActiveSection] = useState('home');
   const [votes, setVotes] = useState<{ [key: number]: number }>({});
   const [showRegistration, setShowRegistration] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   const handleVote = (pollId: number, option: number) => {
     setVotes({ ...votes, [pollId]: option });
     toast.success('Ваш голос учтён!');
   };
 
-  const handleLogin = (role: UserRole = 'member') => {
+  const handleLogin = (email: string, role: UserRole) => {
     setIsLoggedIn(true);
     setUserRole(role);
-    const roleNames = {
-      guest: 'Гость',
-      member: 'Член СНТ',
-      board_member: 'Член правления',
-      chairman: 'Председатель',
-      admin: 'Администратор'
-    };
-    toast.success(`Добро пожаловать в СНТ Факел! Роль: ${roleNames[role]}`);
+    setCurrentUserEmail(email);
+    setShowLogin(false);
+    setActiveSection('home');
+  };
+
+  const handleShowLogin = () => {
+    setShowLogin(true);
+    setActiveSection('login');
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserRole('guest');
+    setCurrentUserEmail('');
     setActiveSection('home');
     toast.success('Вы вышли из личного кабинета');
   };
@@ -47,12 +51,24 @@ const Index = () => {
 
   const handleRegistrationSuccess = () => {
     setShowRegistration(false);
-    setActiveSection('home');
+    setShowLogin(true);
+    setActiveSection('login');
   };
 
   const handleRegistrationCancel = () => {
     setShowRegistration(false);
     setActiveSection('home');
+  };
+
+  const handleLoginCancel = () => {
+    setShowLogin(false);
+    setActiveSection('home');
+  };
+
+  const handleLoginToRegister = () => {
+    setShowLogin(false);
+    setShowRegistration(true);
+    setActiveSection('registration');
   };
 
   const polls = [
@@ -120,9 +136,9 @@ const Index = () => {
         userRole={userRole}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
-        handleLogin={handleLogin}
         handleLogout={handleLogout}
         onRegisterClick={handleRegisterClick}
+        onLoginClick={handleShowLogin}
       />
 
       <main className="container mx-auto px-4 py-12">
@@ -130,6 +146,12 @@ const Index = () => {
           <Registration 
             onSuccess={handleRegistrationSuccess}
             onCancel={handleRegistrationCancel}
+          />
+        ) : showLogin ? (
+          <Login 
+            onSuccess={handleLogin}
+            onCancel={handleLoginCancel}
+            onRegisterClick={handleLoginToRegister}
           />
         ) : (
           <>
