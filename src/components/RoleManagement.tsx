@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
-import BackButton from './BackButton';
 import {
   Select,
   SelectContent,
@@ -40,11 +39,7 @@ interface User {
   payment_status?: string;
 }
 
-interface RoleManagementProps {
-  onBack?: () => void;
-}
-
-const RoleManagement = ({ onBack }: RoleManagementProps = {}) => {
+const RoleManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
@@ -235,7 +230,6 @@ const RoleManagement = ({ onBack }: RoleManagementProps = {}) => {
 
   return (
     <section>
-      {onBack && <BackButton onClick={onBack} />}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
           <Icon name="UserCog" className="text-white" size={24} />

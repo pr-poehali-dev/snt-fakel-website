@@ -6,7 +6,6 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
-import BackButton from './BackButton';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -24,7 +23,6 @@ interface ChatProps {
   isLoggedIn: boolean;
   userRole: UserRole;
   currentUserEmail: string;
-  onBack?: () => void;
 }
 
 const defaultMessages: Message[] = [
@@ -75,7 +73,7 @@ const defaultMessages: Message[] = [
   },
 ];
 
-const Chat = ({ isLoggedIn, userRole, currentUserEmail, onBack }: ChatProps) => {
+const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   const [messages, setMessages] = useState<Message[]>(() => {
     const savedMessages = localStorage.getItem('snt_chat_messages');
     if (savedMessages) {
@@ -160,7 +158,6 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail, onBack }: ChatProps) => 
 
   return (
     <section>
-      {onBack && <BackButton onClick={onBack} />}
       <h2 className="text-4xl font-bold mb-8">Общий чат СНТ</h2>
       
       <div className="grid lg:grid-cols-4 gap-6">

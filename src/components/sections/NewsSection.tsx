@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
-import BackButton from '../BackButton';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -20,10 +19,9 @@ interface NewsSectionProps {
   news: NewsItem[];
   userRole: UserRole;
   onNavigate?: (section: string) => void;
-  onBack?: () => void;
 }
 
-const NewsSection = ({ news: initialNews, userRole, onNavigate, onBack }: NewsSectionProps) => {
+const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionProps) => {
   const [news, setNews] = useState<NewsItem[]>(initialNews);
 
   useEffect(() => {
@@ -51,7 +49,6 @@ const NewsSection = ({ news: initialNews, userRole, onNavigate, onBack }: NewsSe
   }, [initialNews]);
   return (
     <section>
-      {onBack && <BackButton onClick={onBack} />}
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Объявления и новости</h2>
         {(userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && (

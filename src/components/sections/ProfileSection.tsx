@@ -8,7 +8,6 @@ import AdminDashboardCard from '../profile/AdminDashboardCard';
 import MemberDashboardCard from '../profile/MemberDashboardCard';
 import PersonalDataCard from '../profile/PersonalDataCard';
 import OwnerDataCard from '../profile/OwnerDataCard';
-import BackButton from '../BackButton';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -16,7 +15,6 @@ interface ProfileSectionProps {
   userRole: UserRole;
   currentUserEmail: string;
   onNavigate?: (section: string) => void;
-  onBack?: () => void;
 }
 
 interface UserData {
@@ -34,7 +32,7 @@ interface UserData {
   houseDocNumber: string;
 }
 
-const ProfileSection = ({ userRole, currentUserEmail, onNavigate, onBack }: ProfileSectionProps) => {
+const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSectionProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState<UserData>({
     lastName: '',
@@ -229,7 +227,6 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate, onBack }: Prof
 
   return (
     <section>
-      {onBack && <BackButton onClick={onBack} />}
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Личный кабинет</h2>
         <Badge className={`text-lg px-4 py-2 ${userRole === 'admin' ? 'bg-gradient-to-r from-orange-500 to-pink-500' : userRole === 'chairman' ? 'bg-purple-500' : userRole === 'board_member' ? 'bg-green-500' : ''}`}>
