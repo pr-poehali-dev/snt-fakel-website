@@ -33,6 +33,57 @@ def handler(event: dict, context) -> dict:
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         if method == 'GET':
+            query_params = event.get('queryStringParameters', {}) or {}
+            action = query_params.get('action')
+            
+            if action == 'login':
+                email = query_params.get('email')
+                password = query_params.get('password')
+                
+                if not email or not password:
+                    cur.close()
+                    conn.close()
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                        'body': json.dumps({'error': 'Email and password required'}),
+                        'isBase64Encoded': False
+                    }
+                
+                cur.execute("""
+                    SELECT id, email, first_name, last_name, role, password
+                    FROM users 
+                    WHERE email = %s AND status = 'active'
+                """, (email,))
+                user = cur.fetchone()
+                
+                cur.close()
+                conn.close()
+                
+                if user and user['password'] == password:
+                    return {
+                        'statusCode': 200,
+                        'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                        'body': json.dumps({
+                            'success': True,
+                            'user': {
+                                'id': user['id'],
+                                'email': user['email'],
+                                'first_name': user['first_name'],
+                                'last_name': user['last_name'],
+                                'role': user['role']
+                            }
+                        }),
+                        'isBase64Encoded': False
+                    }
+                else:
+                    return {
+                        'statusCode': 401,
+                        'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                        'body': json.dumps({'error': 'Invalid email or password'}),
+                        'isBase64Encoded': False
+                    }
+            
             cur.execute("""
                 SELECT id, email, first_name, last_name, middle_name, phone, 
                        plot_number, birth_date, role, status, owner_is_same,

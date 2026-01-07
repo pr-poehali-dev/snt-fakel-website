@@ -39,18 +39,15 @@ const Login = ({ onSuccess, onCancel, onRegisterClick, onPasswordResetClick }: L
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const url = `https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?action=login&email=${encodeURIComponent(formData.email)}&password=${encodeURIComponent(formData.password)}`;
+      const response = await fetch(url);
       const data = await response.json();
-      
-      const user = data.users?.find(
-        (u: any) => u.email === formData.email && u.password === formData.password
-      );
 
       setIsLoading(false);
 
-      if (user) {
-        toast.success(`Добро пожаловать, ${user.first_name}!`);
-        onSuccess(user.email, user.role || 'member');
+      if (response.ok && data.success && data.user) {
+        toast.success(`Добро пожаловать, ${data.user.first_name}!`);
+        onSuccess(data.user.email, data.user.role || 'member');
       } else {
         toast.error('Неверный email или пароль');
       }
