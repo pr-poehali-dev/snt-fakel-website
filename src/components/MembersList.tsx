@@ -31,6 +31,7 @@ const MembersList = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPayment, setFilterPayment] = useState<'all' | 'paid' | 'unpaid' | 'partial'>('all');
+  const [filterOwnership, setFilterOwnership] = useState<'all' | 'owners' | 'non-owners'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'plot' | 'date'>('name');
 
   useEffect(() => {
@@ -79,7 +80,12 @@ const MembersList = () => {
     
     const matchesPayment = filterPayment === 'all' || user.paymentStatus === filterPayment;
     
-    return matchesSearch && matchesPayment && user.status === 'active';
+    const matchesOwnership = 
+      filterOwnership === 'all' ||
+      (filterOwnership === 'owners' && user.ownerIsSame) ||
+      (filterOwnership === 'non-owners' && !user.ownerIsSame);
+    
+    return matchesSearch && matchesPayment && matchesOwnership && user.status === 'active';
   });
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
@@ -207,6 +213,16 @@ const MembersList = () => {
               <Icon name="Download" size={18} className="mr-2" />
               Экспорт в Excel
             </Button>
+            <Select value={filterOwnership} onValueChange={(value: any) => setFilterOwnership(value)}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Тип участника" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все участники</SelectItem>
+                <SelectItem value="owners">Собственники</SelectItem>
+                <SelectItem value="non-owners">Не собственники</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={filterPayment} onValueChange={(value: any) => setFilterPayment(value)}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Статус оплаты" />
