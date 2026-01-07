@@ -38,7 +38,9 @@ interface ContentSectionsProps {
 }
 
 const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, currentUserEmail, setActiveSection }: ContentSectionsProps) => {
-  if (!isLoggedIn && activeSection !== 'home') {
+  const publicSections = ['home', 'gallery', 'contacts'];
+  
+  if (!isLoggedIn && !publicSections.includes(activeSection)) {
     return (
       <div className="max-w-2xl mx-auto mt-12">
         <div className="bg-white rounded-lg shadow-xl p-8 text-center">
