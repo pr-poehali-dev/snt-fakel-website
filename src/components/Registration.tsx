@@ -8,6 +8,8 @@ import PersonalDataForm from './registration/PersonalDataForm';
 import OwnerDataForm from './registration/OwnerDataForm';
 import AccountDataForm from './registration/AccountDataForm';
 import AgreementSection from './registration/AgreementSection';
+import EmailVerification from './EmailVerification';
+import PhoneVerification from './PhoneVerification';
 
 interface RegistrationProps {
   onSuccess: () => void;
@@ -36,6 +38,10 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showAgreement, setShowAgreement] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => {
@@ -187,11 +193,23 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       return;
     }
 
+    if (!emailVerified) {
+      setShowEmailVerification(true);
+      return;
+    }
+
+    if (!phoneVerified) {
+      setShowPhoneVerification(true);
+      return;
+    }
+
     const newUser = {
       ...formData,
       role: 'member',
       registeredAt: new Date().toISOString(),
-      status: 'active'
+      status: 'active',
+      emailVerified: true,
+      phoneVerified: true
     };
 
     users.push(newUser);
@@ -203,6 +221,40 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
   };
 
   const passwordStrength = validatePassword(formData.password);
+
+  if (showEmailVerification) {
+    return (
+      <EmailVerification
+        email={formData.email}
+        onVerified={() => {
+          setEmailVerified(true);
+          setShowEmailVerification(false);
+          toast.success('Email подтверждён');
+          if (!phoneVerified) {
+            setShowPhoneVerification(true);
+          } else {
+            handleSubmit(new Event('submit') as any);
+          }
+        }}
+        onCancel={() => setShowEmailVerification(false)}
+      />
+    );
+  }
+
+  if (showPhoneVerification) {
+    return (
+      <PhoneVerification
+        phone={formData.phone}
+        onVerified={() => {
+          setPhoneVerified(true);
+          setShowPhoneVerification(false);
+          toast.success('Телефон подтверждён');
+          handleSubmit(new Event('submit') as any);
+        }}
+        onCancel={() => setShowPhoneVerification(false)}
+      />
+    );
+  }
 
   return (
     <section className="max-w-4xl mx-auto">

@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import EmailVerification from '../EmailVerification';
+import PhoneVerification from '../PhoneVerification';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -46,6 +48,10 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
     landDocNumber: '',
     houseDocNumber: ''
   });
+  const [originalEmail, setOriginalEmail] = useState('');
+  const [originalPhone, setOriginalPhone] = useState('');
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -67,12 +73,17 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
           landDocNumber: user.landDocNumber || '',
           houseDocNumber: user.houseDocNumber || ''
         });
+        setOriginalEmail(user.email || '');
+        setOriginalPhone(user.phone || '');
       }
     }
   }, [currentUserEmail]);
 
   const handleSave = () => {
-    if (userData.email !== currentUserEmail) {
+    const emailChanged = userData.email !== originalEmail;
+    const phoneChanged = userData.phone !== originalPhone;
+
+    if (emailChanged) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(userData.email)) {
         toast.error('Введите корректный email');
@@ -88,8 +99,30 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
           return;
         }
       }
+
+      setShowEmailVerification(true);
+      return;
     }
 
+    if (phoneChanged) {
+      const usersJSON = localStorage.getItem('snt_users');
+      if (usersJSON) {
+        const users = JSON.parse(usersJSON);
+        const phoneExists = users.find((u: any) => u.phone === userData.phone && u.email !== currentUserEmail);
+        if (phoneExists) {
+          toast.error('Пользователь с таким телефоном уже существует');
+          return;
+        }
+      }
+
+      setShowPhoneVerification(true);
+      return;
+    }
+
+    saveUserData();
+  };
+
+  const saveUserData = () => {
     const usersJSON = localStorage.getItem('snt_users');
     if (usersJSON) {
       const users = JSON.parse(usersJSON);
@@ -98,11 +131,9 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
       );
       localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
       setIsEditing(false);
+      setOriginalEmail(userData.email);
+      setOriginalPhone(userData.phone);
       toast.success('Данные успешно обновлены');
-      
-      if (userData.email !== currentUserEmail) {
-        toast.info('Email изменён. Используйте новый email для входа', { duration: 5000 });
-      }
     }
   };
 
@@ -138,6 +169,40 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
     chairman: 'Председатель',
     admin: 'Администратор'
   };
+
+  if (showEmailVerification) {
+    return (
+      <EmailVerification
+        email={userData.email}
+        onVerified={() => {
+          setShowEmailVerification(false);
+          toast.success('Email подтверждён');
+          saveUserData();
+        }}
+        onCancel={() => {
+          setShowEmailVerification(false);
+          setUserData({ ...userData, email: originalEmail });
+        }}
+      />
+    );
+  }
+
+  if (showPhoneVerification) {
+    return (
+      <PhoneVerification
+        phone={userData.phone}
+        onVerified={() => {
+          setShowPhoneVerification(false);
+          toast.success('Телефон подтверждён');
+          saveUserData();
+        }}
+        onCancel={() => {
+          setShowPhoneVerification(false);
+          setUserData({ ...userData, phone: originalPhone });
+        }}
+      />
+    );
+  }
 
   return (
     <section>
@@ -341,12 +406,25 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
                 )}
               </div>
               <div className="space-y-2">
-                <Label>Телефон</Label>
+                <Label className="flex items-center gap-2">
+                  Телефон
+                  {!isEditing && (
+                    <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-300">
+                      <Icon name="CheckCircle" size={12} className="mr-1" />
+                      Подтверждён
+                    </Badge>
+                  )}
+                </Label>
                 {isEditing ? (
-                  <Input 
-                    value={userData.phone} 
-                    onChange={(e) => setUserData({...userData, phone: e.target.value})}
-                  />
+                  <>
+                    <Input 
+                      value={userData.phone} 
+                      onChange={(e) => setUserData({...userData, phone: e.target.value})}
+                    />
+                    {userData.phone !== originalPhone && (
+                      <p className="text-xs text-orange-600">Потребуется подтверждение через СМС</p>
+                    )}
+                  </>
                 ) : (
                   <p className="text-lg">{userData.phone || '—'}</p>
                 )}
@@ -364,7 +442,15 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label className="flex items-center gap-2">
+                Email
+                {!isEditing && (
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-300">
+                    <Icon name="CheckCircle" size={12} className="mr-1" />
+                    Подтверждён
+                  </Badge>
+                )}
+              </Label>
               {isEditing ? (
                 <>
                   <Input 
@@ -372,7 +458,11 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
                     value={userData.email} 
                     onChange={(e) => setUserData({...userData, email: e.target.value})}
                   />
-                  <p className="text-xs text-muted-foreground">После изменения email используйте новый адрес для входа</p>
+                  {userData.email !== originalEmail ? (
+                    <p className="text-xs text-orange-600">Потребуется подтверждение через код на новую почту</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">После изменения email используйте новый адрес для входа</p>
+                  )}
                 </>
               ) : (
                 <p className="text-lg">{userData.email}</p>
