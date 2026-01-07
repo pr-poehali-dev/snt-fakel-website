@@ -63,15 +63,15 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
   }
 
   if (activeSection === 'chat') {
-    return <Chat isLoggedIn={isLoggedIn} userRole={userRole} currentUserEmail={currentUserEmail} />;
+    return <Chat isLoggedIn={isLoggedIn} userRole={userRole} currentUserEmail={currentUserEmail} onBack={() => setActiveSection('home')} />;
   }
 
   if (activeSection === 'documents') {
-    return <DocumentsSection userRole={userRole} onNavigate={setActiveSection} />;
+    return <DocumentsSection userRole={userRole} onNavigate={setActiveSection} onBack={() => setActiveSection('home')} />;
   }
 
   if (activeSection === 'news') {
-    return <NewsSection news={news} userRole={userRole} onNavigate={setActiveSection} />;
+    return <NewsSection news={news} userRole={userRole} onNavigate={setActiveSection} onBack={() => setActiveSection('home')} />;
   }
 
   if (activeSection === 'news-editor' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {
@@ -83,15 +83,15 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
   }
 
   if (activeSection === 'rules' || activeSection === 'gallery' || activeSection === 'contacts') {
-    return <InfoSections activeSection={activeSection} gallery={gallery} />;
+    return <InfoSections activeSection={activeSection} gallery={gallery} onBack={() => setActiveSection('home')} />;
   }
 
   if (activeSection === 'profile' && isLoggedIn) {
-    return <ProfileSection userRole={userRole} currentUserEmail={currentUserEmail} onNavigate={setActiveSection} />;
+    return <ProfileSection userRole={userRole} currentUserEmail={currentUserEmail} onNavigate={setActiveSection} onBack={() => setActiveSection('home')} />;
   }
 
   if (activeSection === 'role-management' && userRole === 'admin') {
-    return <RoleManagement />;
+    return <RoleManagement onBack={() => setActiveSection('profile')} />;
   }
 
   if (activeSection === 'members-list' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {

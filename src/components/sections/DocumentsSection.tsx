@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import BackButton from '../BackButton';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -22,6 +23,7 @@ interface Document {
 interface DocumentsSectionProps {
   userRole: UserRole;
   onNavigate?: (section: string) => void;
+  onBack?: () => void;
 }
 
 const defaultDocuments: Document[] = [
@@ -75,7 +77,7 @@ const defaultDocuments: Document[] = [
     },
   ];
 
-const DocumentsSection = ({ userRole, onNavigate }: DocumentsSectionProps) => {
+const DocumentsSection = ({ userRole, onNavigate, onBack }: DocumentsSectionProps) => {
   const [documents, setDocuments] = useState<Document[]>(defaultDocuments);
 
   useEffect(() => {
@@ -128,6 +130,7 @@ const DocumentsSection = ({ userRole, onNavigate }: DocumentsSectionProps) => {
 
   return (
     <section>
+      {onBack && <BackButton onClick={onBack} />}
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Документы СНТ</h2>
         {(userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && (

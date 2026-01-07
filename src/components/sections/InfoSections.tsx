@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import BackButton from '../BackButton';
 
 interface GalleryItem {
   id: number;
@@ -75,9 +76,10 @@ const defaultContent: PageContent = {
 interface InfoSectionsProps {
   activeSection: string;
   gallery: GalleryItem[];
+  onBack?: () => void;
 }
 
-const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
+const InfoSections = ({ activeSection, gallery, onBack }: InfoSectionsProps) => {
   const [content, setContent] = useState<PageContent>(defaultContent);
 
   useEffect(() => {
@@ -104,6 +106,7 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
   if (activeSection === 'rules') {
     return (
       <section>
+        {onBack && <BackButton onClick={onBack} />}
         <h2 className="text-4xl font-bold mb-8">{content.rules.title}</h2>
         <div className="space-y-6">
           <Card>
@@ -146,6 +149,7 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
   if (activeSection === 'gallery') {
     return (
       <section>
+        {onBack && <BackButton onClick={onBack} />}
         <h2 className="text-4xl font-bold mb-8">{content.gallery.title}</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {gallery.map((photo) => (
@@ -167,6 +171,7 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
   if (activeSection === 'contacts') {
     return (
       <section>
+        {onBack && <BackButton onClick={onBack} />}
         <h2 className="text-4xl font-bold mb-8">{content.contacts.title}</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
