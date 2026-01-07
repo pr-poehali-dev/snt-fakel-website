@@ -8,6 +8,7 @@ import AdminDashboardCard from '../profile/AdminDashboardCard';
 import MemberDashboardCard from '../profile/MemberDashboardCard';
 import PersonalDataCard from '../profile/PersonalDataCard';
 import OwnerDataCard from '../profile/OwnerDataCard';
+import MeterReadingsCard from '../profile/MeterReadingsCard';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -265,7 +266,7 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
         onPasswordChange={() => setShowPasswordChange(true)}
       />
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-6">
         <OwnerDataCard
           ownerData={{
             ownerLastName: userData.ownerLastName,
@@ -277,6 +278,10 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
           isEditing={isEditing}
           onChange={handleChange}
         />
+
+        <div className="grid">
+          <MeterReadingsCard currentUserEmail={currentUserEmail} />
+        </div>
       </div>
     </section>
   );

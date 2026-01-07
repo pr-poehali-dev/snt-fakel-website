@@ -72,6 +72,14 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
               Редактор страниц
             </Button>
           )}
+          <Button 
+            variant="outline" 
+            className="w-full justify-start border-green-500 text-green-600 hover:bg-green-50"
+            onClick={() => onNavigate?.('meter-readings')}
+          >
+            <Icon name="Gauge" size={18} className="mr-2" />
+            Показания ПУ
+          </Button>
           <Button variant="outline" className="w-full justify-start">
             <Icon name="Vote" size={18} className="mr-2" />
             Создать голосование
