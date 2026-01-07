@@ -125,6 +125,7 @@ const Index = () => {
           gallery={gallery}
           isLoggedIn={isLoggedIn}
           userRole={userRole}
+          setActiveSection={setActiveSection}
         />
       </main>
 

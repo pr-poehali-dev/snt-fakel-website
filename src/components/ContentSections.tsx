@@ -3,6 +3,7 @@ import DocumentsSection from './sections/DocumentsSection';
 import NewsSection from './sections/NewsSection';
 import InfoSections from './sections/InfoSections';
 import ProfileSection from './sections/ProfileSection';
+import RoleManagement from './RoleManagement';
 
 type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
@@ -26,9 +27,10 @@ interface ContentSectionsProps {
   gallery: GalleryItem[];
   isLoggedIn: boolean;
   userRole: UserRole;
+  setActiveSection: (section: string) => void;
 }
 
-const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole }: ContentSectionsProps) => {
+const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, setActiveSection }: ContentSectionsProps) => {
   if (activeSection === 'chat') {
     return <Chat isLoggedIn={isLoggedIn} userRole={userRole} />;
   }
@@ -46,7 +48,11 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole }:
   }
 
   if (activeSection === 'profile' && isLoggedIn) {
-    return <ProfileSection userRole={userRole} />;
+    return <ProfileSection userRole={userRole} onNavigate={setActiveSection} />;
+  }
+
+  if (activeSection === 'role-management' && userRole === 'admin') {
+    return <RoleManagement />;
   }
 
   return null;

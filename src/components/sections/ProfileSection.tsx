@@ -7,9 +7,10 @@ type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
 interface ProfileSectionProps {
   userRole: UserRole;
+  onNavigate?: (section: string) => void;
 }
 
-const ProfileSection = ({ userRole }: ProfileSectionProps) => {
+const ProfileSection = ({ userRole, onNavigate }: ProfileSectionProps) => {
   const roleNames = {
     guest: 'Гость',
     member: 'Член СНТ',
@@ -78,7 +79,11 @@ const ProfileSection = ({ userRole }: ProfileSectionProps) => {
                   Настройки сайта
                 </Button>
                 {userRole === 'admin' && (
-                  <Button variant="outline" className="w-full justify-start border-orange-500 text-orange-600 hover:bg-orange-50">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start border-orange-500 text-orange-600 hover:bg-orange-50"
+                    onClick={() => onNavigate?.('role-management')}
+                  >
                     <Icon name="UserCog" size={18} className="mr-2" />
                     Управление ролями
                   </Button>
