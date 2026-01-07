@@ -70,7 +70,7 @@ const OwnerDataForm = ({ formData, errors, onChange }: OwnerDataFormProps) => {
         </div>
       )}
 
-      {(formData.ownerIsSame || formData.ownerLastName) && (
+      {formData.ownerIsSame && (
         <div className="grid md:grid-cols-2 gap-4 mt-4">
           <div className="space-y-2">
             <Label htmlFor="landDocNumber">Номер документа на собственность земли</Label>
