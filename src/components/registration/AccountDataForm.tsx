@@ -92,6 +92,7 @@ const AccountDataForm = ({ formData, errors, passwordStrength, onChange }: Accou
         </p>
         <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-5">
           <li>Минимум 8 символов</li>
+          <li>Русские буквы (а-я)</li>
           <li>Хотя бы одна русская заглавная буква</li>
           <li>Хотя бы одна цифра</li>
           <li>Хотя бы один специальный символ (!@#$%^&* и т.д.)</li>
