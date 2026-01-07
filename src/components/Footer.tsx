@@ -24,6 +24,7 @@ const Footer = ({ setActiveSection }: FooterProps) => {
             <h4 className="font-semibold mb-4">Быстрые ссылки</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li><button onClick={() => setActiveSection('news')} className="hover:text-white transition-colors">Новости</button></li>
+              <li><button onClick={() => setActiveSection('chat')} className="hover:text-white transition-colors">Чат</button></li>
               <li><button onClick={() => setActiveSection('rules')} className="hover:text-white transition-colors">Правила</button></li>
               <li><button onClick={() => setActiveSection('gallery')} className="hover:text-white transition-colors">Галерея</button></li>
               <li><button onClick={() => setActiveSection('contacts')} className="hover:text-white transition-colors">Контакты</button></li>

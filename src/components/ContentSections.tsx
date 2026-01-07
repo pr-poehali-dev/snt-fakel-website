@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
+import Chat from './Chat';
 
 interface NewsItem {
   id: number;
@@ -26,6 +27,9 @@ interface ContentSectionsProps {
 }
 
 const ContentSections = ({ activeSection, news, gallery, isLoggedIn }: ContentSectionsProps) => {
+  if (activeSection === 'chat') {
+    return <Chat isLoggedIn={isLoggedIn} />;
+  }
   if (activeSection === 'news') {
     return (
       <section>

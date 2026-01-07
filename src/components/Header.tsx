@@ -25,7 +25,7 @@ const Header = ({ isLoggedIn, activeSection, setActiveSection, handleLogin }: He
             </div>
           </div>
           <nav className="hidden md:flex items-center gap-6">
-            {['home', 'news', 'rules', 'gallery', 'contacts'].map((section) => (
+            {['home', 'news', 'chat', 'rules', 'gallery', 'contacts'].map((section) => (
               <button
                 key={section}
                 onClick={() => setActiveSection(section)}
@@ -37,6 +37,7 @@ const Header = ({ isLoggedIn, activeSection, setActiveSection, handleLogin }: He
               >
                 {section === 'home' && 'Главная'}
                 {section === 'news' && 'Новости'}
+                {section === 'chat' && 'Чат'}
                 {section === 'rules' && 'Правила'}
                 {section === 'gallery' && 'Галерея'}
                 {section === 'contacts' && 'Контакты'}
