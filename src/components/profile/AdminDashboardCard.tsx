@@ -54,6 +54,14 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
             Список участников
             <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full" id="members-badge">-</span>
           </Button>
+          <Button 
+            variant="outline" 
+            className="w-full justify-start border-primary text-primary hover:bg-primary/5"
+            onClick={() => onNavigate?.('mass-notification')}
+          >
+            <Icon name="Mail" size={18} className="mr-2" />
+            Массовая рассылка
+          </Button>
           <Button variant="outline" className="w-full justify-start">
             <Icon name="Vote" size={18} className="mr-2" />
             Создать голосование

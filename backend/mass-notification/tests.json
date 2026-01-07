@@ -1,0 +1,33 @@
+{
+  "tests": [
+    {
+      "name": "Mass notification test",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "recipients": [
+          {
+            "email": "user1@example.com",
+            "firstName": "Иван",
+            "lastName": "Иванов",
+            "plotNumber": "15"
+          },
+          {
+            "email": "user2@example.com",
+            "firstName": "Петр",
+            "lastName": "Петров",
+            "plotNumber": "23"
+          }
+        ],
+        "subject": "Тестовое уведомление",
+        "message": "Это тестовое сообщение для проверки массовой рассылки."
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "sent": 2
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
