@@ -95,6 +95,28 @@ const RoleManagement = () => {
     toast.success('Регистрация отклонена');
   };
 
+  const handleDeleteUser = (userEmail: string) => {
+    const user = users.find(u => u.email === userEmail);
+    if (!user) return;
+
+    const fullName = `${user.lastName} ${user.firstName} ${user.middleName}`;
+    const confirmed = window.confirm(
+      `Вы уверены, что хотите удалить пользователя "${fullName}"?\n\nЭто действие нельзя отменить.`
+    );
+
+    if (!confirmed) return;
+
+    const updatedUsers = users.filter(u => u.email !== userEmail);
+    setUsers(updatedUsers);
+    localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
+    toast.success('Пользователь удалён');
+  };
+
+  const getCurrentAdminEmail = () => {
+    const currentUserEmail = localStorage.getItem('current_user_email');
+    return currentUserEmail || 'assapan-nn@yandex.ru';
+  };
+
   const filteredUsers = users.filter(user => {
     const fullName = `${user.lastName} ${user.firstName} ${user.middleName}`.toLowerCase();
     const matchesSearch = 
@@ -268,13 +290,24 @@ const RoleManagement = () => {
                           <div className="flex gap-2">
                             {user.status === 'pending' && (
                               <>
-                                <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApproveUser(user.email)}>
+                                <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50" onClick={() => handleApproveUser(user.email)}>
                                   <Icon name="Check" size={16} />
                                 </Button>
-                                <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleRejectUser(user.email)}>
+                                <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleRejectUser(user.email)}>
                                   <Icon name="X" size={16} />
                                 </Button>
                               </>
+                            )}
+                            {user.email !== getCurrentAdminEmail() && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-red-600 hover:bg-red-50 border-red-300" 
+                                onClick={() => handleDeleteUser(user.email)}
+                                title="Удалить пользователя"
+                              >
+                                <Icon name="Trash2" size={16} />
+                              </Button>
                             )}
                           </div>
                         </td>
