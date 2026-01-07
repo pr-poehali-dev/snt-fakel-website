@@ -62,6 +62,16 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
             <Icon name="Mail" size={18} className="mr-2" />
             Массовая рассылка
           </Button>
+          {(userRole === 'admin' || userRole === 'chairman') && (
+            <Button 
+              variant="outline" 
+              className="w-full justify-start border-purple-500 text-purple-600 hover:bg-purple-50"
+              onClick={() => onNavigate?.('page-editor')}
+            >
+              <Icon name="FileEdit" size={18} className="mr-2" />
+              Редактор страниц
+            </Button>
+          )}
           <Button variant="outline" className="w-full justify-start">
             <Icon name="Vote" size={18} className="mr-2" />
             Создать голосование

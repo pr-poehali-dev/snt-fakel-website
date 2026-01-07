@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 
@@ -7,36 +8,120 @@ interface GalleryItem {
   season: string;
 }
 
+interface PageContent {
+  rules: {
+    title: string;
+    mainTitle: string;
+    mainText: string;
+    rulesTitle: string;
+    rulesItems: string[];
+    behaviorTitle: string;
+    behaviorText: string;
+  };
+  contacts: {
+    title: string;
+    addressTitle: string;
+    addressText: string;
+    contactsTitle: string;
+    phone: string;
+    email: string;
+    detailsTitle: string;
+    inn: string;
+    kpp: string;
+    account: string;
+    bik: string;
+  };
+  gallery: {
+    title: string;
+    enabled: boolean;
+  };
+}
+
+const defaultContent: PageContent = {
+  rules: {
+    title: 'Правила и устав товарищества',
+    mainTitle: 'Устав СНТ Факел',
+    mainText: 'Садовое некоммерческое товарищество «Факел» создано в соответствии с законодательством РФ и осуществляет деятельность на основании настоящего устава.',
+    rulesTitle: 'Основные положения:',
+    rulesItems: [
+      'Соблюдение тишины с 22:00 до 08:00',
+      'Своевременная уплата членских взносов',
+      'Содержание участка в надлежащем состоянии',
+      'Участие в общих субботниках',
+      'Соблюдение правил пожарной безопасности'
+    ],
+    behaviorTitle: 'Правила поведения',
+    behaviorText: 'Участники товарищества обязуются соблюдать порядок, уважать права соседей, поддерживать чистоту на общей территории и участвовать в жизни сообщества.'
+  },
+  contacts: {
+    title: 'Контакты и реквизиты',
+    addressTitle: 'Адрес',
+    addressText: 'Московская область, Раменский район\nСНТ «Факел»\nд. Малое Уварово',
+    contactsTitle: 'Контакты',
+    phone: '+7 (495) 123-45-67',
+    email: 'info@snt-fakel.ru',
+    detailsTitle: 'Реквизиты',
+    inn: '5012345678',
+    kpp: '501201001',
+    account: '40703810000000000000',
+    bik: '044525225'
+  },
+  gallery: {
+    title: 'Галерея фото территории',
+    enabled: true
+  }
+};
+
 interface InfoSectionsProps {
   activeSection: string;
   gallery: GalleryItem[];
 }
 
 const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
+  const [content, setContent] = useState<PageContent>(defaultContent);
+
+  useEffect(() => {
+    const loadContent = () => {
+      const savedContent = localStorage.getItem('pages_content');
+      if (savedContent) {
+        try {
+          setContent(JSON.parse(savedContent));
+        } catch (e) {
+          console.error('Error loading pages content:', e);
+        }
+      }
+    };
+
+    loadContent();
+
+    const handleContentUpdate = () => {
+      loadContent();
+    };
+
+    window.addEventListener('pages-content-updated', handleContentUpdate);
+    return () => window.removeEventListener('pages-content-updated', handleContentUpdate);
+  }, []);
   if (activeSection === 'rules') {
     return (
       <section>
-        <h2 className="text-4xl font-bold mb-8">Правила и устав товарищества</h2>
+        <h2 className="text-4xl font-bold mb-8">{content.rules.title}</h2>
         <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon name="FileText" className="text-primary" />
-                Устав СНТ Факел
+                {content.rules.mainTitle}
               </CardTitle>
             </CardHeader>
             <CardContent className="prose max-w-none">
               <p className="text-muted-foreground mb-4">
-                Садовое некоммерческое товарищество «Факел» создано в соответствии с законодательством РФ
-                и осуществляет деятельность на основании настоящего устава.
+                {content.rules.mainText}
               </p>
-              <h4 className="font-semibold mt-6 mb-3">Основные положения:</h4>
+              <h4 className="font-semibold mt-6 mb-3">{content.rules.rulesTitle}</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li>• Соблюдение тишины с 22:00 до 08:00</li>
-                <li>• Своевременная уплата членских взносов</li>
-                <li>• Содержание участка в надлежащем состоянии</li>
-                <li>• Участие в общих субботниках</li>
-                <li>• Соблюдение правил пожарной безопасности</li>
+                {content.rules.rulesItems.map((item, index) => (
+                  <li key={index}>• {item}</li>
+                ))}
               </ul>
             </CardContent>
           </Card>
@@ -44,13 +129,12 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon name="Scale" className="text-primary" />
-                Правила поведения
+                {content.rules.behaviorTitle}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                Участники товарищества обязуются соблюдать порядок, уважать права соседей,
-                поддерживать чистоту на общей территории и участвовать в жизни сообщества.
+                {content.rules.behaviorText}
               </p>
             </CardContent>
           </Card>
@@ -62,7 +146,7 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
   if (activeSection === 'gallery') {
     return (
       <section>
-        <h2 className="text-4xl font-bold mb-8">Галерея фото территории</h2>
+        <h2 className="text-4xl font-bold mb-8">{content.gallery.title}</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {gallery.map((photo) => (
             <Card key={photo.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
@@ -83,20 +167,18 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
   if (activeSection === 'contacts') {
     return (
       <section>
-        <h2 className="text-4xl font-bold mb-8">Контакты и реквизиты</h2>
+        <h2 className="text-4xl font-bold mb-8">{content.contacts.title}</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon name="MapPin" className="text-primary" />
-                Адрес
+                {content.contacts.addressTitle}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Московская область, Раменский район<br />
-                СНТ «Факел»<br />
-                д. Малое Уварово
+              <p className="text-muted-foreground" style={{ whiteSpace: 'pre-line' }}>
+                {content.contacts.addressText}
               </p>
             </CardContent>
           </Card>
@@ -104,17 +186,17 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon name="Phone" className="text-primary" />
-                Контакты
+                {content.contacts.contactsTitle}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="text-muted-foreground flex items-center gap-2">
                 <Icon name="Phone" size={16} />
-                +7 (495) 123-45-67
+                {content.contacts.phone}
               </p>
               <p className="text-muted-foreground flex items-center gap-2">
                 <Icon name="Mail" size={16} />
-                info@snt-fakel.ru
+                {content.contacts.email}
               </p>
             </CardContent>
           </Card>
@@ -122,26 +204,26 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon name="Building2" className="text-primary" />
-                Реквизиты
+                {content.contacts.detailsTitle}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground mb-1">ИНН</p>
-                  <p className="font-medium">5012345678</p>
+                  <p className="font-medium">{content.contacts.inn}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground mb-1">КПП</p>
-                  <p className="font-medium">501201001</p>
+                  <p className="font-medium">{content.contacts.kpp}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground mb-1">Расчётный счёт</p>
-                  <p className="font-medium">40703810000000000000</p>
+                  <p className="font-medium">{content.contacts.account}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground mb-1">БИК</p>
-                  <p className="font-medium">044525225</p>
+                  <p className="font-medium">{content.contacts.bik}</p>
                 </div>
               </div>
             </CardContent>

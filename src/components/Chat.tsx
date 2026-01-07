@@ -25,54 +25,67 @@ interface ChatProps {
   currentUserEmail: string;
 }
 
+const defaultMessages: Message[] = [
+  {
+    id: 1,
+    userId: 1,
+    userName: 'Иван Петров (уч. 15)',
+    userRole: 'Председатель',
+    text: 'Добрый день! Напоминаю о субботнике в эту субботу с 10:00.',
+    timestamp: '10:30',
+    avatar: '👨‍💼'
+  },
+  {
+    id: 2,
+    userId: 2,
+    userName: 'Мария Сидорова (уч. 42)',
+    userRole: 'Участник',
+    text: 'Здравствуйте! Подскажите, когда будет вывоз мусора?',
+    timestamp: '11:15',
+    avatar: '👩'
+  },
+  {
+    id: 3,
+    userId: 1,
+    userName: 'Иван Петров (уч. 15)',
+    userRole: 'Председатель',
+    text: 'Вывоз мусора во вторник и пятницу с 9:00 до 11:00.',
+    timestamp: '11:20',
+    avatar: '👨‍💼'
+  },
+  {
+    id: 4,
+    userId: 3,
+    userName: 'Алексей Новиков (уч. 8)',
+    userRole: 'Участник',
+    text: 'На субботнике буду! Что нужно взять с собой?',
+    timestamp: '12:05',
+    avatar: '👨'
+  },
+  {
+    id: 5,
+    userId: 1,
+    userName: 'Иван Петров (уч. 15)',
+    userRole: 'Председатель',
+    text: 'Грабли, мешки для мусора и хорошее настроение! 😊',
+    timestamp: '12:10',
+    avatar: '👨‍💼'
+  },
+];
+
 const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      userId: 1,
-      userName: 'Иван Петров (уч. 15)',
-      userRole: 'Председатель',
-      text: 'Добрый день! Напоминаю о субботнике в эту субботу с 10:00.',
-      timestamp: '10:30',
-      avatar: '👨‍💼'
-    },
-    {
-      id: 2,
-      userId: 2,
-      userName: 'Мария Сидорова (уч. 42)',
-      userRole: 'Участник',
-      text: 'Здравствуйте! Подскажите, когда будет вывоз мусора?',
-      timestamp: '11:15',
-      avatar: '👩'
-    },
-    {
-      id: 3,
-      userId: 1,
-      userName: 'Иван Петров (уч. 15)',
-      userRole: 'Председатель',
-      text: 'Вывоз мусора во вторник и пятницу с 9:00 до 11:00.',
-      timestamp: '11:20',
-      avatar: '👨‍💼'
-    },
-    {
-      id: 4,
-      userId: 3,
-      userName: 'Алексей Новиков (уч. 8)',
-      userRole: 'Участник',
-      text: 'На субботнике буду! Что нужно взять с собой?',
-      timestamp: '12:05',
-      avatar: '👨'
-    },
-    {
-      id: 5,
-      userId: 1,
-      userName: 'Иван Петров (уч. 15)',
-      userRole: 'Председатель',
-      text: 'Грабли, мешки для мусора и хорошее настроение! 😊',
-      timestamp: '12:10',
-      avatar: '👨‍💼'
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const savedMessages = localStorage.getItem('snt_chat_messages');
+    if (savedMessages) {
+      try {
+        return JSON.parse(savedMessages);
+      } catch (e) {
+        console.error('Error loading chat messages:', e);
+        return defaultMessages;
+      }
+    }
+    return defaultMessages;
+  });
 
   const [newMessage, setNewMessage] = useState('');
   const [onlineUsers] = useState(12);
@@ -82,6 +95,10 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+  }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem('snt_chat_messages', JSON.stringify(messages));
   }, [messages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -133,7 +150,8 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       avatar: userRole === 'admin' ? '⭐' : userRole === 'chairman' ? '👑' : userRole === 'board_member' ? '👥' : '👤'
     };
 
-    setMessages([...messages, message]);
+    const updatedMessages = [...messages, message];
+    setMessages(updatedMessages);
     setNewMessage('');
     toast.success('Сообщение отправлено');
   };

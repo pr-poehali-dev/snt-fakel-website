@@ -7,6 +7,7 @@ import RoleManagement from './RoleManagement';
 import MembersList from './MembersList';
 import MassNotification from './MassNotification';
 import SiteSettings from './SiteSettings';
+import PageEditor from './PageEditor';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -91,6 +92,10 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
 
   if (activeSection === 'site-settings' && userRole === 'admin') {
     return <SiteSettings />;
+  }
+
+  if (activeSection === 'page-editor' && (userRole === 'admin' || userRole === 'chairman')) {
+    return <PageEditor />;
   }
 
   return null;
