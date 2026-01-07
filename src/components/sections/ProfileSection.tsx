@@ -72,6 +72,24 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
   }, [currentUserEmail]);
 
   const handleSave = () => {
+    if (userData.email !== currentUserEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(userData.email)) {
+        toast.error('Введите корректный email');
+        return;
+      }
+
+      const usersJSON = localStorage.getItem('snt_users');
+      if (usersJSON) {
+        const users = JSON.parse(usersJSON);
+        const emailExists = users.find((u: any) => u.email === userData.email && u.email !== currentUserEmail);
+        if (emailExists) {
+          toast.error('Пользователь с таким email уже существует');
+          return;
+        }
+      }
+    }
+
     const usersJSON = localStorage.getItem('snt_users');
     if (usersJSON) {
       const users = JSON.parse(usersJSON);
@@ -81,6 +99,10 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
       localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
       setIsEditing(false);
       toast.success('Данные успешно обновлены');
+      
+      if (userData.email !== currentUserEmail) {
+        toast.info('Email изменён. Используйте новый email для входа', { duration: 5000 });
+      }
     }
   };
 
@@ -343,8 +365,18 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
-              <p className="text-lg">{userData.email}</p>
-              <p className="text-xs text-muted-foreground">Email нельзя изменить</p>
+              {isEditing ? (
+                <>
+                  <Input 
+                    type="email"
+                    value={userData.email} 
+                    onChange={(e) => setUserData({...userData, email: e.target.value})}
+                  />
+                  <p className="text-xs text-muted-foreground">После изменения email используйте новый адрес для входа</p>
+                </>
+              ) : (
+                <p className="text-lg">{userData.email}</p>
+              )}
             </div>
           </div>
 
