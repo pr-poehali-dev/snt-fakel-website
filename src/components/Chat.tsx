@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
@@ -131,7 +130,7 @@ const Chat = ({ isLoggedIn }: ChatProps) => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-[500px] p-6" ref={scrollRef}>
+            <div className="h-[500px] overflow-y-auto p-6" ref={scrollRef}>
               <div className="space-y-4">
                 {messages.map((message) => {
                   const isOwnMessage = message.userName === 'Вы';
@@ -171,7 +170,7 @@ const Chat = ({ isLoggedIn }: ChatProps) => {
                   );
                 })}
               </div>
-            </ScrollArea>
+            </div>
             
             <div className="border-t p-4">
               {isLoggedIn ? (
