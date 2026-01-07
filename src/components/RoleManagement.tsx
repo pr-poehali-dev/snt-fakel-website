@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import UserStatisticsCards from './role-management/UserStatisticsCards';
+import UserFilters from './role-management/UserFilters';
+import UserListItem from './role-management/UserListItem';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -82,7 +82,6 @@ const RoleManagement = () => {
   const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<UserStatus | 'all'>('all');
 
-  // Загружаем пользователей из localStorage при монтировании
   const loadUsersFromStorage = () => {
     const usersJSON = localStorage.getItem('snt_users');
     if (usersJSON) {
@@ -100,7 +99,6 @@ const RoleManagement = () => {
     }
   };
 
-  // Загружаем при первом рендере
   useState(() => {
     loadUsersFromStorage();
   });
@@ -134,7 +132,6 @@ const RoleManagement = () => {
     );
     setUsers(updatedUsers);
     
-    // Обновляем localStorage
     const user = users.find(u => u.id === userId);
     if (user && user.id >= 100) {
       const usersJSON = localStorage.getItem('snt_users');
@@ -156,7 +153,6 @@ const RoleManagement = () => {
     );
     setUsers(updatedUsers);
     
-    // Обновляем localStorage
     const user = users.find(u => u.id === userId);
     if (user && user.id >= 100) {
       const usersJSON = localStorage.getItem('snt_users');
@@ -204,140 +200,16 @@ const RoleManagement = () => {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                <Icon name="Users" className="text-white" size={20} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Всего пользователей</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <UserStatisticsCards stats={stats} />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                <Icon name="CheckCircle" className="text-white" size={20} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.active}</p>
-                <p className="text-sm text-muted-foreground">Активных</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                <Icon name="Clock" className="text-white" size={20} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.pending}</p>
-                <p className="text-sm text-muted-foreground">Ожидают проверки</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <Icon name="User" className="text-white" size={20} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.members}</p>
-                <p className="text-sm text-muted-foreground">Членов СНТ</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Фильтры и поиск</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Поиск по имени, email или номеру участка..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex flex-col md:flex-row gap-2">
-              <div className="flex gap-2 flex-wrap">
-                <span className="text-sm font-medium self-center">Статус:</span>
-                <Button
-                  variant={filterStatus === 'all' ? 'default' : 'outline'}
-                  onClick={() => setFilterStatus('all')}
-                  size="sm"
-                >
-                  Все
-                </Button>
-                <Button
-                  variant={filterStatus === 'pending' ? 'default' : 'outline'}
-                  onClick={() => setFilterStatus('pending')}
-                  size="sm"
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                >
-                  <Icon name="Clock" size={14} className="mr-1" />
-                  Ожидают
-                </Button>
-                <Button
-                  variant={filterStatus === 'active' ? 'default' : 'outline'}
-                  onClick={() => setFilterStatus('active')}
-                  size="sm"
-                >
-                  Активные
-                </Button>
-                <Button
-                  variant={filterStatus === 'rejected' ? 'default' : 'outline'}
-                  onClick={() => setFilterStatus('rejected')}
-                  size="sm"
-                >
-                  Отклонённые
-                </Button>
-              </div>
-              <div className="flex gap-2 flex-wrap md:ml-4">
-                <span className="text-sm font-medium self-center">Роль:</span>
-                <Button
-                  variant={filterRole === 'all' ? 'default' : 'outline'}
-                  onClick={() => setFilterRole('all')}
-                  size="sm"
-                >
-                  Все
-                </Button>
-                <Button
-                  variant={filterRole === 'member' ? 'default' : 'outline'}
-                  onClick={() => setFilterRole('member')}
-                  size="sm"
-                >
-                  Члены СНТ
-                </Button>
-                <Button
-                  variant={filterRole === 'board_member' ? 'default' : 'outline'}
-                  onClick={() => setFilterRole('board_member')}
-                  size="sm"
-                >
-                  Правление
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <UserFilters 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        filterStatus={filterStatus}
+        setFilterStatus={setFilterStatus}
+        filterRole={filterRole}
+        setFilterRole={setFilterRole}
+      />
 
       <Card>
         <CardHeader>
@@ -349,146 +221,15 @@ const RoleManagement = () => {
         <CardContent>
           <div className="space-y-4">
             {filteredUsers.map(user => (
-              <Card key={user.id} className="border-2">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-200 to-pink-200 rounded-full flex items-center justify-center text-2xl">
-                        {user.role === 'admin' ? '⭐' : user.role === 'chairman' ? '👑' : user.role === 'board_member' ? '👥' : '👤'}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold">{user.name}</h4>
-                          <Badge 
-                            variant="outline" 
-                            className={roleColors[user.role]}
-                          >
-                            {roleNames[user.role]}
-                          </Badge>
-                          {user.status === 'pending' && (
-                            <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-300">
-                              <Icon name="Clock" size={12} className="mr-1" />
-                              Ожидает проверки
-                            </Badge>
-                          )}
-                          {user.status === 'rejected' && (
-                            <Badge variant="outline" className="bg-red-100 text-red-700 border-red-300">
-                              <Icon name="XCircle" size={12} className="mr-1" />
-                              Отклонён
-                            </Badge>
-                          )}
-                          {user.status === 'active' && (
-                            <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
-                              <Icon name="CheckCircle" size={12} className="mr-1" />
-                              Активен
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Icon name="Mail" size={14} />
-                            {user.email}
-                          </span>
-                          {user.plotNumber && (
-                            <span className="flex items-center gap-1">
-                              <Icon name="Home" size={14} />
-                              Участок {user.plotNumber}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Icon name="Calendar" size={14} />
-                            С {new Date(user.joinDate).toLocaleDateString('ru-RU')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {user.status === 'pending' && (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleApproveUser(user.id)}
-                            className="bg-green-500 hover:bg-green-600 text-white"
-                          >
-                            <Icon name="CheckCircle" size={16} className="mr-1" />
-                            Подтвердить
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleRejectUser(user.id)}
-                            className="text-red-600 border-red-300 hover:bg-red-50"
-                          >
-                            <Icon name="XCircle" size={16} className="mr-1" />
-                            Отклонить
-                          </Button>
-                        </div>
-                      )}
-
-                      {user.status === 'active' && (
-                        <>
-                          <div className="flex items-center gap-1 border rounded-lg p-1">
-                            <Button
-                              size="sm"
-                              variant={user.role === 'member' ? 'default' : 'ghost'}
-                              onClick={() => handleChangeRole(user.id, 'member')}
-                              title="Член СНТ"
-                            >
-                              <Icon name="User" size={16} />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={user.role === 'board_member' ? 'default' : 'ghost'}
-                              onClick={() => handleChangeRole(user.id, 'board_member')}
-                              title="Член правления"
-                            >
-                              <Icon name="Users" size={16} />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={user.role === 'chairman' ? 'default' : 'ghost'}
-                              onClick={() => handleChangeRole(user.id, 'chairman')}
-                              title="Председатель"
-                            >
-                              <Icon name="Crown" size={16} />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={user.role === 'admin' ? 'default' : 'ghost'}
-                              onClick={() => handleChangeRole(user.id, 'admin')}
-                              title="Администратор"
-                            >
-                              <Icon name="Shield" size={16} />
-                            </Button>
-                          </div>
-
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleRejectUser(user.id)}
-                            className="text-red-600 border-red-300 hover:bg-red-50"
-                            title="Деактивировать"
-                          >
-                            <Icon name="UserX" size={16} />
-                          </Button>
-                        </>
-                      )}
-
-                      {user.status === 'rejected' && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleApproveUser(user.id)}
-                          className="bg-green-500 hover:bg-green-600 text-white"
-                        >
-                          <Icon name="CheckCircle" size={16} className="mr-1" />
-                          Активировать
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <UserListItem 
+                key={user.id}
+                user={user}
+                roleNames={roleNames}
+                roleColors={roleColors}
+                onChangeRole={handleChangeRole}
+                onApproveUser={handleApproveUser}
+                onRejectUser={handleRejectUser}
+              />
             ))}
           </div>
         </CardContent>
