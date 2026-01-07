@@ -51,7 +51,7 @@ const RoleManagement = () => {
       id: 4,
       name: 'Елена Кузнецова',
       email: 'elena@example.com',
-      role: 'member',
+      role: 'board_member',
       plotNumber: '23',
       joinDate: '2022-01-12',
       status: 'active'
@@ -63,6 +63,15 @@ const RoleManagement = () => {
       role: 'admin',
       plotNumber: '56',
       joinDate: '2018-11-05',
+      status: 'active'
+    },
+    {
+      id: 6,
+      name: 'Ольга Васильева',
+      email: 'olga@example.com',
+      role: 'board_member',
+      plotNumber: '34',
+      joinDate: '2021-03-18',
       status: 'active'
     }
   ]);
