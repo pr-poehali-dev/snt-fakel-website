@@ -24,6 +24,7 @@ interface PersonalDataCardProps {
   onSave: () => void;
   onCancel: () => void;
   onChange: (field: string, value: string) => void;
+  onPasswordChange?: () => void;
 }
 
 const PersonalDataCard = ({ 
@@ -34,7 +35,8 @@ const PersonalDataCard = ({
   onEdit, 
   onSave, 
   onCancel, 
-  onChange 
+  onChange,
+  onPasswordChange
 }: PersonalDataCardProps) => {
   return (
     <Card>
@@ -178,6 +180,19 @@ const PersonalDataCard = ({
             )}
           </div>
         </div>
+
+        {!isEditing && onPasswordChange && (
+          <div className="pt-4 border-t">
+            <Button 
+              onClick={onPasswordChange} 
+              variant="outline" 
+              className="w-full justify-start"
+            >
+              <Icon name="KeyRound" size={18} className="mr-2" />
+              Сменить пароль
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

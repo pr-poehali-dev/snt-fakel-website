@@ -51,6 +51,32 @@ const PasswordReset = ({ onCancel }: PasswordResetProps) => {
         });
         localStorage.setItem('password_reset_requests', JSON.stringify(resetRequests));
 
+        const emailHTML = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2563eb;">Восстановление пароля</h2>
+            <p>Здравствуйте!</p>
+            <p>Вы запросили восстановление пароля для входа в личный кабинет СНТ "Факел".</p>
+            <p>Для сброса пароля перейдите по ссылке:</p>
+            <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Восстановить пароль</a>
+            <p style="color: #666; font-size: 14px;">Ссылка действительна в течение 1 часа.</p>
+            <p style="color: #666; font-size: 14px;">Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.</p>
+            <p style="margin-top: 30px; color: #666;">С уважением,<br>Администрация СНТ "Факел"</p>
+          </div>
+        `;
+
+        fetch('https://functions.poehali.dev/2672fb97-4151-4228-bb1c-4d0b3a502216', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to_email: email,
+            subject: 'Восстановление пароля - СНТ "Факел"',
+            html_content: emailHTML,
+            text_content: `Восстановление пароля. Перейдите по ссылке: ${resetLink}. Ссылка действительна в течение 1 часа.`
+          })
+        }).catch(error => {
+          console.warn('Ошибка отправки email:', error);
+        });
+
         console.log(`
 ===========================================
 ПИСЬМО ДЛЯ ВОССТАНОВЛЕНИЯ ПАРОЛЯ

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import EmailVerification from '../EmailVerification';
 import PhoneVerification from '../PhoneVerification';
+import PasswordChange from '../PasswordChange';
 import AdminDashboardCard from '../profile/AdminDashboardCard';
 import MemberDashboardCard from '../profile/MemberDashboardCard';
 import PersonalDataCard from '../profile/PersonalDataCard';
@@ -51,6 +52,7 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
   const [originalPhone, setOriginalPhone] = useState('');
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -207,6 +209,16 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
     );
   }
 
+  if (showPasswordChange) {
+    return (
+      <PasswordChange
+        currentUserEmail={currentUserEmail}
+        onCancel={() => setShowPasswordChange(false)}
+        onPasswordChanged={() => setShowPasswordChange(false)}
+      />
+    );
+  }
+
   return (
     <section>
       <div className="flex items-center justify-between mb-8">
@@ -244,6 +256,7 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
         onSave={handleSave}
         onCancel={handleCancel}
         onChange={handleChange}
+        onPasswordChange={() => setShowPasswordChange(true)}
       />
 
       <div className="mt-6">

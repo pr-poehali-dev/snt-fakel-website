@@ -1,0 +1,20 @@
+{
+  "tests": [
+    {
+      "name": "Send email test",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "to_email": "test@example.com",
+        "subject": "Тестовое письмо",
+        "html_content": "<h1>Тест</h1><p>Это тестовое письмо</p>",
+        "text_content": "Тест. Это тестовое письмо"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
