@@ -27,10 +27,11 @@ interface ContentSectionsProps {
   gallery: GalleryItem[];
   isLoggedIn: boolean;
   userRole: UserRole;
+  currentUserEmail: string;
   setActiveSection: (section: string) => void;
 }
 
-const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, setActiveSection }: ContentSectionsProps) => {
+const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, currentUserEmail, setActiveSection }: ContentSectionsProps) => {
   if (activeSection === 'chat') {
     return <Chat isLoggedIn={isLoggedIn} userRole={userRole} />;
   }
@@ -48,7 +49,7 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, s
   }
 
   if (activeSection === 'profile' && isLoggedIn) {
-    return <ProfileSection userRole={userRole} onNavigate={setActiveSection} />;
+    return <ProfileSection userRole={userRole} currentUserEmail={currentUserEmail} onNavigate={setActiveSection} />;
   }
 
   if (activeSection === 'role-management' && userRole === 'admin') {

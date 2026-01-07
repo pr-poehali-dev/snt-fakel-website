@@ -200,6 +200,7 @@ const Index = () => {
               gallery={gallery}
               isLoggedIn={isLoggedIn}
               userRole={userRole}
+              currentUserEmail={currentUserEmail}
               setActiveSection={setActiveSection}
             />
           </>

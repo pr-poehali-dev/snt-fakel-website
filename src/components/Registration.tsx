@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import PersonalDataAgreement from './PersonalDataAgreement';
 
 interface RegistrationProps {
   onSuccess: () => void;
@@ -28,11 +29,13 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     ownerFirstName: '',
     ownerMiddleName: '',
     landDocNumber: '',
-    houseDocNumber: ''
+    houseDocNumber: '',
+    agreementAccepted: false
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [showAgreement, setShowAgreement] = useState(false);
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => {
@@ -116,6 +119,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     if (!formData.plotNumber.trim()) newErrors.plotNumber = 'Обязательное поле';
     if (!formData.password) newErrors.password = 'Обязательное поле';
     if (!formData.confirmPassword) newErrors.confirmPassword = 'Обязательное поле';
+    if (!formData.agreementAccepted) newErrors.agreementAccepted = 'Необходимо согласие на обработку данных';
 
     // Проверка email
     if (formData.email && !validateEmail(formData.email)) {
@@ -461,6 +465,36 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
               </div>
             </div>
 
+            {/* Согласие на обработку персональных данных */}
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Icon name="ShieldCheck" size={20} className="text-primary" />
+                Согласие на обработку данных
+              </h3>
+              <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg">
+                <Checkbox
+                  id="agreementAccepted"
+                  checked={formData.agreementAccepted}
+                  onCheckedChange={(checked) => handleChange('agreementAccepted', checked as boolean)}
+                  className={errors.agreementAccepted ? 'border-red-500' : ''}
+                />
+                <div className="flex-1">
+                  <Label htmlFor="agreementAccepted" className="cursor-pointer font-medium">
+                    Я согласен на обработку персональных данных <span className="text-red-500">*</span>
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 text-sm text-blue-600 hover:text-blue-800"
+                    onClick={() => setShowAgreement(true)}
+                  >
+                    Прочитать текст согласия
+                  </Button>
+                  {errors.agreementAccepted && <p className="text-xs text-red-500 mt-1">{errors.agreementAccepted}</p>}
+                </div>
+              </div>
+            </div>
+
             {/* Кнопки */}
             <div className="flex gap-4 pt-4">
               <Button
@@ -483,6 +517,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
           </form>
         </CardContent>
       </Card>
+      {showAgreement && <PersonalDataAgreement onClose={() => setShowAgreement(false)} />}
     </section>
   );
 };
