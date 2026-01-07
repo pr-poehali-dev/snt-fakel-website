@@ -1,3 +1,4 @@
 {
+  "notify-admin": "https://functions.poehali.dev/cf474001-23d9-421d-a5b8-99244efdddfc",
   "send-email": "https://functions.poehali.dev/2672fb97-4151-4228-bb1c-4d0b3a502216"
 }

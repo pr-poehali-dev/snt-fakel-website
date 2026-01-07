@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Notify admin test",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "user_data": {
+          "lastName": "Иванов",
+          "firstName": "Иван",
+          "middleName": "Иванович",
+          "email": "test@example.com",
+          "phone": "+7 (999) 123-45-67",
+          "plotNumber": "42",
+          "birthDate": "1990-01-15",
+          "registeredAt": "2026-01-07T12:00:00.000Z"
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

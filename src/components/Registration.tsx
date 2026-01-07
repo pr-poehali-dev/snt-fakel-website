@@ -215,6 +215,16 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     users.push(newUser);
     localStorage.setItem('snt_users', JSON.stringify(users));
 
+    fetch('https://functions.poehali.dev/cf474001-23d9-421d-a5b8-99244efdddfc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_data: newUser
+      })
+    }).catch(error => {
+      console.warn('Ошибка отправки уведомления администратору:', error);
+    });
+
     console.log('Регистрация:', newUser);
     toast.success('Регистрация успешно завершена! Теперь вы можете войти в личный кабинет.');
     onSuccess();
