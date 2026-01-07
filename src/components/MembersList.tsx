@@ -23,6 +23,7 @@ interface User {
   role: string;
   status: string;
   registeredAt: string;
+  ownerIsSame: boolean;
   paymentStatus?: 'paid' | 'unpaid' | 'partial';
 }
 
@@ -49,6 +50,7 @@ const MembersList = () => {
             role: user.role,
             status: user.status,
             registeredAt: user.registered_at,
+            ownerIsSame: user.owner_is_same || false,
             paymentStatus: user.payment_status as 'paid' | 'unpaid' | 'partial'
           }));
           setUsers(usersWithPayment);
@@ -91,11 +93,13 @@ const MembersList = () => {
     return 0;
   });
 
+  const owners = users.filter(u => u.status === 'active' && u.ownerIsSame);
+  
   const stats = {
     total: users.filter(u => u.status === 'active').length,
-    paid: users.filter(u => u.paymentStatus === 'paid' && u.status === 'active').length,
-    unpaid: users.filter(u => u.paymentStatus === 'unpaid' && u.status === 'active').length,
-    partial: users.filter(u => u.paymentStatus === 'partial' && u.status === 'active').length
+    paid: owners.filter(u => u.paymentStatus === 'paid').length,
+    unpaid: owners.filter(u => u.paymentStatus === 'unpaid').length,
+    partial: owners.filter(u => u.paymentStatus === 'partial').length
   };
 
   const handleExportToExcel = () => {
@@ -105,7 +109,9 @@ const MembersList = () => {
       'Номер участка': user.plotNumber,
       'Телефон': user.phone,
       'Email': user.email,
-      'Статус оплаты': user.paymentStatus === 'paid' ? 'Оплачено' : user.paymentStatus === 'partial' ? 'Частично' : 'Не оплачено',
+      'Статус оплаты': user.ownerIsSame 
+        ? (user.paymentStatus === 'paid' ? 'Оплачено' : user.paymentStatus === 'partial' ? 'Частично' : 'Не оплачено')
+        : 'Не собственник',
       'Дата регистрации': new Date(user.registeredAt).toLocaleDateString('ru-RU')
     }));
 
@@ -262,22 +268,31 @@ const MembersList = () => {
                       <td className="p-3 text-sm text-muted-foreground">{user.phone}</td>
                       <td className="p-3 text-sm text-muted-foreground">{user.email}</td>
                       <td className="p-3">
-                        {user.paymentStatus === 'paid' && (
-                          <Badge className="bg-green-100 text-green-700 border-green-300">
-                            <Icon name="CheckCircle" size={14} className="mr-1" />
-                            Оплачено
-                          </Badge>
-                        )}
-                        {user.paymentStatus === 'partial' && (
-                          <Badge className="bg-orange-100 text-orange-700 border-orange-300">
-                            <Icon name="AlertCircle" size={14} className="mr-1" />
-                            Частично
-                          </Badge>
-                        )}
-                        {user.paymentStatus === 'unpaid' && (
-                          <Badge className="bg-red-100 text-red-700 border-red-300">
-                            <Icon name="XCircle" size={14} className="mr-1" />
-                            Не оплачено
+                        {user.ownerIsSame ? (
+                          <>
+                            {user.paymentStatus === 'paid' && (
+                              <Badge className="bg-green-100 text-green-700 border-green-300">
+                                <Icon name="CheckCircle" size={14} className="mr-1" />
+                                Оплачено
+                              </Badge>
+                            )}
+                            {user.paymentStatus === 'partial' && (
+                              <Badge className="bg-orange-100 text-orange-700 border-orange-300">
+                                <Icon name="AlertCircle" size={14} className="mr-1" />
+                                Частично
+                              </Badge>
+                            )}
+                            {user.paymentStatus === 'unpaid' && (
+                              <Badge className="bg-red-100 text-red-700 border-red-300">
+                                <Icon name="XCircle" size={14} className="mr-1" />
+                                Не оплачено
+                              </Badge>
+                            )}
+                          </>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-50 text-gray-600">
+                            <Icon name="User" size={14} className="mr-1" />
+                            Не собственник
                           </Badge>
                         )}
                       </td>
