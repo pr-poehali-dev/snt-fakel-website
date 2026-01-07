@@ -23,7 +23,7 @@ const Login = ({ onSuccess, onCancel, onRegisterClick, onPasswordResetClick }: L
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.email.trim()) {
