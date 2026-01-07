@@ -18,6 +18,7 @@ type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 type UserStatus = 'pending' | 'active' | 'rejected';
 
 interface User {
+  id?: number;
   lastName: string;
   firstName: string;
   middleName: string;
@@ -35,6 +36,7 @@ interface User {
   role: UserRole;
   status: UserStatus;
   registeredAt: string;
+  payment_status?: string;
 }
 
 const RoleManagement = () => {
@@ -46,12 +48,35 @@ const RoleManagement = () => {
   const [filterStatus, setFilterStatus] = useState<UserStatus | 'all'>('all');
 
   useEffect(() => {
-    const usersJSON = localStorage.getItem('snt_users');
-    if (usersJSON) {
-      const storedUsers = JSON.parse(usersJSON);
-      setUsers(storedUsers);
-    }
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const data = await response.json();
+      if (data.users) {
+        setUsers(data.users.map((u: any) => ({
+          ...u,
+          lastName: u.last_name,
+          firstName: u.first_name,
+          middleName: u.middle_name || '',
+          birthDate: u.birth_date || '',
+          plotNumber: u.plot_number,
+          ownerIsSame: u.owner_is_same,
+          ownerLastName: u.owner_last_name || '',
+          ownerFirstName: u.owner_first_name || '',
+          ownerMiddleName: u.owner_middle_name || '',
+          landDocNumber: u.land_doc_number || '',
+          houseDocNumber: u.house_doc_number || '',
+          registeredAt: u.registered_at
+        })));
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки пользователей:', error);
+      toast.error('Не удалось загрузить список пользователей');
+    }
+  };
 
   const roleNames = {
     guest: 'Гость',
@@ -69,13 +94,34 @@ const RoleManagement = () => {
     admin: 'bg-gradient-to-r from-orange-100 to-pink-100 text-orange-700 border-orange-300'
   };
 
-  const handleChangeRole = (userEmail: string, newRole: UserRole) => {
-    const updatedUsers = users.map(user => 
-      user.email === userEmail ? { ...user, role: newRole } : user
-    );
-    setUsers(updatedUsers);
-    localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
-    toast.success(`Роль пользователя изменена на "${roleNames[newRole]}"`);
+  const handleChangeRole = async (userEmail: string, newRole: UserRole) => {
+    const user = users.find(u => u.email === userEmail);
+    if (!user) return;
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: (user as any).id,
+          role: newRole,
+          paymentStatus: (user as any).payment_status || 'unpaid'
+        })
+      });
+
+      if (response.ok) {
+        const updatedUsers = users.map(u => 
+          u.email === userEmail ? { ...u, role: newRole } : u
+        );
+        setUsers(updatedUsers);
+        toast.success(`Роль пользователя изменена на "${roleNames[newRole]}"`);
+      } else {
+        toast.error('Не удалось изменить роль');
+      }
+    } catch (error) {
+      console.error('Ошибка изменения роли:', error);
+      toast.error('Ошибка при изменении роли');
+    }
   };
 
   const handleApproveUser = (userEmail: string) => {
