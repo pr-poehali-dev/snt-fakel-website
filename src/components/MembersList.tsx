@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -10,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import * as XLSX from 'xlsx';
 
 interface User {
   lastName: string;
@@ -71,6 +73,39 @@ const MembersList = () => {
     paid: users.filter(u => u.paymentStatus === 'paid' && u.status === 'active').length,
     unpaid: users.filter(u => u.paymentStatus === 'unpaid' && u.status === 'active').length,
     partial: users.filter(u => u.paymentStatus === 'partial' && u.status === 'active').length
+  };
+
+  const handleExportToExcel = () => {
+    const exportData = filteredUsers.map((user, index) => ({
+      '№': index + 1,
+      'ФИО': `${user.lastName} ${user.firstName} ${user.middleName}`,
+      'Номер участка': user.plotNumber,
+      'Телефон': user.phone,
+      'Email': user.email,
+      'Статус оплаты': user.paymentStatus === 'paid' ? 'Оплачено' : user.paymentStatus === 'partial' ? 'Частично' : 'Не оплачено',
+      'Дата регистрации': new Date(user.registeredAt).toLocaleDateString('ru-RU')
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    
+    const columnWidths = [
+      { wch: 5 },
+      { wch: 30 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 25 },
+      { wch: 18 },
+      { wch: 18 }
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Участники');
+
+    const fileName = `Участники_СНТ_Факел_${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+    toast.success('Файл Excel успешно сохранён');
   };
 
   return (
@@ -135,6 +170,14 @@ const MembersList = () => {
                 />
               </div>
             </div>
+            <Button 
+              variant="outline" 
+              className="border-green-500 text-green-600 hover:bg-green-50"
+              onClick={handleExportToExcel}
+            >
+              <Icon name="Download" size={18} className="mr-2" />
+              Экспорт в Excel
+            </Button>
             <Select value={filterPayment} onValueChange={(value: any) => setFilterPayment(value)}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Статус оплаты" />

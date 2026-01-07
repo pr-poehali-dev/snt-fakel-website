@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import * as XLSX from 'xlsx';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -117,6 +118,49 @@ const RoleManagement = () => {
     return currentUserEmail || 'assapan-nn@yandex.ru';
   };
 
+  const handleExportToExcel = () => {
+    const exportData = filteredUsers.map((user, index) => ({
+      '№': index + 1,
+      'ФИО': `${user.lastName} ${user.firstName} ${user.middleName}`,
+      'Дата рождения': user.birthDate || '',
+      'Телефон': user.phone,
+      'Email': user.email,
+      'Номер участка': user.plotNumber,
+      'Роль': roleNames[user.role],
+      'Статус': user.status === 'active' ? 'Активен' : user.status === 'pending' ? 'Ожидает' : 'Отклонён',
+      'Собственник': user.ownerIsSame ? 'Да' : `${user.ownerLastName} ${user.ownerFirstName} ${user.ownerMiddleName}`,
+      'Док. на землю': user.landDocNumber || '',
+      'Док. на дом': user.houseDocNumber || '',
+      'Дата регистрации': new Date(user.registeredAt).toLocaleDateString('ru-RU')
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    
+    const columnWidths = [
+      { wch: 5 },
+      { wch: 30 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 30 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 18 }
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Пользователи');
+
+    const fileName = `Пользователи_СНТ_Факел_${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+    toast.success('Файл Excel успешно сохранён');
+  };
+
   const filteredUsers = users.filter(user => {
     const fullName = `${user.lastName} ${user.firstName} ${user.middleName}`.toLowerCase();
     const matchesSearch = 
@@ -200,6 +244,14 @@ const RoleManagement = () => {
                 />
               </div>
             </div>
+            <Button 
+              variant="outline" 
+              className="border-green-500 text-green-600 hover:bg-green-50"
+              onClick={handleExportToExcel}
+            >
+              <Icon name="Download" size={18} className="mr-2" />
+              Экспорт в Excel
+            </Button>
             <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Статус" />
