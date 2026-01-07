@@ -104,7 +104,16 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
         {content.hero.description}
       </p>
       
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 max-w-6xl mx-auto">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 max-w-7xl mx-auto">
+        <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('home')}>
+          <CardContent className="pt-6 pb-6 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-600 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+              <Icon name="Home" className="text-white" size={24} />
+            </div>
+            <h4 className="text-sm font-bold">Главная</h4>
+          </CardContent>
+        </Card>
+
         <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('news')}>
           <CardContent className="pt-6 pb-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-lg">
