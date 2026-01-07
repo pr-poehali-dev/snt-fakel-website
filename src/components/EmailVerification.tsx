@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,10 @@ const EmailVerification = ({ email, onVerified, onCancel }: EmailVerificationPro
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
+
+  useEffect(() => {
+    generateCode();
+  }, []);
 
   const generateCode = async () => {
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
