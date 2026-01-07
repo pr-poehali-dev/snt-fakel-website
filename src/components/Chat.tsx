@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
-type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
+type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 interface Message {
   id: number;
@@ -104,8 +104,9 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
     const hours = currentTime.getHours().toString().padStart(2, '0');
     const minutes = currentTime.getMinutes().toString().padStart(2, '0');
 
-    const roleNames: Record<'member' | 'chairman' | 'admin', string> = {
+    const roleNames: Record<'member' | 'board_member' | 'chairman' | 'admin', string> = {
       member: 'Участник',
+      board_member: 'Член правления',
       chairman: 'Председатель',
       admin: 'Администратор'
     };
@@ -117,7 +118,7 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
       userRole: roleNames[userRole],
       text: newMessage,
       timestamp: `${hours}:${minutes}`,
-      avatar: userRole === 'admin' ? '⭐' : userRole === 'chairman' ? '👑' : '👤'
+      avatar: userRole === 'admin' ? '⭐' : userRole === 'chairman' ? '👑' : userRole === 'board_member' ? '👥' : '👤'
     };
 
     setMessages([...messages, message]);
@@ -187,7 +188,7 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
             </div>
             
             <div className="border-t p-4">
-              {isLoggedIn && (userRole === 'member' || userRole === 'chairman' || userRole === 'admin') ? (
+              {isLoggedIn && (userRole === 'member' || userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') ? (
                 <form onSubmit={handleSendMessage} className="flex gap-2">
                   <Input
                     placeholder="Написать сообщение..."

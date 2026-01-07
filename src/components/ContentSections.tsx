@@ -5,7 +5,7 @@ import InfoSections from './sections/InfoSections';
 import ProfileSection from './sections/ProfileSection';
 import RoleManagement from './RoleManagement';
 
-type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
+type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 interface NewsItem {
   id: number;

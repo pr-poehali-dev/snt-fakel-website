@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 
-type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
+type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 interface DocumentsSectionProps {
   userRole: UserRole;
@@ -66,7 +66,7 @@ const DocumentsSection = ({ userRole }: DocumentsSectionProps) => {
     <section>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Документы СНТ</h2>
-        {userRole === 'admin' && (
+        {(userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && (
           <Button className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
             <Icon name="Upload" size={18} className="mr-2" />
             Загрузить документ

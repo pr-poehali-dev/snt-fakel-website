@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
-type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
+type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 interface User {
   id: number;
@@ -73,6 +73,7 @@ const RoleManagement = () => {
   const roleNames = {
     guest: 'Гость',
     member: 'Член СНТ',
+    board_member: 'Член правления',
     chairman: 'Председатель',
     admin: 'Администратор'
   };
@@ -80,6 +81,7 @@ const RoleManagement = () => {
   const roleColors = {
     guest: 'bg-gray-100 text-gray-700 border-gray-300',
     member: 'bg-blue-100 text-blue-700 border-blue-300',
+    board_member: 'bg-green-100 text-green-700 border-green-300',
     chairman: 'bg-purple-100 text-purple-700 border-purple-300',
     admin: 'bg-gradient-to-r from-orange-100 to-pink-100 text-orange-700 border-orange-300'
   };
@@ -120,7 +122,7 @@ const RoleManagement = () => {
     total: users.length,
     active: users.filter(u => u.status === 'active').length,
     members: users.filter(u => u.role === 'member').length,
-    admins: users.filter(u => u.role === 'admin' || u.role === 'chairman').length
+    admins: users.filter(u => u.role === 'admin' || u.role === 'chairman' || u.role === 'board_member').length
   };
 
   return (
@@ -223,6 +225,13 @@ const RoleManagement = () => {
                 Члены СНТ
               </Button>
               <Button
+                variant={filterRole === 'board_member' ? 'default' : 'outline'}
+                onClick={() => setFilterRole('board_member')}
+                size="sm"
+              >
+                Правление
+              </Button>
+              <Button
                 variant={filterRole === 'chairman' ? 'default' : 'outline'}
                 onClick={() => setFilterRole('chairman')}
                 size="sm"
@@ -256,7 +265,7 @@ const RoleManagement = () => {
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 flex-1">
                       <div className="w-12 h-12 bg-gradient-to-br from-orange-200 to-pink-200 rounded-full flex items-center justify-center text-2xl">
-                        {user.role === 'admin' ? '⭐' : user.role === 'chairman' ? '👑' : '👤'}
+                        {user.role === 'admin' ? '⭐' : user.role === 'chairman' ? '👑' : user.role === 'board_member' ? '👥' : '👤'}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -301,6 +310,14 @@ const RoleManagement = () => {
                           title="Член СНТ"
                         >
                           <Icon name="User" size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={user.role === 'board_member' ? 'default' : 'ghost'}
+                          onClick={() => handleChangeRole(user.id, 'board_member')}
+                          title="Член правления"
+                        >
+                          <Icon name="Users" size={16} />
                         </Button>
                         <Button
                           size="sm"

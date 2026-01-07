@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
-type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
+type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 interface ProfileSectionProps {
   userRole: UserRole;
@@ -14,6 +14,7 @@ const ProfileSection = ({ userRole, onNavigate }: ProfileSectionProps) => {
   const roleNames = {
     guest: 'Гость',
     member: 'Член СНТ',
+    board_member: 'Член правления',
     chairman: 'Председатель',
     admin: 'Администратор'
   };
@@ -22,18 +23,18 @@ const ProfileSection = ({ userRole, onNavigate }: ProfileSectionProps) => {
     <section>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Личный кабинет</h2>
-        <Badge className={`text-lg px-4 py-2 ${userRole === 'admin' ? 'bg-gradient-to-r from-orange-500 to-pink-500' : userRole === 'chairman' ? 'bg-purple-500' : ''}`}>
+        <Badge className={`text-lg px-4 py-2 ${userRole === 'admin' ? 'bg-gradient-to-r from-orange-500 to-pink-500' : userRole === 'chairman' ? 'bg-purple-500' : userRole === 'board_member' ? 'bg-green-500' : ''}`}>
           {roleNames[userRole]}
         </Badge>
       </div>
       <div className="grid md:grid-cols-3 gap-6">
-        {userRole === 'chairman' || userRole === 'admin' ? (
+        {userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin' ? (
           <>
             <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Icon name={userRole === 'admin' ? 'Shield' : 'Crown'} className="text-primary" />
-                  {userRole === 'admin' ? 'Панель администратора' : 'Панель председателя'}
+                  <Icon name={userRole === 'admin' ? 'Shield' : userRole === 'chairman' ? 'Crown' : 'Users'} className="text-primary" />
+                  {userRole === 'admin' ? 'Панель администратора' : userRole === 'chairman' ? 'Панель председателя' : 'Панель члена правления'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">

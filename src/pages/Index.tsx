@@ -6,7 +6,7 @@ import ContentSections from '@/components/ContentSections';
 import Footer from '@/components/Footer';
 import Registration from '@/components/Registration';
 
-type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
+type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -26,6 +26,7 @@ const Index = () => {
     const roleNames = {
       guest: 'Гость',
       member: 'Член СНТ',
+      board_member: 'Член правления',
       chairman: 'Председатель',
       admin: 'Администратор'
     };

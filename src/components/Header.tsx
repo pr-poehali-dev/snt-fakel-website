@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 
-type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
+type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 interface HeaderProps {
   isLoggedIn: boolean;
@@ -23,6 +23,7 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
   const roleNames = {
     guest: 'Гость',
     member: 'Член СНТ',
+    board_member: 'Член правления',
     chairman: 'Председатель',
     admin: 'Администратор'
   };
@@ -104,6 +105,21 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
                       <Button 
                         variant="outline" 
                         className="w-full justify-start h-auto py-3"
+                        onClick={() => { handleLogin('board_member'); setShowLoginMenu(false); }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Icon name="Users" className="text-white" size={20} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold">Член правления</div>
+                            <div className="text-xs text-muted-foreground">Управление + контроль</div>
+                          </div>
+                        </div>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start h-auto py-3"
                         onClick={() => { handleLogin('chairman'); setShowLoginMenu(false); }}
                       >
                         <div className="flex items-start gap-3">
@@ -138,13 +154,21 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
             ) : (
               <>
                 <Button variant="outline" onClick={() => setShowProfileMenu(!showProfileMenu)} className="gap-2">
-                  <Icon name={userRole === 'admin' ? 'Shield' : userRole === 'chairman' ? 'Crown' : 'User'} size={18} />
+                  <Icon name={
+                    userRole === 'admin' ? 'Shield' : 
+                    userRole === 'chairman' ? 'Crown' : 
+                    userRole === 'board_member' ? 'Users' : 
+                    'User'
+                  } size={18} />
                   {roleNames[userRole]}
                   {userRole === 'admin' && (
                     <Badge className="ml-1 bg-gradient-to-r from-orange-500 to-pink-500">Admin</Badge>
                   )}
                   {userRole === 'chairman' && (
                     <Badge className="ml-1 bg-purple-500">Chairman</Badge>
+                  )}
+                  {userRole === 'board_member' && (
+                    <Badge className="ml-1 bg-green-500">Board</Badge>
                   )}
                 </Button>
                 {showProfileMenu && (
