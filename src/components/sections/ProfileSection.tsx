@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
-type UserRole = 'guest' | 'member' | 'admin';
+type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
 interface ProfileSectionProps {
   userRole: UserRole;
@@ -13,6 +13,7 @@ const ProfileSection = ({ userRole }: ProfileSectionProps) => {
   const roleNames = {
     guest: 'Гость',
     member: 'Член СНТ',
+    chairman: 'Председатель',
     admin: 'Администратор'
   };
 
@@ -20,18 +21,18 @@ const ProfileSection = ({ userRole }: ProfileSectionProps) => {
     <section>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Личный кабинет</h2>
-        <Badge className={`text-lg px-4 py-2 ${userRole === 'admin' ? 'bg-gradient-to-r from-orange-500 to-pink-500' : ''}`}>
+        <Badge className={`text-lg px-4 py-2 ${userRole === 'admin' ? 'bg-gradient-to-r from-orange-500 to-pink-500' : userRole === 'chairman' ? 'bg-purple-500' : ''}`}>
           {roleNames[userRole]}
         </Badge>
       </div>
       <div className="grid md:grid-cols-3 gap-6">
-        {userRole === 'admin' ? (
+        {userRole === 'chairman' || userRole === 'admin' ? (
           <>
             <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Icon name="Shield" className="text-primary" />
-                  Панель администратора
+                  <Icon name={userRole === 'admin' ? 'Shield' : 'Crown'} className="text-primary" />
+                  {userRole === 'admin' ? 'Панель администратора' : 'Панель председателя'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -76,6 +77,12 @@ const ProfileSection = ({ userRole }: ProfileSectionProps) => {
                   <Icon name="Settings" size={18} className="mr-2" />
                   Настройки сайта
                 </Button>
+                {userRole === 'admin' && (
+                  <Button variant="outline" className="w-full justify-start border-orange-500 text-orange-600 hover:bg-orange-50">
+                    <Icon name="UserCog" size={18} className="mr-2" />
+                    Управление ролями
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </>

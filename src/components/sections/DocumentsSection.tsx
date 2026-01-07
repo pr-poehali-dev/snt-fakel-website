@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 
-type UserRole = 'guest' | 'member' | 'admin';
+type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
 interface DocumentsSectionProps {
   userRole: UserRole;

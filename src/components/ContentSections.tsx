@@ -4,7 +4,7 @@ import NewsSection from './sections/NewsSection';
 import InfoSections from './sections/InfoSections';
 import ProfileSection from './sections/ProfileSection';
 
-type UserRole = 'guest' | 'member' | 'admin';
+type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
 interface NewsItem {
   id: number;

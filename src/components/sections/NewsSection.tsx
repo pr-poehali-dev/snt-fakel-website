@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 
-type UserRole = 'guest' | 'member' | 'admin';
+type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
 interface NewsItem {
   id: number;
@@ -24,7 +24,7 @@ const NewsSection = ({ news, userRole }: NewsSectionProps) => {
     <section>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Объявления и новости</h2>
-        {userRole === 'admin' && (
+        {(userRole === 'chairman' || userRole === 'admin') && (
           <Button className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
             <Icon name="Plus" size={18} className="mr-2" />
             Добавить новость
@@ -45,7 +45,7 @@ const NewsSection = ({ news, userRole }: NewsSectionProps) => {
                   <Badge>{item.category}</Badge>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">{item.date}</span>
-                    {userRole === 'admin' && (
+                    {(userRole === 'chairman' || userRole === 'admin') && (
                       <div className="flex gap-1">
                         <Button size="sm" variant="ghost">
                           <Icon name="Pencil" size={14} />

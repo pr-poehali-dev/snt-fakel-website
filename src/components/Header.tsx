@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 
-type UserRole = 'guest' | 'member' | 'admin';
+type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
 interface HeaderProps {
   isLoggedIn: boolean;
@@ -12,14 +12,17 @@ interface HeaderProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
   handleLogin: (role: UserRole) => void;
+  handleLogout: () => void;
 }
 
-const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleLogin }: HeaderProps) => {
+const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleLogin, handleLogout }: HeaderProps) => {
   const [showLoginMenu, setShowLoginMenu] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const roleNames = {
     guest: 'Гость',
     member: 'Член СНТ',
+    chairman: 'Председатель',
     admin: 'Администратор'
   };
 
@@ -93,6 +96,21 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
                       <Button 
                         variant="outline" 
                         className="w-full justify-start h-auto py-3"
+                        onClick={() => { handleLogin('chairman'); setShowLoginMenu(false); }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Icon name="Crown" className="text-white" size={20} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold">Председатель</div>
+                            <div className="text-xs text-muted-foreground">Управление СНТ</div>
+                          </div>
+                        </div>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start h-auto py-3"
                         onClick={() => { handleLogin('admin'); setShowLoginMenu(false); }}
                       >
                         <div className="flex items-start gap-3">
@@ -101,7 +119,7 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
                           </div>
                           <div className="text-left">
                             <div className="font-semibold">Администратор</div>
-                            <div className="text-xs text-muted-foreground">Полный доступ к управлению</div>
+                            <div className="text-xs text-muted-foreground">Полный доступ + управление ролями</div>
                           </div>
                         </div>
                       </Button>
@@ -110,13 +128,40 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
                 )}
               </>
             ) : (
-              <Button variant="outline" onClick={() => setActiveSection('profile')} className="gap-2">
-                <Icon name={userRole === 'admin' ? 'Shield' : 'User'} size={18} />
-                {roleNames[userRole]}
-                {userRole === 'admin' && (
-                  <Badge className="ml-1 bg-gradient-to-r from-orange-500 to-pink-500">Admin</Badge>
+              <>
+                <Button variant="outline" onClick={() => setShowProfileMenu(!showProfileMenu)} className="gap-2">
+                  <Icon name={userRole === 'admin' ? 'Shield' : userRole === 'chairman' ? 'Crown' : 'User'} size={18} />
+                  {roleNames[userRole]}
+                  {userRole === 'admin' && (
+                    <Badge className="ml-1 bg-gradient-to-r from-orange-500 to-pink-500">Admin</Badge>
+                  )}
+                  {userRole === 'chairman' && (
+                    <Badge className="ml-1 bg-purple-500">Chairman</Badge>
+                  )}
+                </Button>
+                {showProfileMenu && (
+                  <Card className="absolute right-0 top-full mt-2 w-56 shadow-2xl border-2 z-50">
+                    <CardContent className="p-2">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => { setActiveSection('profile'); setShowProfileMenu(false); }}
+                      >
+                        <Icon name="User" size={18} className="mr-2" />
+                        Личный кабинет
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => { handleLogout(); setShowProfileMenu(false); }}
+                      >
+                        <Icon name="LogOut" size={18} className="mr-2" />
+                        Выйти
+                      </Button>
+                    </CardContent>
+                  </Card>
                 )}
-              </Button>
+              </>
             )}
           </div>
         </div>

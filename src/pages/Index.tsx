@@ -5,11 +5,11 @@ import HomePage from '@/components/HomePage';
 import ContentSections from '@/components/ContentSections';
 import Footer from '@/components/Footer';
 
-type UserRole = 'guest' | 'member' | 'admin';
+type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
 const Index = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState<UserRole>('guest');
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole>('admin');
   const [activeSection, setActiveSection] = useState('home');
   const [votes, setVotes] = useState<{ [key: number]: number }>({});
 
@@ -24,9 +24,17 @@ const Index = () => {
     const roleNames = {
       guest: 'Гость',
       member: 'Член СНТ',
+      chairman: 'Председатель',
       admin: 'Администратор'
     };
     toast.success(`Добро пожаловать в СНТ Факел! Роль: ${roleNames[role]}`);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserRole('guest');
+    setActiveSection('home');
+    toast.success('Вы вышли из личного кабинета');
   };
 
   const polls = [
@@ -95,6 +103,7 @@ const Index = () => {
         activeSection={activeSection}
         setActiveSection={setActiveSection}
         handleLogin={handleLogin}
+        handleLogout={handleLogout}
       />
 
       <main className="container mx-auto px-4 py-12">

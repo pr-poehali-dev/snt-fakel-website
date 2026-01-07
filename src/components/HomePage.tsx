@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 
-type UserRole = 'guest' | 'member' | 'admin';
+type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
 interface Poll {
   id: number;
@@ -119,7 +119,7 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{option.votes} голосов</span>
-                        {isLoggedIn && (userRole === 'member' || userRole === 'admin') && !isVoted && (
+                        {isLoggedIn && (userRole === 'member' || userRole === 'chairman' || userRole === 'admin') && !isVoted && (
                           <Button
                             size="sm"
                             variant="ghost"
