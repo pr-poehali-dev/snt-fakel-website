@@ -23,7 +23,7 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Всего участников</p>
-              <p className="text-2xl font-bold">156</p>
+              <p className="text-2xl font-bold" id="total-members-count">-</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Активных голосований</p>
@@ -45,9 +45,14 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
           <CardTitle>Управление</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Button variant="outline" className="w-full justify-start">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={() => onNavigate?.('members-list')}
+          >
             <Icon name="Users" size={18} className="mr-2" />
             Список участников
+            <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full" id="members-badge">-</span>
           </Button>
           <Button variant="outline" className="w-full justify-start">
             <Icon name="Vote" size={18} className="mr-2" />

@@ -77,6 +77,12 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
         setOriginalEmail(user.email || '');
         setOriginalPhone(user.phone || '');
       }
+
+      const activeMembers = users.filter((u: any) => u.status === 'active').length;
+      const totalMembersElement = document.getElementById('total-members-count');
+      const membersBadgeElement = document.getElementById('members-badge');
+      if (totalMembersElement) totalMembersElement.textContent = activeMembers.toString();
+      if (membersBadgeElement) membersBadgeElement.textContent = activeMembers.toString();
     }
   }, [currentUserEmail]);
 

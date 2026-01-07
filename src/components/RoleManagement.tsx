@@ -207,7 +207,7 @@ const RoleManagement = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Таблица пользователей ({filteredUsers.length})</CardTitle>
+          <CardTitle>Управление ролями ({filteredUsers.length})</CardTitle>
           <CardDescription>
             Нажмите на строку для просмотра всех данных пользователя
           </CardDescription>
