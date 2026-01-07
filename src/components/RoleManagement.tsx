@@ -320,12 +320,12 @@ const RoleManagement = () => {
                                   Учётная запись
                                 </h4>
                                 <div className="space-y-2 text-sm">
-                                  <p><span className="font-medium">Роль:</span> <Badge className={roleColors[user.role]}>{roleNames[user.role]}</Badge></p>
-                                  <p><span className="font-medium">Статус:</span> 
+                                  <div><span className="font-medium">Роль:</span> <Badge className={roleColors[user.role]}>{roleNames[user.role]}</Badge></div>
+                                  <div><span className="font-medium">Статус:</span> 
                                     {user.status === 'active' && <Badge className="bg-green-100 text-green-700 ml-2">Активен</Badge>}
                                     {user.status === 'pending' && <Badge className="bg-orange-100 text-orange-700 ml-2">Ожидает</Badge>}
                                     {user.status === 'rejected' && <Badge className="bg-red-100 text-red-700 ml-2">Отклонён</Badge>}
-                                  </p>
+                                  </div>
                                   <p><span className="font-medium">Пароль:</span> <span className="text-muted-foreground">••••••••</span></p>
                                 </div>
                               </div>
