@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 interface MeterReading {
   id: string;
@@ -97,13 +98,54 @@ const MeterReadingsManager = () => {
     return matchesSearch && matchesMonth;
   });
 
+  const exportToExcel = () => {
+    const dataToExport = filteredReadings.map(reading => ({
+      'Участок': reading.plotNumber,
+      'ФИО': getUserName(reading.email),
+      'Номер ПУ': reading.meterNumber,
+      'Показания (кВт⋅ч)': reading.reading,
+      'Дата передачи': reading.date,
+      'Месяц': reading.month
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Показания ПУ');
+
+    worksheet['!cols'] = [
+      { wch: 10 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 15 },
+      { wch: 20 }
+    ];
+
+    const fileName = selectedMonth === 'all' 
+      ? `Показания_ПУ_все_месяцы_${new Date().toLocaleDateString('ru-RU')}.xlsx`
+      : `Показания_ПУ_${selectedMonth}_${new Date().toLocaleDateString('ru-RU')}.xlsx`;
+
+    XLSX.writeFile(workbook, fileName);
+    toast.success('Excel файл успешно скачан');
+  };
+
   return (
     <section>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Показания приборов учёта</h2>
-        <Badge className="text-lg px-4 py-2">
-          Всего записей: {readings.length}
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={exportToExcel}
+            disabled={filteredReadings.length === 0}
+            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+          >
+            <Icon name="Download" size={18} className="mr-2" />
+            Скачать Excel
+          </Button>
+          <Badge className="text-lg px-4 py-2">
+            Всего записей: {readings.length}
+          </Badge>
+        </div>
       </div>
 
       <Card className="mb-6">
