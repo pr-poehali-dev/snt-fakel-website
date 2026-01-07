@@ -100,18 +100,73 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
       <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight">
         {content.hero.title}
       </h2>
-      <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+      <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
         {content.hero.description}
       </p>
-      <div className="flex gap-4 justify-center">
-        <Button size="lg" className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600" onClick={() => setActiveSection('about')}>
-          <Icon name="Info" size={20} className="mr-2" />
-          О товариществе
-        </Button>
-        <Button size="lg" variant="outline" onClick={() => setActiveSection('contacts')}>
-          <Icon name="Phone" size={20} className="mr-2" />
-          Контакты
-        </Button>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 max-w-6xl mx-auto">
+        <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('news')}>
+          <CardContent className="pt-6 pb-6 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+              <Icon name="Newspaper" className="text-white" size={24} />
+            </div>
+            <h4 className="text-sm font-bold">Новости</h4>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('chat')}>
+          <CardContent className="pt-6 pb-6 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+              <Icon name="MessageCircle" className="text-white" size={24} />
+            </div>
+            <h4 className="text-sm font-bold">Чат</h4>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('documents')}>
+          <CardContent className="pt-6 pb-6 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+              <Icon name="FileText" className="text-white" size={24} />
+            </div>
+            <h4 className="text-sm font-bold">Документы</h4>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('rules')}>
+          <CardContent className="pt-6 pb-6 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+              <Icon name="Scale" className="text-white" size={24} />
+            </div>
+            <h4 className="text-sm font-bold">Правила</h4>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('gallery')}>
+          <CardContent className="pt-6 pb-6 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+              <Icon name="Image" className="text-white" size={24} />
+            </div>
+            <h4 className="text-sm font-bold">Галерея</h4>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('contacts')}>
+          <CardContent className="pt-6 pb-6 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+              <Icon name="Phone" className="text-white" size={24} />
+            </div>
+            <h4 className="text-sm font-bold">Контакты</h4>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('voting')}>
+          <CardContent className="pt-6 pb-6 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+              <Icon name="Vote" className="text-white" size={24} />
+            </div>
+            <h4 className="text-sm font-bold">Голосования</h4>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );
