@@ -4,14 +4,16 @@ import Header from '@/components/Header';
 import HomePage from '@/components/HomePage';
 import ContentSections from '@/components/ContentSections';
 import Footer from '@/components/Footer';
+import Registration from '@/components/Registration';
 
 type UserRole = 'guest' | 'member' | 'chairman' | 'admin';
 
 const Index = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [userRole, setUserRole] = useState<UserRole>('admin');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole>('guest');
   const [activeSection, setActiveSection] = useState('home');
   const [votes, setVotes] = useState<{ [key: number]: number }>({});
+  const [showRegistration, setShowRegistration] = useState(false);
 
   const handleVote = (pollId: number, option: number) => {
     setVotes({ ...votes, [pollId]: option });
@@ -35,6 +37,21 @@ const Index = () => {
     setUserRole('guest');
     setActiveSection('home');
     toast.success('Вы вышли из личного кабинета');
+  };
+
+  const handleRegisterClick = () => {
+    setShowRegistration(true);
+    setActiveSection('registration');
+  };
+
+  const handleRegistrationSuccess = () => {
+    setShowRegistration(false);
+    setActiveSection('home');
+  };
+
+  const handleRegistrationCancel = () => {
+    setShowRegistration(false);
+    setActiveSection('home');
   };
 
   const polls = [
@@ -104,29 +121,39 @@ const Index = () => {
         setActiveSection={setActiveSection}
         handleLogin={handleLogin}
         handleLogout={handleLogout}
+        onRegisterClick={handleRegisterClick}
       />
 
       <main className="container mx-auto px-4 py-12">
-        {activeSection === 'home' && (
-          <HomePage 
-            polls={polls}
-            news={news}
-            isLoggedIn={isLoggedIn}
-            userRole={userRole}
-            votes={votes}
-            handleVote={handleVote}
-            setActiveSection={setActiveSection}
+        {showRegistration ? (
+          <Registration 
+            onSuccess={handleRegistrationSuccess}
+            onCancel={handleRegistrationCancel}
           />
-        )}
+        ) : (
+          <>
+            {activeSection === 'home' && (
+              <HomePage 
+                polls={polls}
+                news={news}
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+                votes={votes}
+                handleVote={handleVote}
+                setActiveSection={setActiveSection}
+              />
+            )}
 
-        <ContentSections 
-          activeSection={activeSection}
-          news={news}
-          gallery={gallery}
-          isLoggedIn={isLoggedIn}
-          userRole={userRole}
-          setActiveSection={setActiveSection}
-        />
+            <ContentSections 
+              activeSection={activeSection}
+              news={news}
+              gallery={gallery}
+              isLoggedIn={isLoggedIn}
+              userRole={userRole}
+              setActiveSection={setActiveSection}
+            />
+          </>
+        )}
       </main>
 
       <Footer setActiveSection={setActiveSection} />

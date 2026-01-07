@@ -13,9 +13,10 @@ interface HeaderProps {
   setActiveSection: (section: string) => void;
   handleLogin: (role: UserRole) => void;
   handleLogout: () => void;
+  onRegisterClick: () => void;
 }
 
-const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleLogin, handleLogout }: HeaderProps) => {
+const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleLogin, handleLogout, onRegisterClick }: HeaderProps) => {
   const [showLoginMenu, setShowLoginMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -62,9 +63,16 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
               </button>
             ))}
           </nav>
-          <div className="relative">
+          <div className="relative flex items-center gap-3">
             {!isLoggedIn ? (
               <>
+                <Button 
+                  variant="outline"
+                  onClick={onRegisterClick}
+                >
+                  <Icon name="UserPlus" size={18} className="mr-2" />
+                  Регистрация
+                </Button>
                 <Button 
                   className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
                   onClick={() => setShowLoginMenu(!showLoginMenu)}
