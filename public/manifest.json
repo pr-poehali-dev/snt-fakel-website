@@ -1,0 +1,24 @@
+{
+  "name": "СНТ Факел Нижний Новгород",
+  "short_name": "СНТ Факел",
+  "description": "Официальный сайт садоводческого некоммерческого товарищества Факел",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f97316",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://cdn.poehali.dev/projects/c189d705-a585-48be-8b1d-d980c3bb3c63/files/favicon-1767751607830.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.poehali.dev/projects/c189d705-a585-48be-8b1d-d980c3bb3c63/files/favicon-1767751607830.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
