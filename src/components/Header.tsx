@@ -18,6 +18,7 @@ interface HeaderProps {
 
 const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleLogout, onRegisterClick, onLoginClick }: HeaderProps) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const roleNames = {
     guest: 'Гость',
@@ -32,6 +33,14 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+            >
+              <Icon name={showMobileMenu ? "X" : "Menu"} size={24} />
+            </Button>
             <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
               <Icon name="Flame" className="text-white" size={28} />
             </div>
@@ -106,8 +115,81 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
             )}
           </div>
         </div>
+
+        {showMobileMenu && (
+          <div className="md:hidden mb-4">
+            <Card className="border-2 shadow-xl">
+              <CardContent className="p-4 space-y-2">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { setActiveSection('home'); setShowMobileMenu(false); }}
+                >
+                  <Icon name="Home" size={18} className="mr-2" />
+                  Главная
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { setActiveSection('news'); setShowMobileMenu(false); }}
+                >
+                  <Icon name="Newspaper" size={18} className="mr-2" />
+                  Новости
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { setActiveSection('chat'); setShowMobileMenu(false); }}
+                >
+                  <Icon name="MessageCircle" size={18} className="mr-2" />
+                  Чат
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { setActiveSection('documents'); setShowMobileMenu(false); }}
+                >
+                  <Icon name="FileText" size={18} className="mr-2" />
+                  Документы
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { setActiveSection('rules'); setShowMobileMenu(false); }}
+                >
+                  <Icon name="Scale" size={18} className="mr-2" />
+                  Правила
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { setActiveSection('gallery'); setShowMobileMenu(false); }}
+                >
+                  <Icon name="Image" size={18} className="mr-2" />
+                  Галерея
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { setActiveSection('contacts'); setShowMobileMenu(false); }}
+                >
+                  <Icon name="Phone" size={18} className="mr-2" />
+                  Контакты
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { setActiveSection('voting'); setShowMobileMenu(false); }}
+                >
+                  <Icon name="Vote" size={18} className="mr-2" />
+                  Голосования
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
         
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-3 max-w-7xl mx-auto">
+        <div className="hidden md:grid grid-cols-4 md:grid-cols-8 gap-3 max-w-7xl mx-auto">
           <Card className="border hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('home')}>
             <CardContent className="pt-4 pb-4 text-center">
               <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-slate-600 rounded-lg flex items-center justify-center mb-2 mx-auto shadow">
