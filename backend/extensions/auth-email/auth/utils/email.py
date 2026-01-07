@@ -8,7 +8,7 @@ from email.mime.multipart import MIMEMultipart
 
 def is_email_enabled() -> bool:
     """Check if email sending is configured."""
-    return bool(os.environ.get('YANDEX_SMTP_USER') and os.environ.get('YANDEX_SMTP_PASSWORD'))
+    return bool(os.environ.get('YANDEX_SMTP_USER') and os.environ.get('YANDEX_SMTP_PASS'))
 
 
 def generate_code() -> str:
@@ -21,7 +21,7 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: str) -> b
     smtp_host = os.environ.get('YANDEX_SMTP_HOST', 'smtp.yandex.ru')
     smtp_port = int(os.environ.get('YANDEX_SMTP_PORT', '465'))
     smtp_user = os.environ.get('YANDEX_SMTP_USER', '')
-    smtp_password = os.environ.get('YANDEX_SMTP_PASSWORD', '')
+    smtp_password = os.environ.get('YANDEX_SMTP_PASS', '')
     smtp_from = os.environ.get('YANDEX_SMTP_FROM', smtp_user)
 
     if not smtp_user or not smtp_password:
