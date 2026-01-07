@@ -1,17 +1,31 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
+import { toast } from 'sonner';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
-interface DocumentsSectionProps {
-  userRole: UserRole;
+interface Document {
+  id: number;
+  title: string;
+  category: string;
+  date: string;
+  size: string;
+  description: string;
+  fileUrl?: string;
+  fileName?: string;
 }
 
-const DocumentsSection = ({ userRole }: DocumentsSectionProps) => {
-  const documents = [
+interface DocumentsSectionProps {
+  userRole: UserRole;
+  onNavigate?: (section: string) => void;
+}
+
+const defaultDocuments: Document[] = [
+  {
     {
       id: 1,
       title: 'Устав СНТ Факел',
@@ -62,14 +76,68 @@ const DocumentsSection = ({ userRole }: DocumentsSectionProps) => {
     },
   ];
 
+const DocumentsSection = ({ userRole, onNavigate }: DocumentsSectionProps) => {
+  const [documents, setDocuments] = useState<Document[]>(defaultDocuments);
+
+  useEffect(() => {
+    const loadDocuments = () => {
+      const savedDocs = localStorage.getItem('snt_documents');
+      if (savedDocs) {
+        try {
+          setDocuments(JSON.parse(savedDocs));
+        } catch (e) {
+          console.error('Error loading documents:', e);
+        }
+      } else {
+        setDocuments(defaultDocuments);
+      }
+    };
+
+    loadDocuments();
+
+    const handleDocsUpdate = () => {
+      loadDocuments();
+    };
+
+    window.addEventListener('documents-updated', handleDocsUpdate);
+    return () => window.removeEventListener('documents-updated', handleDocsUpdate);
+  }, []);
+
+  const handleDownload = (doc: Document) => {
+    if (!doc.fileUrl) {
+      toast.error('Файл не загружен');
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = doc.fileUrl;
+    link.download = doc.fileName || doc.title;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Файл скачан');
+  };
+
+  const handleView = (doc: Document) => {
+    if (!doc.fileUrl) {
+      toast.error('Файл не загружен');
+      return;
+    }
+
+    window.open(doc.fileUrl, '_blank');
+  };
+
   return (
     <section>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Документы СНТ</h2>
         {(userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && (
-          <Button className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
-            <Icon name="Upload" size={18} className="mr-2" />
-            Загрузить документ
+          <Button 
+            onClick={() => onNavigate?.('documents-manager')}
+            className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+          >
+            <Icon name="Settings" size={18} className="mr-2" />
+            Управление документами
           </Button>
         )}
       </div>
@@ -108,18 +176,19 @@ const DocumentsSection = ({ userRole }: DocumentsSectionProps) => {
                     </div>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
-                    <Button size="sm" variant="outline">
-                      <Icon name="Eye" size={16} className="mr-1" />
-                      Просмотр
-                    </Button>
-                    <Button size="sm" className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
-                      <Icon name="Download" size={16} className="mr-1" />
-                      Скачать
-                    </Button>
-                    {userRole === 'admin' && (
-                      <Button size="sm" variant="ghost">
-                        <Icon name="Trash2" size={16} />
-                      </Button>
+                    {doc.fileUrl ? (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => handleView(doc)}>
+                          <Icon name="Eye" size={16} className="mr-1" />
+                          Просмотр
+                        </Button>
+                        <Button size="sm" className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600" onClick={() => handleDownload(doc)}>
+                          <Icon name="Download" size={16} className="mr-1" />
+                          Скачать
+                        </Button>
+                      </>
+                    ) : (
+                      <span className="text-sm text-muted-foreground italic">Файл не загружен</span>
                     )}
                   </div>
                 </div>

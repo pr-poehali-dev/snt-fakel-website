@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,17 +18,46 @@ interface NewsItem {
 interface NewsSectionProps {
   news: NewsItem[];
   userRole: UserRole;
+  onNavigate?: (section: string) => void;
 }
 
-const NewsSection = ({ news, userRole }: NewsSectionProps) => {
+const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionProps) => {
+  const [news, setNews] = useState<NewsItem[]>(initialNews);
+
+  useEffect(() => {
+    const loadNews = () => {
+      const savedNews = localStorage.getItem('snt_news');
+      if (savedNews) {
+        try {
+          setNews(JSON.parse(savedNews));
+        } catch (e) {
+          console.error('Error loading news:', e);
+        }
+      } else {
+        setNews(initialNews);
+      }
+    };
+
+    loadNews();
+
+    const handleNewsUpdate = () => {
+      loadNews();
+    };
+
+    window.addEventListener('news-updated', handleNewsUpdate);
+    return () => window.removeEventListener('news-updated', handleNewsUpdate);
+  }, [initialNews]);
   return (
     <section>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Объявления и новости</h2>
         {(userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && (
-          <Button className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
-            <Icon name="Plus" size={18} className="mr-2" />
-            Добавить новость
+          <Button 
+            onClick={() => onNavigate?.('news-editor')}
+            className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+          >
+            <Icon name="Settings" size={18} className="mr-2" />
+            Управление новостями
           </Button>
         )}
       </div>

@@ -8,6 +8,8 @@ import MembersList from './MembersList';
 import MassNotification from './MassNotification';
 import SiteSettings from './SiteSettings';
 import PageEditor from './PageEditor';
+import NewsEditor from './NewsEditor';
+import DocumentsManager from './DocumentsManager';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -63,11 +65,19 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
   }
 
   if (activeSection === 'documents') {
-    return <DocumentsSection userRole={userRole} />;
+    return <DocumentsSection userRole={userRole} onNavigate={setActiveSection} />;
   }
 
   if (activeSection === 'news') {
-    return <NewsSection news={news} userRole={userRole} />;
+    return <NewsSection news={news} userRole={userRole} onNavigate={setActiveSection} />;
+  }
+
+  if (activeSection === 'news-editor' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {
+    return <NewsEditor />;
+  }
+
+  if (activeSection === 'documents-manager' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {
+    return <DocumentsManager />;
   }
 
   if (activeSection === 'rules' || activeSection === 'gallery' || activeSection === 'contacts') {
