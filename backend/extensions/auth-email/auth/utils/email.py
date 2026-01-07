@@ -8,7 +8,7 @@ from email.mime.multipart import MIMEMultipart
 
 def is_email_enabled() -> bool:
     """Check if email sending is configured."""
-    return bool(os.environ.get('SMTP_USER') and os.environ.get('SMTP_PASSWORD'))
+    return bool(os.environ.get('YANDEX_SMTP_USER') and os.environ.get('YANDEX_SMTP_PASSWORD'))
 
 
 def generate_code() -> str:
@@ -17,12 +17,12 @@ def generate_code() -> str:
 
 
 def send_email(to_email: str, subject: str, html_body: str, text_body: str) -> bool:
-    """Send email via SMTP (Gmail by default)."""
-    smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
-    smtp_port = int(os.environ.get('SMTP_PORT', '587'))
-    smtp_user = os.environ.get('SMTP_USER', '')
-    smtp_password = os.environ.get('SMTP_PASSWORD', '')
-    smtp_from = os.environ.get('SMTP_FROM', smtp_user)
+    """Send email via SMTP (Yandex by default)."""
+    smtp_host = os.environ.get('YANDEX_SMTP_HOST', 'smtp.yandex.ru')
+    smtp_port = int(os.environ.get('YANDEX_SMTP_PORT', '465'))
+    smtp_user = os.environ.get('YANDEX_SMTP_USER', '')
+    smtp_password = os.environ.get('YANDEX_SMTP_PASSWORD', '')
+    smtp_from = os.environ.get('YANDEX_SMTP_FROM', smtp_user)
 
     if not smtp_user or not smtp_password:
         return False
@@ -36,10 +36,15 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: str) -> b
     msg.attach(MIMEText(html_body, 'html', 'utf-8'))
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(smtp_from, to_email, msg.as_string())
+        if smtp_port == 465:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10) as server:
+                server.login(smtp_user, smtp_password)
+                server.sendmail(smtp_from, to_email, msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(smtp_from, to_email, msg.as_string())
         return True
     except (smtplib.SMTPException, OSError):
         return False

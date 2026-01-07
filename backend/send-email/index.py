@@ -40,11 +40,11 @@ def handler(event: dict, context) -> dict:
                 'body': json.dumps({'error': 'Missing required fields: to_email, subject, html_content'})
             }
         
-        smtp_host = os.environ.get('SMTP_HOST')
-        smtp_port = int(os.environ.get('SMTP_PORT', '587'))
-        smtp_user = os.environ.get('SMTP_USER')
-        smtp_password = os.environ.get('SMTP_PASSWORD')
-        from_email = os.environ.get('SMTP_FROM_EMAIL')
+        smtp_host = os.environ.get('YANDEX_SMTP_HOST')
+        smtp_port = int(os.environ.get('YANDEX_SMTP_PORT', '465'))
+        smtp_user = os.environ.get('YANDEX_SMTP_USER')
+        smtp_password = os.environ.get('YANDEX_SMTP_PASSWORD')
+        from_email = os.environ.get('YANDEX_SMTP_FROM')
         
         if not all([smtp_host, smtp_user, smtp_password, from_email]):
             return {

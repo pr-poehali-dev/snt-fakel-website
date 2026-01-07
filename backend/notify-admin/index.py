@@ -38,11 +38,11 @@ def handler(event: dict, context) -> dict:
                 'body': json.dumps({'error': 'Missing user_data'})
             }
         
-        smtp_host = os.environ.get('SMTP_HOST')
-        smtp_port = int(os.environ.get('SMTP_PORT', '587'))
-        smtp_user = os.environ.get('SMTP_USER')
-        smtp_password = os.environ.get('SMTP_PASSWORD')
-        from_email = os.environ.get('SMTP_FROM_EMAIL')
+        smtp_host = os.environ.get('YANDEX_SMTP_HOST')
+        smtp_port = int(os.environ.get('YANDEX_SMTP_PORT', '465'))
+        smtp_user = os.environ.get('YANDEX_SMTP_USER')
+        smtp_password = os.environ.get('YANDEX_SMTP_PASSWORD')
+        from_email = os.environ.get('YANDEX_SMTP_FROM')
         admin_email = os.environ.get('ADMIN_EMAIL')
         
         if not all([smtp_host, smtp_user, smtp_password, from_email, admin_email]):
@@ -106,10 +106,15 @@ Email: {user_data.get('email', '')}
         part2 = MIMEText(html_content, 'html', 'utf-8')
         msg.attach(part2)
         
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.send_message(msg)
+        if smtp_port == 465:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+                server.login(smtp_user, smtp_password)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.send_message(msg)
         
         return {
             'statusCode': 200,
