@@ -50,24 +50,8 @@ const Login = ({ onSuccess, onCancel, onRegisterClick }: LoginProps) => {
       setIsLoading(false);
 
       if (user) {
-        // Проверяем статус пользователя
-        if (user.status === 'pending') {
-          toast.error('Ваша регистрация ожидает подтверждения администратором');
-          return;
-        }
-        
-        if (user.status === 'rejected') {
-          toast.error('Ваша регистрация была отклонена. Обратитесь к администратору');
-          return;
-        }
-
-        // Только активные пользователи могут войти
-        if (user.status === 'active') {
-          toast.success(`Добро пожаловать, ${user.firstName}!`);
-          onSuccess(user.email, user.role || 'member');
-        } else {
-          toast.error('Доступ запрещён. Обратитесь к администратору');
-        }
+        toast.success(`Добро пожаловать, ${user.firstName}!`);
+        onSuccess(user.email, user.role || 'member');
       } else {
         toast.error('Неверный email или пароль');
       }

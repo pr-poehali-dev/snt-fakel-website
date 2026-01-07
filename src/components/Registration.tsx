@@ -197,7 +197,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       ...formData,
       role: 'member', // По умолчанию все новые пользователи - члены СНТ
       registeredAt: new Date().toISOString(),
-      status: 'pending' // Ожидает подтверждения администратора
+      status: 'active' // Автоматически активируем пользователя
     };
 
     users.push(newUser);
