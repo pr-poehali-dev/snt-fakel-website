@@ -1,0 +1,8 @@
+{
+  "tests": [{
+    "name": "Check secrets status",
+    "method": "GET",
+    "path": "/",
+    "expectedStatus": 200
+  }]
+}
