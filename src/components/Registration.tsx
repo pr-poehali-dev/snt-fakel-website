@@ -110,8 +110,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     // Проверка обязательных полей
     if (!formData.lastName.trim()) newErrors.lastName = 'Обязательное поле';
     if (!formData.firstName.trim()) newErrors.firstName = 'Обязательное поле';
-    if (!formData.middleName.trim()) newErrors.middleName = 'Обязательное поле';
-    if (!formData.birthDate) newErrors.birthDate = 'Обязательное поле';
+    // middleName и birthDate теперь необязательные
     if (!formData.phone.trim()) newErrors.phone = 'Обязательное поле';
     if (!formData.email.trim()) newErrors.email = 'Обязательное поле';
     if (!formData.plotNumber.trim()) newErrors.plotNumber = 'Обязательное поле';
@@ -161,7 +160,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     if (!formData.ownerIsSame) {
       if (!formData.ownerLastName.trim()) newErrors.ownerLastName = 'Обязательное поле';
       if (!formData.ownerFirstName.trim()) newErrors.ownerFirstName = 'Обязательное поле';
-      if (!formData.ownerMiddleName.trim()) newErrors.ownerMiddleName = 'Обязательное поле';
+      // ownerMiddleName необязательное
     }
 
     // Если флажок установлен, проверяем документы
@@ -255,7 +254,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
                   {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="middleName">Отчество <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="middleName">Отчество</Label>
                   <Input
                     id="middleName"
                     value={formData.middleName}
@@ -267,7 +266,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
               </div>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="birthDate">Дата рождения <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="birthDate">Дата рождения</Label>
                   <Input
                     id="birthDate"
                     type="date"
@@ -344,7 +343,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
                     {errors.ownerFirstName && <p className="text-xs text-red-500">{errors.ownerFirstName}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="ownerMiddleName">Отчество собственника <span className="text-red-500">*</span></Label>
+                    <Label htmlFor="ownerMiddleName">Отчество собственника</Label>
                     <Input
                       id="ownerMiddleName"
                       value={formData.ownerMiddleName}
