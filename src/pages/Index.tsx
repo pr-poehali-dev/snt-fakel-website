@@ -6,10 +6,12 @@ import ContentSections from '@/components/ContentSections';
 import Footer from '@/components/Footer';
 import Registration from '@/components/Registration';
 import Login from '@/components/Login';
+import SiteProtection from '@/components/SiteProtection';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 const Index = () => {
+  const [siteAccess, setSiteAccess] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>('guest');
   const [currentUserEmail, setCurrentUserEmail] = useState('');
@@ -19,6 +21,11 @@ const Index = () => {
   const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
+    const access = localStorage.getItem('snt_site_access');
+    if (access === 'granted') {
+      setSiteAccess(true);
+    }
+
     const usersJSON = localStorage.getItem('snt_users');
     const users = usersJSON ? JSON.parse(usersJSON) : [];
     
@@ -155,6 +162,10 @@ const Index = () => {
     { id: 3, title: 'Территория зимой', season: 'Зима 2025' },
     { id: 4, title: 'Праздник урожая', season: 'Осень 2025' },
   ];
+
+  if (!siteAccess) {
+    return <SiteProtection onSuccess={() => setSiteAccess(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-purple-50 to-pink-50">
