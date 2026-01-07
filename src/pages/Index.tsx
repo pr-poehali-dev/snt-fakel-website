@@ -5,8 +5,11 @@ import HomePage from '@/components/HomePage';
 import ContentSections from '@/components/ContentSections';
 import Footer from '@/components/Footer';
 
+type UserRole = 'guest' | 'member' | 'admin';
+
 const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole>('guest');
   const [activeSection, setActiveSection] = useState('home');
   const [votes, setVotes] = useState<{ [key: number]: number }>({});
 
@@ -15,9 +18,15 @@ const Index = () => {
     toast.success('Ваш голос учтён!');
   };
 
-  const handleLogin = () => {
+  const handleLogin = (role: UserRole = 'member') => {
     setIsLoggedIn(true);
-    toast.success('Добро пожаловать в СНТ Факел!');
+    setUserRole(role);
+    const roleNames = {
+      guest: 'Гость',
+      member: 'Член СНТ',
+      admin: 'Администратор'
+    };
+    toast.success(`Добро пожаловать в СНТ Факел! Роль: ${roleNames[role]}`);
   };
 
   const polls = [
@@ -82,6 +91,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-purple-50 to-pink-50">
       <Header 
         isLoggedIn={isLoggedIn}
+        userRole={userRole}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
         handleLogin={handleLogin}
@@ -93,6 +103,7 @@ const Index = () => {
             polls={polls}
             news={news}
             isLoggedIn={isLoggedIn}
+            userRole={userRole}
             votes={votes}
             handleVote={handleVote}
             setActiveSection={setActiveSection}
@@ -104,6 +115,7 @@ const Index = () => {
           news={news}
           gallery={gallery}
           isLoggedIn={isLoggedIn}
+          userRole={userRole}
         />
       </main>
 

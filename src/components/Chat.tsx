@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
+type UserRole = 'guest' | 'member' | 'admin';
+
 interface Message {
   id: number;
   userId: number;
@@ -19,9 +21,10 @@ interface Message {
 
 interface ChatProps {
   isLoggedIn: boolean;
+  userRole: UserRole;
 }
 
-const Chat = ({ isLoggedIn }: ChatProps) => {
+const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -88,6 +91,11 @@ const Chat = ({ isLoggedIn }: ChatProps) => {
       return;
     }
 
+    if (userRole === 'guest') {
+      toast.error('Только члены СНТ могут писать в чат');
+      return;
+    }
+
     if (newMessage.trim() === '') {
       return;
     }
@@ -96,14 +104,19 @@ const Chat = ({ isLoggedIn }: ChatProps) => {
     const hours = currentTime.getHours().toString().padStart(2, '0');
     const minutes = currentTime.getMinutes().toString().padStart(2, '0');
 
+    const roleNames = {
+      member: 'Участник',
+      admin: 'Администратор'
+    };
+
     const message: Message = {
       id: messages.length + 1,
       userId: 999,
       userName: 'Вы',
-      userRole: 'Участник',
+      userRole: roleNames[userRole],
       text: newMessage,
       timestamp: `${hours}:${minutes}`,
-      avatar: '👤'
+      avatar: userRole === 'admin' ? '⭐' : '👤'
     };
 
     setMessages([...messages, message]);
@@ -173,7 +186,7 @@ const Chat = ({ isLoggedIn }: ChatProps) => {
             </div>
             
             <div className="border-t p-4">
-              {isLoggedIn ? (
+              {isLoggedIn && (userRole === 'member' || userRole === 'admin') ? (
                 <form onSubmit={handleSendMessage} className="flex gap-2">
                   <Input
                     placeholder="Написать сообщение..."
@@ -191,7 +204,7 @@ const Chat = ({ isLoggedIn }: ChatProps) => {
               ) : (
                 <div className="text-center py-2">
                   <p className="text-sm text-muted-foreground">
-                    Войдите в личный кабинет для отправки сообщений
+                    {!isLoggedIn ? 'Войдите в личный кабинет для отправки сообщений' : 'Только члены СНТ могут писать в чат'}
                   </p>
                 </div>
               )}

@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 
+type UserRole = 'guest' | 'member' | 'admin';
+
 interface Poll {
   id: number;
   title: string;
@@ -24,12 +26,13 @@ interface HomePageProps {
   polls: Poll[];
   news: NewsItem[];
   isLoggedIn: boolean;
+  userRole: UserRole;
   votes: { [key: number]: number };
   handleVote: (pollId: number, option: number) => void;
   setActiveSection: (section: string) => void;
 }
 
-const HomePage = ({ polls, news, isLoggedIn, votes, handleVote, setActiveSection }: HomePageProps) => {
+const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setActiveSection }: HomePageProps) => {
   return (
     <>
       <section className="mb-16 text-center">
@@ -116,7 +119,7 @@ const HomePage = ({ polls, news, isLoggedIn, votes, handleVote, setActiveSection
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{option.votes} голосов</span>
-                        {isLoggedIn && !isVoted && (
+                        {isLoggedIn && (userRole === 'member' || userRole === 'admin') && !isVoted && (
                           <Button
                             size="sm"
                             variant="ghost"
@@ -137,9 +140,9 @@ const HomePage = ({ polls, news, isLoggedIn, votes, handleVote, setActiveSection
                     </div>
                   );
                 })}
-                {!isLoggedIn && (
+                {(!isLoggedIn || userRole === 'guest') && (
                   <p className="text-sm text-muted-foreground italic pt-2 border-t">
-                    Войдите в личный кабинет для участия в голосовании
+                    {!isLoggedIn ? 'Войдите в личный кабинет для участия в голосовании' : 'Только члены СНТ могут участвовать в голосовании'}
                   </p>
                 )}
               </CardContent>

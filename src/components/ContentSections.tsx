@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import Chat from './Chat';
 
+type UserRole = 'guest' | 'member' | 'admin';
+
 interface NewsItem {
   id: number;
   title: string;
@@ -24,11 +26,12 @@ interface ContentSectionsProps {
   news: NewsItem[];
   gallery: GalleryItem[];
   isLoggedIn: boolean;
+  userRole: UserRole;
 }
 
-const ContentSections = ({ activeSection, news, gallery, isLoggedIn }: ContentSectionsProps) => {
+const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole }: ContentSectionsProps) => {
   if (activeSection === 'chat') {
-    return <Chat isLoggedIn={isLoggedIn} />;
+    return <Chat isLoggedIn={isLoggedIn} userRole={userRole} />;
   }
 
   if (activeSection === 'documents') {
@@ -85,7 +88,15 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn }: ContentSe
 
     return (
       <section>
-        <h2 className="text-4xl font-bold mb-8">Документы СНТ</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-4xl font-bold">Документы СНТ</h2>
+          {userRole === 'admin' && (
+            <Button className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
+              <Icon name="Upload" size={18} className="mr-2" />
+              Загрузить документ
+            </Button>
+          )}
+        </div>
         <Tabs defaultValue="all" className="space-y-6">
           <TabsList>
             <TabsTrigger value="all">Все документы</TabsTrigger>
@@ -129,6 +140,11 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn }: ContentSe
                         <Icon name="Download" size={16} className="mr-1" />
                         Скачать
                       </Button>
+                      {userRole === 'admin' && (
+                        <Button size="sm" variant="ghost">
+                          <Icon name="Trash2" size={16} />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -260,7 +276,15 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn }: ContentSe
   if (activeSection === 'news') {
     return (
       <section>
-        <h2 className="text-4xl font-bold mb-8">Объявления и новости</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-4xl font-bold">Объявления и новости</h2>
+          {userRole === 'admin' && (
+            <Button className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
+              <Icon name="Plus" size={18} className="mr-2" />
+              Добавить новость
+            </Button>
+          )}
+        </div>
         <Tabs defaultValue="all" className="space-y-6">
           <TabsList>
             <TabsTrigger value="all">Все</TabsTrigger>
@@ -273,7 +297,19 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn }: ContentSe
                 <CardHeader>
                   <div className="flex items-center justify-between mb-2">
                     <Badge>{item.category}</Badge>
-                    <span className="text-sm text-muted-foreground">{item.date}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">{item.date}</span>
+                      {userRole === 'admin' && (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost">
+                            <Icon name="Pencil" size={14} />
+                          </Button>
+                          <Button size="sm" variant="ghost">
+                            <Icon name="Trash2" size={14} />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <CardTitle>{item.title}</CardTitle>
                 </CardHeader>
@@ -427,54 +463,123 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn }: ContentSe
   }
 
   if (activeSection === 'profile' && isLoggedIn) {
+    const roleNames = {
+      guest: 'Гость',
+      member: 'Член СНТ',
+      admin: 'Администратор'
+    };
+
     return (
       <section>
-        <h2 className="text-4xl font-bold mb-8">Личный кабинет участника</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-4xl font-bold">Личный кабинет</h2>
+          <Badge className={`text-lg px-4 py-2 ${userRole === 'admin' ? 'bg-gradient-to-r from-orange-500 to-pink-500' : ''}`}>
+            {roleNames[userRole]}
+          </Badge>
+        </div>
         <div className="grid md:grid-cols-3 gap-6">
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Информация об участке</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Номер участка</p>
-                  <p className="text-lg font-semibold">№ 42</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Площадь</p>
-                  <p className="text-lg font-semibold">6 соток</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Членский взнос</p>
-                  <Badge className="bg-green-500">Оплачен</Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Статус</p>
-                  <Badge>Активный член</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Быстрые действия</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
-                <Icon name="Receipt" size={18} className="mr-2" />
-                История платежей
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Icon name="MessageSquare" size={18} className="mr-2" />
-                Обращение в правление
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Icon name="Download" size={18} className="mr-2" />
-                Скачать документы
-              </Button>
-            </CardContent>
-          </Card>
+          {userRole === 'admin' ? (
+            <>
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Icon name="Shield" className="text-primary" />
+                    Панель администратора
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Всего участников</p>
+                      <p className="text-2xl font-bold">156</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Активных голосований</p>
+                      <p className="text-2xl font-bold">2</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Новостей</p>
+                      <p className="text-2xl font-bold">12</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Документов</p>
+                      <p className="text-2xl font-bold">24</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Управление</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Icon name="Users" size={18} className="mr-2" />
+                    Список участников
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Icon name="Vote" size={18} className="mr-2" />
+                    Создать голосование
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Icon name="FileText" size={18} className="mr-2" />
+                    Управление документами
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Icon name="Settings" size={18} className="mr-2" />
+                    Настройки сайта
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>Информация об участке</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Номер участка</p>
+                      <p className="text-lg font-semibold">№ 42</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Площадь</p>
+                      <p className="text-lg font-semibold">6 соток</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Членский взнос</p>
+                      <Badge className="bg-green-500">Оплачен</Badge>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Статус</p>
+                      <Badge>Активный член</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Быстрые действия</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Icon name="Receipt" size={18} className="mr-2" />
+                    История платежей
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Icon name="MessageSquare" size={18} className="mr-2" />
+                    Обращение в правление
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Icon name="Download" size={18} className="mr-2" />
+                    Скачать документы
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </section>
     );
