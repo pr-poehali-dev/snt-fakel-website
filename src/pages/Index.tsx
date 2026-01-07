@@ -24,15 +24,20 @@ const Index = () => {
     const usersJSON = localStorage.getItem('snt_users');
     const users = usersJSON ? JSON.parse(usersJSON) : [];
     
-    const adminExists = users.find((u: any) => u.email === 'admin@sntfakel.ru');
+    const oldAdminIndex = users.findIndex((u: any) => u.email === 'admin@sntfakel.ru');
+    if (oldAdminIndex !== -1) {
+      users.splice(oldAdminIndex, 1);
+    }
+    
+    const adminExists = users.find((u: any) => u.email === 'assapan-nn@yandex.ru');
     
     if (!adminExists) {
       const adminUser = {
         lastName: 'Администратор',
         firstName: 'Системный',
         middleName: '',
-        email: 'admin@sntfakel.ru',
-        password: 'Админ123!',
+        email: 'assapan-nn@yandex.ru',
+        password: 'Admin1#',
         phone: '79999999999',
         plotNumber: '1',
         role: 'admin',
