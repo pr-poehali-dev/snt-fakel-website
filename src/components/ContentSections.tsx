@@ -38,7 +38,7 @@ interface ContentSectionsProps {
 }
 
 const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, currentUserEmail, setActiveSection }: ContentSectionsProps) => {
-  const publicSections = ['home', 'gallery', 'contacts'];
+  const publicSections = ['home', 'gallery', 'contacts', 'rules'];
   
   if (!isLoggedIn && !publicSections.includes(activeSection)) {
     return (
