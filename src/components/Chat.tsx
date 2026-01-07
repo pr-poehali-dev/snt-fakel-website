@@ -22,14 +22,15 @@ interface Message {
 interface ChatProps {
   isLoggedIn: boolean;
   userRole: UserRole;
+  currentUserEmail: string;
 }
 
-const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
+const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       userId: 1,
-      userName: 'Иван Петров',
+      userName: 'Иван Петров (уч. 15)',
       userRole: 'Председатель',
       text: 'Добрый день! Напоминаю о субботнике в эту субботу с 10:00.',
       timestamp: '10:30',
@@ -38,7 +39,7 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
     {
       id: 2,
       userId: 2,
-      userName: 'Мария Сидорова',
+      userName: 'Мария Сидорова (уч. 42)',
       userRole: 'Участник',
       text: 'Здравствуйте! Подскажите, когда будет вывоз мусора?',
       timestamp: '11:15',
@@ -47,7 +48,7 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
     {
       id: 3,
       userId: 1,
-      userName: 'Иван Петров',
+      userName: 'Иван Петров (уч. 15)',
       userRole: 'Председатель',
       text: 'Вывоз мусора во вторник и пятницу с 9:00 до 11:00.',
       timestamp: '11:20',
@@ -56,7 +57,7 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
     {
       id: 4,
       userId: 3,
-      userName: 'Алексей Новиков',
+      userName: 'Алексей Новиков (уч. 8)',
       userRole: 'Участник',
       text: 'На субботнике буду! Что нужно взять с собой?',
       timestamp: '12:05',
@@ -65,7 +66,7 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
     {
       id: 5,
       userId: 1,
-      userName: 'Иван Петров',
+      userName: 'Иван Петров (уч. 15)',
       userRole: 'Председатель',
       text: 'Грабли, мешки для мусора и хорошее настроение! 😊',
       timestamp: '12:10',
@@ -111,10 +112,21 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
       admin: 'Администратор'
     };
 
+    // Получаем данные текущего пользователя из localStorage
+    const usersJSON = localStorage.getItem('snt_users');
+    let currentUserName = 'Вы';
+    if (usersJSON && currentUserEmail) {
+      const users = JSON.parse(usersJSON);
+      const user = users.find((u: any) => u.email === currentUserEmail);
+      if (user) {
+        currentUserName = `${user.firstName} ${user.lastName} (уч. ${user.plotNumber})`;
+      }
+    }
+
     const message: Message = {
       id: messages.length + 1,
       userId: 999,
-      userName: 'Вы',
+      userName: currentUserName,
       userRole: roleNames[userRole],
       text: newMessage,
       timestamp: `${hours}:${minutes}`,
@@ -148,7 +160,7 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
             <div className="h-[500px] overflow-y-auto p-6" ref={scrollRef}>
               <div className="space-y-4">
                 {messages.map((message) => {
-                  const isOwnMessage = message.userName === 'Вы';
+                  const isOwnMessage = message.userId === 999;
                   return (
                     <div
                       key={message.id}
@@ -159,15 +171,11 @@ const Chat = ({ isLoggedIn, userRole }: ChatProps) => {
                       </Avatar>
                       <div className={`flex-1 ${isOwnMessage ? 'items-end' : ''}`}>
                         <div className="flex items-center gap-2 mb-1">
-                          {!isOwnMessage && (
-                            <>
-                              <span className="font-semibold text-sm">{message.userName}</span>
-                              {message.userRole === 'Председатель' && (
-                                <Badge variant="outline" className="text-xs bg-gradient-to-r from-orange-100 to-pink-100 border-orange-300">
-                                  {message.userRole}
-                                </Badge>
-                              )}
-                            </>
+                          <span className="font-semibold text-sm">{message.userName}</span>
+                          {message.userRole === 'Председатель' && (
+                            <Badge variant="outline" className="text-xs bg-gradient-to-r from-orange-100 to-pink-100 border-orange-300">
+                              {message.userRole}
+                            </Badge>
                           )}
                           <span className="text-xs text-muted-foreground">{message.timestamp}</span>
                         </div>

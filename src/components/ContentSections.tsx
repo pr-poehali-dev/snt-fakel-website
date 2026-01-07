@@ -33,7 +33,7 @@ interface ContentSectionsProps {
 
 const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, currentUserEmail, setActiveSection }: ContentSectionsProps) => {
   if (activeSection === 'chat') {
-    return <Chat isLoggedIn={isLoggedIn} userRole={userRole} />;
+    return <Chat isLoggedIn={isLoggedIn} userRole={userRole} currentUserEmail={currentUserEmail} />;
   }
 
   if (activeSection === 'documents') {
