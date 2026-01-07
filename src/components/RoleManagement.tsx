@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -231,9 +231,8 @@ const RoleManagement = () => {
                   const isExpanded = expandedUser === user.email;
                   
                   return (
-                    <>
+                    <React.Fragment key={user.email}>
                       <tr 
-                        key={user.email} 
                         className="border-b hover:bg-gray-50 cursor-pointer"
                         onClick={() => setExpandedUser(isExpanded ? null : user.email)}
                       >
@@ -281,7 +280,7 @@ const RoleManagement = () => {
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr key={`${user.email}-details`} className="bg-blue-50 border-b">
+                        <tr className="bg-blue-50 border-b">
                           <td colSpan={6} className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                               <div>
@@ -334,7 +333,7 @@ const RoleManagement = () => {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   );
                 })}
               </tbody>
