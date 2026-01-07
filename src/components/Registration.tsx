@@ -160,55 +160,28 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      toast.error('Пожалуйста, исправьте ошибки в форме');
-      return;
-    }
-
-    const usersJSON = localStorage.getItem('snt_users');
-    const users = usersJSON ? JSON.parse(usersJSON) : [];
-    
-    const existingUserByEmail = users.find((u: any) => u.email === formData.email);
-    if (existingUserByEmail) {
-      toast.error('Пользователь с таким email уже зарегистрирован');
-      return;
-    }
-
-    const existingUserByPhone = users.find((u: any) => u.phone === formData.phone);
-    if (existingUserByPhone) {
-      toast.error('Пользователь с таким номером телефона уже зарегистрирован');
-      return;
-    }
-
-    const existingUserByName = users.find((u: any) => 
-      u.lastName === formData.lastName && 
-      u.firstName === formData.firstName && 
-      u.middleName === formData.middleName
-    );
-    if (existingUserByName) {
-      toast.error('Пользователь с такими ФИО уже зарегистрирован');
-      return;
-    }
-
-    if (!emailVerified) {
-      setShowEmailVerification(true);
-      return;
-    }
-
+  const saveUserToDatabase = () => {
     const newUser = {
-      ...formData,
+      email: formData.email,
+      password: formData.password,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      middleName: formData.middleName,
+      phone: formData.phone,
+      plotNumber: formData.plotNumber,
+      birthDate: formData.birthDate || null,
       role: 'member',
-      registeredAt: new Date().toISOString(),
       status: 'active',
+      ownerIsSame: formData.ownerIsSame,
+      ownerFirstName: formData.ownerFirstName || null,
+      ownerLastName: formData.ownerLastName || null,
+      ownerMiddleName: formData.ownerMiddleName || null,
+      landDocNumber: formData.landDocNumber || null,
+      houseDocNumber: formData.houseDocNumber || null,
       emailVerified: true,
-      phoneVerified: false
+      phoneVerified: false,
+      registeredAt: new Date().toISOString()
     };
-
-    users.push(newUser);
-    localStorage.setItem('snt_users', JSON.stringify(users));
 
     fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
       method: 'POST',
@@ -222,18 +195,34 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       fetch('https://functions.poehali.dev/cf474001-23d9-421d-a5b8-99244efdddfc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.dumps({ user_data: newUser })
+        body: JSON.stringify({ user_data: newUser })
       }).catch(error => {
         console.warn('Ошибка отправки уведомления администратору:', error);
       });
       
-      toast.success('Регистрация успешно завершена! Добро пожаловать в личный кабинет!');
+      toast.success('Регистрация завершена! Добро пожаловать!');
       onSuccess(formData.email, 'member');
     })
     .catch(error => {
       console.error('Ошибка сохранения пользователя в БД:', error);
       toast.error('Ошибка регистрации. Попробуйте позже.');
     });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      toast.error('Пожалуйста, исправьте ошибки в форме');
+      return;
+    }
+
+    if (!emailVerified) {
+      setShowEmailVerification(true);
+      return;
+    }
+
+    saveUserToDatabase();
   };
 
   const passwordStrength = validatePassword(formData.password);
@@ -246,7 +235,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
           setEmailVerified(true);
           setShowEmailVerification(false);
           toast.success('Email подтверждён');
-          handleSubmit(new Event('submit') as any);
+          saveUserToDatabase();
         }}
         onCancel={() => setShowEmailVerification(false)}
       />
