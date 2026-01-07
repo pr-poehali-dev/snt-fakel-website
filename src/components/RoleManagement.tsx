@@ -1,107 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
-import UserStatisticsCards from './role-management/UserStatisticsCards';
-import UserFilters from './role-management/UserFilters';
-import UserListItem from './role-management/UserListItem';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 type UserStatus = 'pending' | 'active' | 'rejected';
 
 interface User {
-  id: number;
-  name: string;
+  lastName: string;
+  firstName: string;
+  middleName: string;
+  birthDate: string;
+  phone: string;
   email: string;
+  plotNumber: string;
+  password: string;
+  ownerIsSame: boolean;
+  ownerLastName: string;
+  ownerFirstName: string;
+  ownerMiddleName: string;
+  landDocNumber: string;
+  houseDocNumber: string;
   role: UserRole;
-  plotNumber?: string;
-  joinDate: string;
   status: UserStatus;
+  registeredAt: string;
 }
 
 const RoleManagement = () => {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: 1,
-      name: 'Иван Петров',
-      email: 'ivan@example.com',
-      role: 'chairman',
-      plotNumber: '12',
-      joinDate: '2020-03-15',
-      status: 'active'
-    },
-    {
-      id: 2,
-      name: 'Мария Сидорова',
-      email: 'maria@example.com',
-      role: 'member',
-      plotNumber: '45',
-      joinDate: '2021-05-20',
-      status: 'active'
-    },
-    {
-      id: 3,
-      name: 'Алексей Новиков',
-      email: 'alexey@example.com',
-      role: 'member',
-      plotNumber: '78',
-      joinDate: '2019-08-10',
-      status: 'active'
-    },
-    {
-      id: 4,
-      name: 'Елена Кузнецова',
-      email: 'elena@example.com',
-      role: 'board_member',
-      plotNumber: '23',
-      joinDate: '2022-01-12',
-      status: 'active'
-    },
-    {
-      id: 5,
-      name: 'Дмитрий Соколов',
-      email: 'dmitry@example.com',
-      role: 'admin',
-      plotNumber: '56',
-      joinDate: '2018-11-05',
-      status: 'active'
-    },
-    {
-      id: 6,
-      name: 'Ольга Васильева',
-      email: 'olga@example.com',
-      role: 'board_member',
-      plotNumber: '34',
-      joinDate: '2021-03-18',
-      status: 'active'
-    }
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<UserStatus | 'all'>('all');
 
-  const loadUsersFromStorage = () => {
+  useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
     if (usersJSON) {
       const storedUsers = JSON.parse(usersJSON);
-      const formattedUsers = storedUsers.map((u: any, idx: number) => ({
-        id: idx + 100,
-        name: `${u.lastName} ${u.firstName} ${u.middleName || ''}`.trim(),
-        email: u.email,
-        role: u.role || 'member',
-        plotNumber: u.plotNumber,
-        joinDate: u.registeredAt ? new Date(u.registeredAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        status: u.status || 'pending'
-      }));
-      setUsers([...users, ...formattedUsers]);
+      setUsers(storedUsers);
     }
-  };
-
-  useState(() => {
-    loadUsersFromStorage();
-  });
+  }, []);
 
   const roleNames = {
     guest: 'Гость',
@@ -119,58 +68,37 @@ const RoleManagement = () => {
     admin: 'bg-gradient-to-r from-orange-100 to-pink-100 text-orange-700 border-orange-300'
   };
 
-  const handleChangeRole = (userId: number, newRole: UserRole) => {
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, role: newRole } : user
-    ));
+  const handleChangeRole = (userEmail: string, newRole: UserRole) => {
+    const updatedUsers = users.map(user => 
+      user.email === userEmail ? { ...user, role: newRole } : user
+    );
+    setUsers(updatedUsers);
+    localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
     toast.success(`Роль пользователя изменена на "${roleNames[newRole]}"`);
   };
 
-  const handleApproveUser = (userId: number) => {
+  const handleApproveUser = (userEmail: string) => {
     const updatedUsers = users.map(user => 
-      user.id === userId ? { ...user, status: 'active' as UserStatus } : user
+      user.email === userEmail ? { ...user, status: 'active' as UserStatus } : user
     );
     setUsers(updatedUsers);
-    
-    const user = users.find(u => u.id === userId);
-    if (user && user.id >= 100) {
-      const usersJSON = localStorage.getItem('snt_users');
-      if (usersJSON) {
-        const storedUsers = JSON.parse(usersJSON);
-        const updated = storedUsers.map((u: any) => 
-          u.email === user.email ? { ...u, status: 'active' } : u
-        );
-        localStorage.setItem('snt_users', JSON.stringify(updated));
-      }
-    }
-    
+    localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
     toast.success('Регистрация подтверждена');
   };
 
-  const handleRejectUser = (userId: number) => {
+  const handleRejectUser = (userEmail: string) => {
     const updatedUsers = users.map(user => 
-      user.id === userId ? { ...user, status: 'rejected' as UserStatus } : user
+      user.email === userEmail ? { ...user, status: 'rejected' as UserStatus } : user
     );
     setUsers(updatedUsers);
-    
-    const user = users.find(u => u.id === userId);
-    if (user && user.id >= 100) {
-      const usersJSON = localStorage.getItem('snt_users');
-      if (usersJSON) {
-        const storedUsers = JSON.parse(usersJSON);
-        const updated = storedUsers.map((u: any) => 
-          u.email === user.email ? { ...u, status: 'rejected' } : u
-        );
-        localStorage.setItem('snt_users', JSON.stringify(updated));
-      }
-    }
-    
+    localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
     toast.success('Регистрация отклонена');
   };
 
   const filteredUsers = users.filter(user => {
+    const fullName = `${user.lastName} ${user.firstName} ${user.middleName}`.toLowerCase();
     const matchesSearch = 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      fullName.includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.plotNumber?.includes(searchQuery);
     
@@ -195,42 +123,222 @@ const RoleManagement = () => {
           <Icon name="UserCog" className="text-white" size={24} />
         </div>
         <div>
-          <h2 className="text-4xl font-bold">Управление ролями</h2>
-          <p className="text-muted-foreground">Назначайте роли и управляйте доступом пользователей</p>
+          <h2 className="text-4xl font-bold">База пользователей</h2>
+          <p className="text-muted-foreground">Полная информация о всех зарегистрированных пользователях</p>
         </div>
       </div>
 
-      <UserStatisticsCards stats={stats} />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-3xl font-bold text-blue-600">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">Всего пользователей</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-3xl font-bold text-green-600">{stats.active}</p>
+              <p className="text-sm text-muted-foreground">Активных</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-3xl font-bold text-orange-600">{stats.pending}</p>
+              <p className="text-sm text-muted-foreground">Ожидают подтверждения</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-3xl font-bold text-purple-600">{stats.admins}</p>
+              <p className="text-sm text-muted-foreground">Администраторов</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      <UserFilters 
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
-        filterRole={filterRole}
-        setFilterRole={setFilterRole}
-      />
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <input
+                  type="text"
+                  placeholder="Поиск по ФИО, email, номеру участка..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+            <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Статус" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все статусы</SelectItem>
+                <SelectItem value="active">Активные</SelectItem>
+                <SelectItem value="pending">Ожидают</SelectItem>
+                <SelectItem value="rejected">Отклонённые</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterRole} onValueChange={(value: any) => setFilterRole(value)}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Роль" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все роли</SelectItem>
+                <SelectItem value="member">Член СНТ</SelectItem>
+                <SelectItem value="board_member">Член правления</SelectItem>
+                <SelectItem value="chairman">Председатель</SelectItem>
+                <SelectItem value="admin">Администратор</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Список пользователей ({filteredUsers.length})</CardTitle>
+          <CardTitle>Таблица пользователей ({filteredUsers.length})</CardTitle>
           <CardDescription>
-            Измените роль пользователя или деактивируйте учетную запись
+            Нажмите на строку для просмотра всех данных пользователя
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredUsers.map(user => (
-              <UserListItem 
-                key={user.id}
-                user={user}
-                roleNames={roleNames}
-                roleColors={roleColors}
-                onChangeRole={handleChangeRole}
-                onApproveUser={handleApproveUser}
-                onRejectUser={handleRejectUser}
-              />
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-3 font-semibold">ФИО</th>
+                  <th className="text-left p-3 font-semibold">Email</th>
+                  <th className="text-left p-3 font-semibold">Участок</th>
+                  <th className="text-left p-3 font-semibold">Роль</th>
+                  <th className="text-left p-3 font-semibold">Статус</th>
+                  <th className="text-left p-3 font-semibold">Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => {
+                  const fullName = `${user.lastName} ${user.firstName} ${user.middleName}`;
+                  const isExpanded = expandedUser === user.email;
+                  
+                  return (
+                    <>
+                      <tr 
+                        key={user.email} 
+                        className="border-b hover:bg-gray-50 cursor-pointer"
+                        onClick={() => setExpandedUser(isExpanded ? null : user.email)}
+                      >
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <Icon name={isExpanded ? "ChevronDown" : "ChevronRight"} size={16} className="text-muted-foreground" />
+                            <span className="font-medium">{fullName}</span>
+                          </div>
+                        </td>
+                        <td className="p-3 text-sm text-muted-foreground">{user.email}</td>
+                        <td className="p-3">
+                          <Badge variant="outline">№ {user.plotNumber}</Badge>
+                        </td>
+                        <td className="p-3">
+                          <Select value={user.role} onValueChange={(value: UserRole) => handleChangeRole(user.email, value)}>
+                            <SelectTrigger className="w-40" onClick={(e) => e.stopPropagation()}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="member">Член СНТ</SelectItem>
+                              <SelectItem value="board_member">Член правления</SelectItem>
+                              <SelectItem value="chairman">Председатель</SelectItem>
+                              <SelectItem value="admin">Администратор</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="p-3">
+                          {user.status === 'active' && <Badge className="bg-green-100 text-green-700">Активен</Badge>}
+                          {user.status === 'pending' && <Badge className="bg-orange-100 text-orange-700">Ожидает</Badge>}
+                          {user.status === 'rejected' && <Badge className="bg-red-100 text-red-700">Отклонён</Badge>}
+                        </td>
+                        <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2">
+                            {user.status === 'pending' && (
+                              <>
+                                <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApproveUser(user.email)}>
+                                  <Icon name="Check" size={16} />
+                                </Button>
+                                <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleRejectUser(user.email)}>
+                                  <Icon name="X" size={16} />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr key={`${user.email}-details`} className="bg-blue-50 border-b">
+                          <td colSpan={6} className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                  <Icon name="User" size={18} className="text-orange-600" />
+                                  Личные данные
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                  <p><span className="font-medium">ФИО:</span> {fullName}</p>
+                                  <p><span className="font-medium">Дата рождения:</span> {user.birthDate || 'Не указана'}</p>
+                                  <p><span className="font-medium">Телефон:</span> {user.phone}</p>
+                                  <p><span className="font-medium">Email:</span> {user.email}</p>
+                                  <p><span className="font-medium">Номер участка:</span> {user.plotNumber}</p>
+                                  <p><span className="font-medium">Дата регистрации:</span> {new Date(user.registeredAt).toLocaleDateString('ru-RU')}</p>
+                                </div>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                  <Icon name="FileText" size={18} className="text-orange-600" />
+                                  Данные собственника
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                  {user.ownerIsSame ? (
+                                    <p className="text-green-600 font-medium">✓ Является собственником участка</p>
+                                  ) : (
+                                    <>
+                                      <p><span className="font-medium">Собственник:</span> {user.ownerLastName} {user.ownerFirstName} {user.ownerMiddleName}</p>
+                                    </>
+                                  )}
+                                  <p><span className="font-medium">Док. на землю:</span> {user.landDocNumber || 'Не указан'}</p>
+                                  <p><span className="font-medium">Док. на дом:</span> {user.houseDocNumber || 'Не указан'}</p>
+                                </div>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                  <Icon name="Shield" size={18} className="text-orange-600" />
+                                  Учётная запись
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                  <p><span className="font-medium">Роль:</span> <Badge className={roleColors[user.role]}>{roleNames[user.role]}</Badge></p>
+                                  <p><span className="font-medium">Статус:</span> 
+                                    {user.status === 'active' && <Badge className="bg-green-100 text-green-700 ml-2">Активен</Badge>}
+                                    {user.status === 'pending' && <Badge className="bg-orange-100 text-orange-700 ml-2">Ожидает</Badge>}
+                                    {user.status === 'rejected' && <Badge className="bg-red-100 text-red-700 ml-2">Отклонён</Badge>}
+                                  </p>
+                                  <p><span className="font-medium">Пароль:</span> <span className="text-muted-foreground">••••••••</span></p>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
