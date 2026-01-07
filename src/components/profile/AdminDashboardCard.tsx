@@ -70,19 +70,25 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
             <Icon name="FileText" size={18} className="mr-2" />
             Управление документами
           </Button>
-          <Button variant="outline" className="w-full justify-start">
-            <Icon name="Settings" size={18} className="mr-2" />
-            Настройки сайта
-          </Button>
           {userRole === 'admin' && (
-            <Button 
-              variant="outline" 
-              className="w-full justify-start border-orange-500 text-orange-600 hover:bg-orange-50"
-              onClick={() => onNavigate?.('role-management')}
-            >
-              <Icon name="UserCog" size={18} className="mr-2" />
-              Управление ролями
-            </Button>
+            <>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => onNavigate?.('site-settings')}
+              >
+                <Icon name="Settings" size={18} className="mr-2" />
+                Настройки сайта
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start border-orange-500 text-orange-600 hover:bg-orange-50"
+                onClick={() => onNavigate?.('role-management')}
+              >
+                <Icon name="UserCog" size={18} className="mr-2" />
+                Управление ролями
+              </Button>
+            </>
           )}
         </CardContent>
       </Card>

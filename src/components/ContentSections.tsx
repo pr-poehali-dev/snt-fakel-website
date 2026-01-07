@@ -6,6 +6,7 @@ import ProfileSection from './sections/ProfileSection';
 import RoleManagement from './RoleManagement';
 import MembersList from './MembersList';
 import MassNotification from './MassNotification';
+import SiteSettings from './SiteSettings';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -86,6 +87,10 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
 
   if (activeSection === 'mass-notification' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {
     return <MassNotification />;
+  }
+
+  if (activeSection === 'site-settings' && userRole === 'admin') {
+    return <SiteSettings />;
   }
 
   return null;
