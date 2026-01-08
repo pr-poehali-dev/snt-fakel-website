@@ -68,7 +68,8 @@ def handler(event: dict, context) -> dict:
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type'
+                'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
+                'Access-Control-Max-Age': '86400'
             },
             'body': '',
             'isBase64Encoded': False
@@ -84,7 +85,8 @@ def handler(event: dict, context) -> dict:
                 'isBase64Encoded': False
             }
         
-        conn = psycopg2.connect(dsn)
+        # Подключение к БД с таймаутом
+        conn = psycopg2.connect(dsn, connect_timeout=5)
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         if method == 'GET':
