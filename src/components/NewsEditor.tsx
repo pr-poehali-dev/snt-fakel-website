@@ -17,7 +17,11 @@ interface NewsItem {
   text: string;
 }
 
-const NewsEditor = () => {
+interface NewsEditorProps {
+  onNavigate?: (section: string) => void;
+}
+
+const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -193,10 +197,20 @@ const NewsEditor = () => {
                 </Button>
               </>
             ) : (
-              <Button onClick={handleAdd} className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
-                <Icon name="Plus" size={18} className="mr-2" />
-                Добавить новость
-              </Button>
+              <>
+                <Button onClick={handleAdd} className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
+                  <Icon name="Plus" size={18} className="mr-2" />
+                  Добавить новость
+                </Button>
+                <Button onClick={resetForm} variant="outline" className="border-gray-300">
+                  <Icon name="RotateCcw" size={18} className="mr-2" />
+                  Очистить форму
+                </Button>
+                <Button onClick={() => onNavigate?.('news')} variant="outline" className="border-orange-300">
+                  <Icon name="ArrowLeft" size={18} className="mr-2" />
+                  Отмена
+                </Button>
+              </>
             )}
           </div>
         </CardContent>
