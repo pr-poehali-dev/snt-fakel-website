@@ -48,8 +48,12 @@ const Login = ({ onSuccess, onCancel, onRegisterClick, onPasswordResetClick }: L
       if (response.ok && data.success && data.user) {
         toast.success(`Добро пожаловать, ${data.user.first_name}!`);
         onSuccess(data.user.email, data.user.role || 'member');
+      } else if (response.status === 401) {
+        toast.error('❌ Неверный email или пароль');
+      } else if (data.error) {
+        toast.error(data.error);
       } else {
-        toast.error('Неверный email или пароль');
+        toast.error('Ошибка входа. Попробуйте снова');
       }
     } catch (error) {
       console.error('Ошибка входа:', error);
