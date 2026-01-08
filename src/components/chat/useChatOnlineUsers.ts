@@ -26,37 +26,51 @@ export const useChatOnlineUsers = (
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
-  const updateOnlineStatus = () => {
+  const updateOnlineStatus = async () => {
     if (!currentUserEmail) return;
 
-    const usersJSON = localStorage.getItem('snt_users');
-    if (!usersJSON) return;
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const data = await response.json();
+      
+      if (!data.users) return;
+      
+      const users = data.users.map((u: any) => ({
+        email: u.email,
+        firstName: u.first_name,
+        lastName: u.last_name,
+        plotNumber: u.plot_number,
+        role: u.role,
+        status: u.status
+      }));
+      
+      const currentUser = users.find((u: User) => u.email === currentUserEmail);
+      if (!currentUser) return;
 
-    const users: User[] = JSON.parse(usersJSON);
-    const currentUser = users.find((u) => u.email === currentUserEmail);
-    if (!currentUser) return;
+      const onlineJSON = localStorage.getItem('snt_online_users');
+      const onlineList: OnlineUser[] = onlineJSON ? JSON.parse(onlineJSON) : [];
 
-    const onlineJSON = localStorage.getItem('snt_online_users');
-    const onlineList: OnlineUser[] = onlineJSON ? JSON.parse(onlineJSON) : [];
+      const userIndex = onlineList.findIndex((u) => u.email === currentUserEmail);
+      const onlineUser: OnlineUser = {
+        email: currentUserEmail,
+        name: `${currentUser.firstName} ${currentUser.lastName}`,
+        plotNumber: currentUser.plotNumber,
+        role: currentUser.role,
+        avatar: getRoleAvatar(currentUser.role),
+        lastSeen: Date.now()
+      };
 
-    const userIndex = onlineList.findIndex((u) => u.email === currentUserEmail);
-    const onlineUser: OnlineUser = {
-      email: currentUserEmail,
-      name: `${currentUser.firstName} ${currentUser.lastName}`,
-      plotNumber: currentUser.plotNumber,
-      role: currentUser.role,
-      avatar: getRoleAvatar(currentUser.role),
-      lastSeen: Date.now()
-    };
+      if (userIndex >= 0) {
+        onlineList[userIndex] = onlineUser;
+      } else {
+        onlineList.push(onlineUser);
+      }
 
-    if (userIndex >= 0) {
-      onlineList[userIndex] = onlineUser;
-    } else {
-      onlineList.push(onlineUser);
+      localStorage.setItem('snt_online_users', JSON.stringify(onlineList));
+      setOnlineUsers(onlineList.filter((u) => u.email !== currentUserEmail));
+    } catch (error) {
+      console.error('Error updating online status:', error);
     }
-
-    localStorage.setItem('snt_online_users', JSON.stringify(onlineList));
-    setOnlineUsers(onlineList.filter((u) => u.email !== currentUserEmail));
   };
 
   const cleanupInactiveUsers = () => {
