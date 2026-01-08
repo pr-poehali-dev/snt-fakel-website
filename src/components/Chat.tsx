@@ -6,46 +6,9 @@ import PrivateChat from './PrivateChat';
 import ChatMessage from './chat/ChatMessage';
 import ChatInput from './chat/ChatInput';
 import OnlineUsersPanel from './chat/OnlineUsersPanel';
-
-type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
-
-interface Message {
-  id: number;
-  userId: number;
-  userName: string;
-  userRole: string;
-  text: string;
-  timestamp: string;
-  avatar: string;
-  userEmail?: string;
-  deleted?: boolean;
-  deletedBy?: string;
-}
-
-interface BlockedUser {
-  email: string;
-  blockedBy: string;
-  blockedAt: string;
-  reason?: string;
-}
-
-interface User {
-  email: string;
-  firstName: string;
-  lastName: string;
-  plotNumber: string;
-  role: string;
-  status: string;
-}
-
-interface OnlineUser {
-  email: string;
-  name: string;
-  plotNumber: string;
-  role: string;
-  avatar: string;
-  lastSeen: number;
-}
+import { useChatState, UserRole, Message } from './chat/useChatState';
+import { useChatOnlineUsers } from './chat/useChatOnlineUsers';
+import { containsProfanity, getRoleAvatar, playNotificationSound } from './chat/chatHelpers';
 
 interface ChatProps {
   isLoggedIn: boolean;
@@ -53,83 +16,28 @@ interface ChatProps {
   currentUserEmail: string;
 }
 
-const defaultMessages: Message[] = [
-  {
-    id: 1,
-    userId: 1,
-    userName: 'Иван Петров (уч. 15)',
-    userRole: 'Председатель',
-    text: 'Добрый день! Напоминаю о субботнике в эту субботу с 10:00.',
-    timestamp: '10:30',
-    avatar: '👨‍💼'
-  },
-  {
-    id: 2,
-    userId: 2,
-    userName: 'Мария Сидорова (уч. 42)',
-    userRole: 'Участник',
-    text: 'Здравствуйте! Подскажите, когда будет вывоз мусора?',
-    timestamp: '11:15',
-    avatar: '👩'
-  },
-  {
-    id: 3,
-    userId: 1,
-    userName: 'Иван Петров (уч. 15)',
-    userRole: 'Председатель',
-    text: 'Вывоз мусора во вторник и пятницу с 9:00 до 11:00.',
-    timestamp: '11:20',
-    avatar: '👨‍💼'
-  },
-  {
-    id: 4,
-    userId: 3,
-    userName: 'Алексей Новиков (уч. 8)',
-    userRole: 'Участник',
-    text: 'На субботнике буду! Что нужно взять с собой?',
-    timestamp: '12:05',
-    avatar: '👨'
-  },
-  {
-    id: 5,
-    userId: 1,
-    userName: 'Иван Петров (уч. 15)',
-    userRole: 'Председатель',
-    text: 'Грабли, мешки для мусора и хорошее настроение! 😊',
-    timestamp: '12:10',
-    avatar: '👨‍💼'
-  },
-];
-
 const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    const savedMessages = localStorage.getItem('snt_chat_messages');
-    if (savedMessages) {
-      try {
-        return JSON.parse(savedMessages);
-      } catch (e) {
-        console.error('Error loading chat messages:', e);
-        return defaultMessages;
-      }
-    }
-    return defaultMessages;
-  });
+  const {
+    messages,
+    setMessages,
+    blockedUsers,
+    setBlockedUsers,
+    newMessage,
+    setNewMessage
+  } = useChatState();
 
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>(() => {
-    const saved = localStorage.getItem('snt_blocked_users');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const {
+    onlineUsers,
+    unreadCounts,
+    loadUnreadCounts
+  } = useChatOnlineUsers(currentUserEmail, getRoleAvatar, playNotificationSound);
 
-  const [newMessage, setNewMessage] = useState('');
-  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [privateChatOpen, setPrivateChatOpen] = useState<string | null>(null);
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const isModerator = userRole === 'chairman' || userRole === 'admin' || userRole === 'board_member';
   const isCurrentUserBlocked = blockedUsers.some(u => u.email === currentUserEmail);
   
-  // Debug: log moderation status
   useEffect(() => {
     console.log('Chat Debug:', {
       userRole,
@@ -139,156 +47,12 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       blockedUsersCount: blockedUsers.length
     });
   }, [userRole, isModerator, currentUserEmail, isCurrentUserBlocked, blockedUsers]);
-  
-  const profanityList = [
-    'хуй', 'хуя', 'хуи', 'хуё', 'хер', 'пизд', 'ебал', 'ебан', 'ебат', 'ебл', 'ебу', 'еби',
-    'бля', 'блят', 'сука', 'суки', 'сучк', 'говн', 'дерьм', 'срат', 'срал',
-    'пидар', 'пидор', 'педик', 'даун', 'дебил', 'мудак', 'уёб', 'уеб'
-  ];
-  
-  const containsProfanity = (text: string): boolean => {
-    const lowerText = text.toLowerCase();
-    return profanityList.some(word => lowerText.includes(word));
-  };
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
-
-  useEffect(() => {
-    localStorage.setItem('snt_chat_messages', JSON.stringify(messages));
-    window.dispatchEvent(new Event('chat-updated'));
-  }, [messages]);
-  
-  useEffect(() => {
-    localStorage.setItem('snt_blocked_users', JSON.stringify(blockedUsers));
-  }, [blockedUsers]);
-
-  useEffect(() => {
-    updateOnlineStatus();
-    loadUnreadCounts();
-
-    const interval = setInterval(() => {
-      updateOnlineStatus();
-      cleanupInactiveUsers();
-    }, 30000);
-
-    const handlePrivateMessagesUpdate = () => {
-      loadUnreadCounts();
-    };
-
-    window.addEventListener('private-messages-updated', handlePrivateMessagesUpdate);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('private-messages-updated', handlePrivateMessagesUpdate);
-    };
-  }, [currentUserEmail]);
-
-  const updateOnlineStatus = () => {
-    if (!currentUserEmail) return;
-
-    const usersJSON = localStorage.getItem('snt_users');
-    if (!usersJSON) return;
-
-    const users: User[] = JSON.parse(usersJSON);
-    const currentUser = users.find((u) => u.email === currentUserEmail);
-    if (!currentUser) return;
-
-    const onlineJSON = localStorage.getItem('snt_online_users');
-    const onlineList: OnlineUser[] = onlineJSON ? JSON.parse(onlineJSON) : [];
-
-    const userIndex = onlineList.findIndex((u) => u.email === currentUserEmail);
-    const onlineUser: OnlineUser = {
-      email: currentUserEmail,
-      name: `${currentUser.firstName} ${currentUser.lastName}`,
-      plotNumber: currentUser.plotNumber,
-      role: currentUser.role,
-      avatar: getRoleAvatar(currentUser.role),
-      lastSeen: Date.now()
-    };
-
-    if (userIndex >= 0) {
-      onlineList[userIndex] = onlineUser;
-    } else {
-      onlineList.push(onlineUser);
-    }
-
-    localStorage.setItem('snt_online_users', JSON.stringify(onlineList));
-    setOnlineUsers(onlineList.filter((u) => u.email !== currentUserEmail));
-  };
-
-  const cleanupInactiveUsers = () => {
-    const onlineJSON = localStorage.getItem('snt_online_users');
-    if (!onlineJSON) return;
-
-    const onlineList: OnlineUser[] = JSON.parse(onlineJSON);
-    const now = Date.now();
-    const activeUsers = onlineList.filter((u) => now - u.lastSeen < 120000);
-
-    localStorage.setItem('snt_online_users', JSON.stringify(activeUsers));
-    setOnlineUsers(activeUsers.filter((u) => u.email !== currentUserEmail));
-  };
-
-  const getRoleAvatar = (role: string): string => {
-    switch (role) {
-      case 'admin': return '⭐';
-      case 'chairman': return '👑';
-      case 'board_member': return '👥';
-      default: return '👤';
-    }
-  };
-
-  const playNotificationSound = () => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
-    } catch (e) {
-      console.error('Error playing notification sound:', e);
-    }
-  };
-
-  const loadUnreadCounts = () => {
-    const saved = localStorage.getItem('snt_private_messages');
-    if (!saved) return;
-
-    try {
-      const allMessages = JSON.parse(saved);
-      const counts: Record<string, number> = {};
-
-      allMessages.forEach((msg: any) => {
-        if (msg.toEmail === currentUserEmail && !msg.read) {
-          counts[msg.fromEmail] = (counts[msg.fromEmail] || 0) + 1;
-        }
-      });
-
-      const totalUnread = Object.values(counts).reduce((sum: number, count) => sum + count, 0);
-      const previousTotalUnread = Object.values(unreadCounts).reduce((sum: number, count) => sum + count, 0);
-
-      if (totalUnread > previousTotalUnread) {
-        playNotificationSound();
-      }
-
-      setUnreadCounts(counts);
-    } catch (e) {
-      console.error('Error loading unread counts:', e);
-    }
-  };
 
   const handleOpenPrivateChat = (userEmail: string) => {
     setPrivateChatOpen(userEmail);
@@ -324,7 +88,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       return;
     }
     
-    const newBlock: BlockedUser = {
+    const newBlock = {
       email: userEmail,
       blockedBy: currentUserEmail,
       blockedAt: new Date().toISOString(),
