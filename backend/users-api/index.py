@@ -86,8 +86,8 @@ def handler(event: dict, context) -> dict:
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         if method == 'GET':
-            query_params = event.get('queryStringParameters', {}) or {}
-            action = query_params.get('action')
+            query_params = event.get('queryStringParameters') or {}
+            action = query_params.get('action') if query_params else None
             
             if action == 'chat_messages':
                 # Получить все сообщения чата
