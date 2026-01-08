@@ -1,0 +1,38 @@
+{
+  "tests": [
+    {
+      "name": "Send voting completion notification",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "votingTitle": "Тестовое голосование",
+        "votingId": "test-123",
+        "results": [
+          {
+            "option": "За",
+            "votes": 5,
+            "percentage": "83.3"
+          },
+          {
+            "option": "Против",
+            "votes": 1,
+            "percentage": "16.7"
+          }
+        ],
+        "users": [
+          {
+            "email": "test@example.com",
+            "firstName": "Иван",
+            "lastName": "Иванов"
+          }
+        ]
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "sent": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

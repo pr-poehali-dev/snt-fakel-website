@@ -174,13 +174,59 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
             </div>
           </div>
         </div>
-        <Button
-          onClick={exportToExcel}
-          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-        >
-          <Icon name="Download" size={18} className="mr-2" />
-          Экспорт в CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={async () => {
+              try {
+                // Получаем список всех пользователей
+                const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+                const usersData = await usersResponse.json();
+                const users = usersData.users || [];
+
+                // Подсчитываем результаты
+                const results = voting.options.map((option: string, idx: number) => {
+                  const votes = voting.votes?.[idx] || 0;
+                  const percentage = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : '0';
+                  return { option, votes, percentage };
+                });
+
+                // Отправляем уведомления
+                const response = await fetch('https://functions.poehali.dev/ba6cda1e-5207-4b2e-b0b9-30cce2155cd1', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    votingTitle: voting.title,
+                    votingId: voting.id,
+                    results,
+                    users
+                  })
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  toast.success(`Отправлено ${data.sent} уведомлений`);
+                } else {
+                  toast.error('Не удалось отправить уведомления');
+                }
+              } catch (error) {
+                console.error('Error sending notifications:', error);
+                toast.error('Ошибка при отправке уведомлений');
+              }
+            }}
+            variant="outline"
+            className="border-indigo-500 text-indigo-600 hover:bg-indigo-50"
+          >
+            <Icon name="Mail" size={18} className="mr-2" />
+            Отправить уведомления
+          </Button>
+          <Button
+            onClick={exportToExcel}
+            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+          >
+            <Icon name="Download" size={18} className="mr-2" />
+            Экспорт в CSV
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6">

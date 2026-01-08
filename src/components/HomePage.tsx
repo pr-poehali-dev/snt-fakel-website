@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import MeterReadingsNotification from './MeterReadingsNotification';
+import CompletedVotings from './CompletedVotings';
 import { toast } from 'sonner';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
@@ -84,28 +85,36 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
       }
     };
 
-    const loadVotings = () => {
+    const loadVotings = async () => {
       const votingsJSON = localStorage.getItem('snt_votings');
       if (votingsJSON) {
         try {
           const votings = JSON.parse(votingsJSON);
           const now = new Date();
-          let updated = false;
+          const completedVotingIds: string[] = [];
           
           // Автоматически закрываем истекшие голосования
           const updatedVotings = votings.map((v: any) => {
             const endDate = new Date(v.endDate);
             if (v.status === 'active' && endDate < now) {
-              updated = true;
+              completedVotingIds.push(v.id);
               return { ...v, status: 'completed' };
             }
             return v;
           });
           
-          // Сохраняем обновленные голосования, если были изменения
-          if (updated) {
+          // Сохраняем обновленные голосования и отправляем уведомления
+          if (completedVotingIds.length > 0) {
             localStorage.setItem('snt_votings', JSON.stringify(updatedVotings));
             window.dispatchEvent(new Event('votings-updated'));
+            
+            // Отправляем уведомления для каждого завершённого голосования
+            for (const votingId of completedVotingIds) {
+              const voting = updatedVotings.find((v: any) => v.id === votingId);
+              if (voting) {
+                await sendVotingCompletionNotification(voting);
+              }
+            }
           }
           
           const active = updatedVotings.filter((v: any) => {
@@ -116,6 +125,49 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
         } catch (e) {
           console.error('Error loading votings:', e);
         }
+      }
+    };
+
+    const sendVotingCompletionNotification = async (voting: any) => {
+      try {
+        // Проверяем, не отправляли ли мы уже уведомление для этого голосования
+        const notificationSentKey = `voting_notification_sent_${voting.id}`;
+        if (localStorage.getItem(notificationSentKey)) {
+          return;
+        }
+
+        // Получаем список всех пользователей
+        const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        const usersData = await usersResponse.json();
+        const users = usersData.users || [];
+
+        // Подсчитываем результаты
+        const totalVotes = Object.values(voting.votes || {}).reduce((sum: number, count: any) => sum + count, 0);
+        const results = voting.options.map((option: string, idx: number) => {
+          const votes = voting.votes?.[idx] || 0;
+          const percentage = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : '0';
+          return { option, votes, percentage };
+        });
+
+        // Отправляем уведомления
+        const response = await fetch('https://functions.poehali.dev/ba6cda1e-5207-4b2e-b0b9-30cce2155cd1', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            votingTitle: voting.title,
+            votingId: voting.id,
+            results,
+            users
+          })
+        });
+
+        if (response.ok) {
+          // Отмечаем, что уведомление отправлено
+          localStorage.setItem(notificationSentKey, 'true');
+          console.log(`Уведомления о завершении голосования "${voting.title}" отправлены`);
+        }
+      } catch (error) {
+        console.error('Error sending voting completion notification:', error);
       }
     };
 
@@ -361,6 +413,8 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
           </div>
         )}
       </section>
+
+      <CompletedVotings userRole={userRole} setActiveSection={setActiveSection} />
 
       <section>
         <div className="flex items-center gap-3 mb-8">
