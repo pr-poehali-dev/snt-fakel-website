@@ -80,6 +80,16 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
             <Icon name="Gauge" size={18} className="mr-2" />
             Показания ПУ
           </Button>
+          {(userRole === 'admin' || userRole === 'chairman') && (
+            <Button 
+              variant="outline" 
+              className="w-full justify-start border-red-500 text-red-600 hover:bg-red-50"
+              onClick={() => onNavigate?.('chat-moderation')}
+            >
+              <Icon name="ShieldAlert" size={18} className="mr-2" />
+              Модерация чата
+            </Button>
+          )}
           <Button variant="outline" className="w-full justify-start">
             <Icon name="Vote" size={18} className="mr-2" />
             Создать голосование

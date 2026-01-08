@@ -11,6 +11,7 @@ import PageEditor from './PageEditor';
 import NewsEditor from './NewsEditor';
 import DocumentsManager from './DocumentsManager';
 import MeterReadingsManager from './MeterReadingsManager';
+import ChatModerationPanel from './ChatModerationPanel';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -113,6 +114,10 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
 
   if (activeSection === 'meter-readings' && (userRole === 'admin' || userRole === 'chairman')) {
     return <MeterReadingsManager />;
+  }
+
+  if (activeSection === 'chat-moderation' && (userRole === 'admin' || userRole === 'chairman')) {
+    return <ChatModerationPanel onBack={() => setActiveSection('profile')} />;
   }
 
   return null;
