@@ -215,6 +215,27 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
           <Card className="md:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <Icon name="Map" className="text-primary" />
+                Как нас найти
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="w-full h-[400px] rounded-lg overflow-hidden">
+                <iframe
+                  src="https://yandex.ru/map-widget/v1/?ll=43.988056%2C56.238202&z=16&pt=43.988056,56.238202,pm2rdm"
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  allowFullScreen
+                  style={{ position: 'relative' }}
+                  title="Карта СНТ Факел"
+                />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Icon name="Building2" className="text-primary" />
                 {content.contacts.detailsTitle}
               </CardTitle>
