@@ -14,6 +14,7 @@ import MeterReadingsManager from './MeterReadingsManager';
 import ChatModerationPanel from './ChatModerationPanel';
 import BoardAppeal from './BoardAppeal';
 import CreateVoting from './CreateVoting';
+import VotingResults from './VotingResults';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -134,6 +135,11 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
 
   if (activeSection === 'create-voting' && (userRole === 'admin' || userRole === 'chairman')) {
     return <CreateVoting onBack={() => setActiveSection('profile')} />;
+  }
+
+  if (activeSection.startsWith('voting-results-') && (userRole === 'admin' || userRole === 'chairman')) {
+    const votingId = parseInt(activeSection.replace('voting-results-', ''));
+    return <VotingResults votingId={votingId} onBack={() => setActiveSection('home')} />;
   }
 
   return null;

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import MeterReadingsNotification from './MeterReadingsNotification';
+import { toast } from 'sonner';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -270,9 +271,15 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
                                       votings[votingIndex].votes[idx] = (votings[votingIndex].votes[idx] || 0) + 1;
                                       localStorage.setItem('snt_votings', JSON.stringify(votings));
                                       
+                                      const voteData = {
+                                        optionIndex: idx,
+                                        timestamp: new Date().toISOString()
+                                      };
                                       localStorage.setItem(`voting_${voting.id}_${currentEmail}`, JSON.stringify([idx]));
+                                      localStorage.setItem(`voting_detail_${voting.id}_${currentEmail}`, JSON.stringify(voteData));
                                       
                                       window.dispatchEvent(new Event('votings-updated'));
+                                      toast.success('Ваш голос учтён!');
                                     }
                                   }
                                 }}
@@ -297,6 +304,23 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
                         </div>
                       );
                     })}
+                    <div className="mt-4 pt-4 border-t space-y-3">
+                      <p className="text-xs text-muted-foreground flex items-start gap-2">
+                        <Icon name="Info" size={14} className="mt-0.5 flex-shrink-0" />
+                        <span>Голосовать могут только собственники участков. Перевыбор невозможен. Голосование завершится {new Date(voting.endDate).toLocaleDateString('ru-RU')}.</span>
+                      </p>
+                      {(userRole === 'admin' || userRole === 'chairman') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setActiveSection(`voting-results-${voting.id}`)}
+                          className="w-full border-indigo-500 text-indigo-600 hover:bg-indigo-50"
+                        >
+                          <Icon name="BarChart3" size={16} className="mr-2" />
+                          Просмотреть результаты
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               );
