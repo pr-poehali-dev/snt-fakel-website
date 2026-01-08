@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Avatar } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import PrivateChat from './PrivateChat';
+import ChatMessage from './chat/ChatMessage';
+import ChatInput from './chat/ChatInput';
+import OnlineUsersPanel from './chat/OnlineUsersPanel';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -130,7 +129,6 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   const isModerator = userRole === 'chairman' || userRole === 'admin';
   const isCurrentUserBlocked = blockedUsers.some(u => u.email === currentUserEmail);
   
-  // Список матерных слов
   const profanityList = [
     'хуй', 'хуя', 'хуи', 'хуё', 'хер', 'пизд', 'ебал', 'ебан', 'ебат', 'ебл', 'ебу', 'еби',
     'бля', 'блят', 'сука', 'суки', 'сучк', 'говн', 'дерьм', 'срат', 'срал',
@@ -164,7 +162,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     const interval = setInterval(() => {
       updateOnlineStatus();
       cleanupInactiveUsers();
-    }, 30000); // Обновление каждые 30 секунд
+    }, 30000);
 
     const handlePrivateMessagesUpdate = () => {
       loadUnreadCounts();
@@ -217,7 +215,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
 
     const onlineList: OnlineUser[] = JSON.parse(onlineJSON);
     const now = Date.now();
-    const activeUsers = onlineList.filter((u) => now - u.lastSeen < 120000); // 2 минуты
+    const activeUsers = onlineList.filter((u) => now - u.lastSeen < 120000);
 
     localStorage.setItem('snt_online_users', JSON.stringify(activeUsers));
     setOnlineUsers(activeUsers.filter((u) => u.email !== currentUserEmail));
@@ -332,7 +330,6 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       admin: 'Администратор'
     };
 
-    // Получаем данные текущего пользователя из localStorage
     const usersJSON = localStorage.getItem('snt_users');
     let currentUserName = 'Вы';
     if (usersJSON && currentUserEmail) {
@@ -385,217 +382,45 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                   const isOwnMessage = message.userId === 999;
                   const isBlocked = message.userEmail && blockedUsers.some(u => u.email === message.userEmail);
                   
-                  if (message.deleted) {
-                    return (
-                      <div key={message.id} className="flex gap-3 opacity-50">
-                        <div className="flex-1 bg-gray-100 rounded-lg px-4 py-2">
-                          <p className="text-xs text-muted-foreground italic">
-                            <Icon name="Trash2" size={12} className="inline mr-1" />
-                            Сообщение удалено модератором
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  }
-                  
                   return (
-                    <div
+                    <ChatMessage
                       key={message.id}
-                      className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''} group`}
-                    >
-                      <Avatar className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 text-2xl">
-                        {message.avatar}
-                      </Avatar>
-                      <div className={`flex-1 ${isOwnMessage ? 'items-end' : ''}`}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-sm">{message.userName}</span>
-                          {message.userRole === 'Председатель' && (
-                            <Badge variant="outline" className="text-xs bg-gradient-to-r from-orange-100 to-pink-100 border-orange-300">
-                              {message.userRole}
-                            </Badge>
-                          )}
-                          {isBlocked && (
-                            <Badge variant="outline" className="text-xs bg-red-100 border-red-300 text-red-700">
-                              Заблокирован
-                            </Badge>
-                          )}
-                          <span className="text-xs text-muted-foreground">{message.timestamp}</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <div
-                            className={`rounded-2xl px-4 py-2 max-w-lg ${
-                              isOwnMessage
-                                ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white ml-auto'
-                                : 'bg-secondary'
-                            }`}
-                          >
-                            <p className="text-sm">{message.text}</p>
-                          </div>
-                          {isModerator && !isOwnMessage && message.userEmail && (
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 w-6 p-0"
-                                onClick={() => handleDeleteMessage(message.id)}
-                                title="Удалить сообщение"
-                              >
-                                <Icon name="Trash2" size={14} className="text-red-500" />
-                              </Button>
-                              {!isBlocked ? (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0"
-                                  onClick={() => handleBlockUser(message.userEmail!, message.userName)}
-                                  title="Заблокировать пользователя"
-                                >
-                                  <Icon name="Ban" size={14} className="text-orange-500" />
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0"
-                                  onClick={() => handleUnblockUser(message.userEmail!)}
-                                  title="Разблокировать пользователя"
-                                >
-                                  <Icon name="CheckCircle" size={14} className="text-green-500" />
-                                </Button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                      message={message}
+                      isOwnMessage={isOwnMessage}
+                      isBlocked={!!isBlocked}
+                      isModerator={isModerator}
+                      onDeleteMessage={handleDeleteMessage}
+                      onBlockUser={handleBlockUser}
+                      onUnblockUser={handleUnblockUser}
+                    />
                   );
                 })}
               </div>
             </div>
             
             <div className="border-t p-4">
-              {isCurrentUserBlocked ? (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-red-700">
-                    <Icon name="Ban" size={18} />
-                    <p className="text-sm font-medium">
-                      Вы заблокированы модератором и не можете писать в чат
-                    </p>
-                  </div>
-                </div>
-              ) : isLoggedIn && (userRole === 'member' || userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') ? (
-                <>
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <Input
-                      placeholder="Написать сообщение..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button 
-                      type="submit" 
-                      className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
-                    >
-                      <Icon name="Send" size={18} />
-                    </Button>
-                  </form>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    <Icon name="ShieldAlert" size={12} className="inline mr-1" />
-                    Использование ненормативной лексики запрещено
-                  </p>
-                </>
-              ) : (
-                <div className="text-center py-2">
-                  <p className="text-sm text-muted-foreground">
-                    {!isLoggedIn ? 'Войдите в личный кабинет для отправки сообщений' : 'Только члены СНТ могут писать в чат'}
-                  </p>
-                </div>
-              )}
+              <ChatInput
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+                isCurrentUserBlocked={isCurrentUserBlocked}
+                newMessage={newMessage}
+                onMessageChange={setNewMessage}
+                onSubmit={handleSendMessage}
+              />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Icon name="Users" className="text-green-500" />
-              Онлайн
-              <Badge variant="outline" className="ml-auto">
-                {onlineUsers.length + 1}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="max-h-[500px] overflow-y-auto">
-              {/* Текущий пользователь */}
-              {isLoggedIn && (
-                <div className="p-3 border-b bg-blue-50">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-400 text-xl">
-                      {getRoleAvatar(userRole)}
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold">Вы (онлайн)</p>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                        <span className="text-xs text-muted-foreground">В сети</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Другие пользователи онлайн */}
-              {onlineUsers.length === 0 && isLoggedIn && (
-                <div className="p-6 text-center text-muted-foreground">
-                  <Icon name="Users" size={32} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Пока никого нет</p>
-                </div>
-              )}
-
-              {onlineUsers.map((user) => {
-                const unreadCount = unreadCounts[user.email] || 0;
-                return (
-                  <div
-                    key={user.email}
-                    className="p-3 border-b hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => handleOpenPrivateChat(user.email)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 text-xl relative">
-                        {user.avatar}
-                        <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">Участок №{user.plotNumber}</p>
-                      </div>
-                      {unreadCount > 0 && (
-                        <Badge variant="default" className="bg-red-500 text-white">
-                          {unreadCount}
-                        </Badge>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenPrivateChat(user.email);
-                        }}
-                      >
-                        <Icon name="MessageCircle" size={16} className="text-blue-500" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <OnlineUsersPanel
+          isLoggedIn={isLoggedIn}
+          userRole={userRole}
+          onlineUsers={onlineUsers}
+          unreadCounts={unreadCounts}
+          onOpenPrivateChat={handleOpenPrivateChat}
+          getRoleAvatar={getRoleAvatar}
+        />
       </div>
 
-      {/* Приватный чат */}
       {privateChatOpen && (
         <PrivateChat
           currentUserEmail={currentUserEmail}
