@@ -80,14 +80,22 @@ const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
     calculateStats();
   }, [messages, blockedUsers]);
 
-  const loadBlockedUsers = () => {
-    const saved = localStorage.getItem('snt_blocked_users');
-    if (saved) {
-      try {
-        setBlockedUsers(JSON.parse(saved));
-      } catch (e) {
-        console.error('Error loading blocked users:', e);
+  const loadBlockedUsers = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?action=chat_messages');
+      const data = await response.json();
+      
+      if (data.blocked) {
+        const formattedBlocked = data.blocked.map((b: any) => ({
+          email: b.email,
+          blockedBy: b.blockedBy,
+          blockedAt: b.blockedAt,
+          reason: b.reason
+        }));
+        setBlockedUsers(formattedBlocked);
       }
+    } catch (error) {
+      console.error('Error loading blocked users:', error);
     }
   };
 
@@ -112,14 +120,28 @@ const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
     }
   };
 
-  const loadMessages = () => {
-    const saved = localStorage.getItem('snt_chat_messages');
-    if (saved) {
-      try {
-        setMessages(JSON.parse(saved));
-      } catch (e) {
-        console.error('Error loading messages:', e);
+  const loadMessages = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?action=chat_messages');
+      const data = await response.json();
+      
+      if (data.messages) {
+        const formattedMessages = data.messages.map((msg: any) => ({
+          id: msg.id,
+          userId: 0,
+          userName: msg.userName,
+          userRole: msg.userRole,
+          text: msg.text,
+          timestamp: msg.timestamp,
+          avatar: msg.avatar,
+          userEmail: msg.userEmail,
+          deleted: msg.deleted,
+          deletedBy: msg.deletedBy
+        }));
+        setMessages(formattedMessages);
       }
+    } catch (error) {
+      console.error('Error loading messages:', error);
     }
   };
 
@@ -145,17 +167,41 @@ const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
     });
   };
 
-  const handleUnblock = (userEmail: string) => {
-    const updatedBlocked = blockedUsers.filter(u => u.email !== userEmail);
-    setBlockedUsers(updatedBlocked);
-    localStorage.setItem('snt_blocked_users', JSON.stringify(updatedBlocked));
-    
-    // Trigger storage event for Chat component
-    window.dispatchEvent(new Event('storage'));
-    
-    const userInfo = userInfoMap.get(userEmail);
-    const userName = userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : userEmail;
-    toast.success(`Пользователь ${userName} разблокирован`);
+  const handleUnblock = async (userEmail: string) => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'unblock_user',
+          email: userEmail
+        })
+      });
+      
+      if (response.ok) {
+        // Немедленно обновляем локальное состояние
+        const updatedBlocked = blockedUsers.filter(u => u.email !== userEmail);
+        setBlockedUsers(updatedBlocked);
+        
+        // Trigger storage event for Chat component
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('chat-updated'));
+        
+        const userInfo = userInfoMap.get(userEmail);
+        const userName = userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : userEmail;
+        toast.success(`Пользователь ${userName} разблокирован и может писать в чат`);
+        
+        // Перезагружаем данные с сервера для синхронизации
+        loadBlockedUsers();
+        loadMessages();
+      } else {
+        const errorData = await response.json();
+        toast.error(`Ошибка при разблокировке: ${errorData.error || 'Неизвестная ошибка'}`);
+      }
+    } catch (error) {
+      console.error('Unblock error:', error);
+      toast.error('Ошибка соединения с сервером');
+    }
   };
 
   const formatDate = (isoDate: string) => {

@@ -154,13 +154,24 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       });
       
       if (response.ok) {
-        toast.success('Пользователь разблокирован');
-        refreshMessages();
+        // Немедленно обновляем локальное состояние
+        setBlockedUsers(prev => prev.filter(u => u.email !== userEmail));
+        
+        toast.success('Пользователь разблокирован и может писать в чат');
+        
+        // Обновляем данные с сервера
+        await refreshMessages();
+        
+        // Отправляем событие для других компонентов
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('chat-updated'));
       } else {
-        toast.error('Ошибка при разблокировке');
+        const errorData = await response.json();
+        toast.error(`Ошибка при разблокировке: ${errorData.error || 'Неизвестная ошибка'}`);
       }
     } catch (error) {
-      toast.error('Ошибка соединения');
+      console.error('Unblock error:', error);
+      toast.error('Ошибка соединения с сервером');
     }
   };
 
