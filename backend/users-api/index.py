@@ -7,7 +7,7 @@ import secrets
 from datetime import datetime, timedelta
 import pytz
 
-# Force redeploy to fix network issues
+# Force redeploy - add plot_number to login response v2
 
 def send_role_change_notification(email: str, full_name: str, old_role: str, new_role: str):
     '''Отправка уведомления о смене роли'''
