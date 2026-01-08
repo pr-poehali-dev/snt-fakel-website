@@ -264,6 +264,11 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
         <MeterReadingsNotification onNavigateToProfile={() => setActiveSection('profile')} />
       )}
 
+      {content.blockOrder.map((blockId) => {
+        const renderBlock = blockComponents[blockId];
+        return renderBlock ? renderBlock() : null;
+      })}
+
       <section className="mb-16">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
@@ -297,11 +302,6 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
       </section>
 
       <CompletedVotings userRole={userRole} setActiveSection={setActiveSection} />
-
-      {content.blockOrder.map((blockId) => {
-        const renderBlock = blockComponents[blockId];
-        return renderBlock ? renderBlock() : null;
-      })}
 
       <section>
         <div className="flex items-center gap-3 mb-8">

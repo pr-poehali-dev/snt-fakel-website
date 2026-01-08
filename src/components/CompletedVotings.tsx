@@ -11,6 +11,7 @@ interface CompletedVotingsProps {
 
 const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps) => {
   const [completedVotings, setCompletedVotings] = useState<any[]>([]);
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'title'>('date-desc');
 
   useEffect(() => {
     loadCompletedVotings();
@@ -21,7 +22,7 @@ const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps)
 
     window.addEventListener('votings-updated', handleUpdate);
     return () => window.removeEventListener('votings-updated', handleUpdate);
-  }, []);
+  }, [sortBy]);
 
   const loadCompletedVotings = () => {
     const votingsJSON = localStorage.getItem('snt_votings');
@@ -29,6 +30,19 @@ const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps)
       try {
         const votings = JSON.parse(votingsJSON);
         const completed = votings.filter((v: any) => v.status === 'completed' && !v.archived);
+        
+        // Сортировка
+        completed.sort((a: any, b: any) => {
+          if (sortBy === 'date-desc') {
+            return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();
+          } else if (sortBy === 'date-asc') {
+            return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+          } else if (sortBy === 'title') {
+            return a.title.localeCompare(b.title);
+          }
+          return 0;
+        });
+        
         setCompletedVotings(completed);
       } catch (e) {
         console.error('Error loading completed votings:', e);
@@ -68,11 +82,39 @@ const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps)
 
   return (
     <section className="mb-16">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg flex items-center justify-center">
-          <Icon name="Archive" className="text-white" size={20} />
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg flex items-center justify-center">
+            <Icon name="Archive" className="text-white" size={20} />
+          </div>
+          <h3 className="text-3xl font-bold">Завершённые голосования</h3>
         </div>
-        <h3 className="text-3xl font-bold">Завершённые голосования</h3>
+        <div className="flex gap-2">
+          <Button
+            variant={sortBy === 'date-desc' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSortBy('date-desc')}
+          >
+            <Icon name="ArrowDown" size={16} className="mr-1" />
+            Новые
+          </Button>
+          <Button
+            variant={sortBy === 'date-asc' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSortBy('date-asc')}
+          >
+            <Icon name="ArrowUp" size={16} className="mr-1" />
+            Старые
+          </Button>
+          <Button
+            variant={sortBy === 'title' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSortBy('title')}
+          >
+            <Icon name="SortAsc" size={16} className="mr-1" />
+            По названию
+          </Button>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">

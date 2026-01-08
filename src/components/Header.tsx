@@ -184,14 +184,6 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
                   <Icon name="Vote" size={18} className="mr-2" />
                   Голосования
                 </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => { setActiveSection('archive'); setShowMobileMenu(false); }}
-                >
-                  <Icon name="Archive" size={18} className="mr-2" />
-                  Архив
-                </Button>
               </CardContent>
             </Card>
           </div>
@@ -267,15 +259,6 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
                 <Icon name="Vote" className="text-white" size={20} />
               </div>
               <h4 className="text-xs font-bold">Голосования</h4>
-            </CardContent>
-          </Card>
-
-          <Card className="border hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('archive')}>
-            <CardContent className="pt-4 pb-4 text-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center mb-2 mx-auto shadow">
-                <Icon name="Archive" className="text-white" size={20} />
-              </div>
-              <h4 className="text-xs font-bold">Архив</h4>
             </CardContent>
           </Card>
         </div>
