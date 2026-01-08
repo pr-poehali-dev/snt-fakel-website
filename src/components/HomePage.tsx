@@ -216,6 +216,10 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
               const userVotes = userVotesJSON ? JSON.parse(userVotesJSON) : [];
               const hasVoted = userVotes.length > 0;
               
+              // Проверка на собственность участка
+              const sessionJSON = localStorage.getItem('snt_session');
+              const isOwner = sessionJSON ? JSON.parse(sessionJSON).isOwner === true : false;
+              
               return (
                 <Card key={voting.id} className="border-2 hover:shadow-xl transition-all duration-300">
                   <CardHeader>
@@ -252,7 +256,7 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">{optionVotes} голосов</span>
-                            {isLoggedIn && (userRole === 'member' || userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && !hasVoted && (
+                            {isLoggedIn && isOwner && (userRole === 'member' || userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && !hasVoted && (
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -277,6 +281,11 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
                                 <Icon name="CheckCircle" size={16} className="mr-1" />
                                 Голосовать
                               </Button>
+                            )}
+                            {isLoggedIn && !isOwner && !hasVoted && (
+                              <span className="text-xs text-muted-foreground italic">
+                                Только собственники
+                              </span>
                             )}
                             {isVoted && (
                               <Badge variant="outline" className="text-green-600 border-green-600">

@@ -167,7 +167,7 @@ def handler(event: dict, context) -> dict:
                     }
                 
                 cur.execute("""
-                    SELECT id, email, first_name, last_name, role, password
+                    SELECT id, email, first_name, last_name, role, password, owner_is_same
                     FROM users 
                     WHERE email = %s AND status = 'active'
                 """, (email,))
@@ -187,7 +187,8 @@ def handler(event: dict, context) -> dict:
                                 'email': user['email'],
                                 'first_name': user['first_name'],
                                 'last_name': user['last_name'],
-                                'role': user['role']
+                                'role': user['role'],
+                                'owner_is_same': user['owner_is_same']
                             }
                         }),
                         'isBase64Encoded': False
@@ -250,7 +251,7 @@ def handler(event: dict, context) -> dict:
                     }
                 
                 cur.execute("""
-                    SELECT id, email, first_name, last_name, role, password
+                    SELECT id, email, first_name, last_name, role, password, owner_is_same
                     FROM users 
                     WHERE email = %s AND status = 'active'
                 """, (email,))
@@ -270,7 +271,8 @@ def handler(event: dict, context) -> dict:
                                 'email': user['email'],
                                 'first_name': user['first_name'],
                                 'last_name': user['last_name'],
-                                'role': user['role']
+                                'role': user['role'],
+                                'owner_is_same': user['owner_is_same']
                             }
                         }),
                         'isBase64Encoded': False

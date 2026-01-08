@@ -136,7 +136,7 @@ const Index = () => {
     toast.success('Ваш голос учтён!');
   };
 
-  const handleLogin = (email: string, role: UserRole) => {
+  const handleLogin = (email: string, role: UserRole, isOwner?: boolean) => {
     setIsLoggedIn(true);
     setUserRole(role);
     setCurrentUserEmail(email);
@@ -148,6 +148,7 @@ const Index = () => {
       isLoggedIn: true,
       userRole: role,
       currentUserEmail: email,
+      isOwner: isOwner === true,
       expiresAt
     }));
   };

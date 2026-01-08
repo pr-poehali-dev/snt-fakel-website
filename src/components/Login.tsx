@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 interface LoginProps {
-  onSuccess: (email: string, role: UserRole) => void;
+  onSuccess: (email: string, role: UserRole, isOwner?: boolean) => void;
   onCancel: () => void;
   onRegisterClick: () => void;
   onPasswordResetClick: () => void;
@@ -64,7 +64,7 @@ const Login = ({ onSuccess, onCancel, onRegisterClick, onPasswordResetClick }: L
 
       if (response.ok && data.success && data.user) {
         toast.success(`Добро пожаловать, ${data.user.first_name}!`);
-        onSuccess(data.user.email, data.user.role || 'member');
+        onSuccess(data.user.email, data.user.role || 'member', data.user.owner_is_same);
       } else if (response.status === 401) {
         toast.error('❌ Неверный email или пароль');
       } else if (data.error) {
