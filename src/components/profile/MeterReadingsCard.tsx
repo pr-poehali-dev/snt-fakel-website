@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
@@ -28,6 +29,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
   const [canSubmit, setCanSubmit] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [submittedBy, setSubmittedBy] = useState('');
+  const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -75,6 +77,11 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
 
     if (!reading.trim() || isNaN(Number(reading))) {
       toast.error('Введите корректные показания');
+      return;
+    }
+
+    if (!confirmed) {
+      toast.error('Подтвердите правильность показаний');
       return;
     }
 
@@ -131,6 +138,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
 
     toast.success('Показания успешно переданы');
     setReading('');
+    setConfirmed(false);
 
     window.dispatchEvent(new Event('meter-readings-updated'));
   };
@@ -206,9 +214,29 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
               </div>
             </div>
 
+            <div className="flex items-start space-x-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <Checkbox
+                id="confirm-readings"
+                checked={confirmed}
+                onCheckedChange={(checked) => setConfirmed(checked as boolean)}
+                disabled={!canSubmit}
+              />
+              <div className="flex-1">
+                <label
+                  htmlFor="confirm-readings"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  Подтверждаю правильность переданных показаний
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Убедитесь, что показания введены корректно. После отправки изменить их будет невозможно.
+                </p>
+              </div>
+            </div>
+
             <Button
               onClick={handleSubmit}
-              disabled={!canSubmit || !meterNumber.trim() || !reading.trim()}
+              disabled={!canSubmit || !meterNumber.trim() || !reading.trim() || !confirmed}
               className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
             >
               <Icon name="Send" size={18} className="mr-2" />
