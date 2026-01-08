@@ -176,6 +176,16 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
             <Icon name="FileText" size={18} className="mr-2" />
             Управление документами
           </Button>
+          {(userRole === 'admin' || userRole === 'chairman') && (
+            <Button 
+              variant="outline" 
+              className="w-full justify-start border-pink-500 text-pink-600 hover:bg-pink-50"
+              onClick={() => onNavigate?.('holiday-decor')}
+            >
+              <Icon name="Sparkles" size={18} className="mr-2" />
+              Праздничный декор
+            </Button>
+          )}
           {userRole === 'admin' && (
             <>
               <Button 

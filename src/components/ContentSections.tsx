@@ -15,6 +15,7 @@ import ChatModerationPanel from './ChatModerationPanel';
 import BoardAppeal from './BoardAppeal';
 import CreateVoting from './CreateVoting';
 import VotingResults from './VotingResults';
+import HolidayDecorManager from './HolidayDecorManager';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -80,7 +81,7 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
   }
 
   if (activeSection === 'news-editor' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {
-    return <NewsEditor />;
+    return <NewsEditor onNavigate={setActiveSection} />;
   }
 
   if (activeSection === 'documents-manager' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {
@@ -109,6 +110,10 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
 
   if (activeSection === 'site-settings' && userRole === 'admin') {
     return <SiteSettings onBack={() => setActiveSection('profile')} />;
+  }
+
+  if (activeSection === 'holiday-decor' && (userRole === 'admin' || userRole === 'chairman')) {
+    return <HolidayDecorManager onBack={() => setActiveSection('profile')} />;
   }
 
   if (activeSection === 'page-editor' && (userRole === 'admin' || userRole === 'chairman')) {

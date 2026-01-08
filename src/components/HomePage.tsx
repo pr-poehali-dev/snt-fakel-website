@@ -6,6 +6,7 @@ import Icon from '@/components/ui/icon';
 import MeterReadingsNotification from './MeterReadingsNotification';
 import CompletedVotings from './CompletedVotings';
 import VotingCard from './VotingCard';
+import HolidayDecor from './HolidayDecor';
 import { toast } from 'sonner';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
@@ -327,6 +328,8 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
           ))}
         </div>
       </section>
+      
+      <HolidayDecor />
     </>
   );
 };
