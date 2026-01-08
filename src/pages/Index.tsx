@@ -71,8 +71,23 @@ const Index = () => {
 
   useEffect(() => {
     const initAdmin = async () => {
+      // Проверяем, был ли уже запуск инициализации в этой сессии
+      if (sessionStorage.getItem('admin_init_attempted')) {
+        return;
+      }
+      
+      sessionStorage.setItem('admin_init_attempted', 'true');
+      
       try {
-        const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+          signal: AbortSignal.timeout(10000) // Таймаут 10 секунд
+        });
+        
+        if (!response.ok) {
+          console.error('Ошибка при получении пользователей:', response.status);
+          return;
+        }
+        
         const data = await response.json();
         
         const adminExists = data.users?.find((u: any) => u.email === 'assapan-nn@yandex.ru');
@@ -98,13 +113,18 @@ const Index = () => {
           await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(adminUser)
+            body: JSON.stringify(adminUser),
+            signal: AbortSignal.timeout(10000)
           });
           
           console.log('Админ создан в БД');
         }
       } catch (error) {
-        console.error('Ошибка инициализации админа:', error);
+        if (error instanceof Error && error.name === 'TimeoutError') {
+          console.error('Таймаут при инициализации админа');
+        } else {
+          console.error('Ошибка инициализации админа:', error);
+        }
       }
     };
     

@@ -58,7 +58,9 @@ const Login = ({ onSuccess, onCancel, onRegisterClick, onPasswordResetClick }: L
     } catch (error) {
       console.error('Ошибка входа:', error);
       setIsLoading(false);
-      toast.error('Ошибка подключения к серверу');
+      toast.error('Не удалось подключиться к серверу. Проверьте интернет-соединение и попробуйте снова через несколько секунд.', {
+        duration: 5000
+      });
     }
   };
 
