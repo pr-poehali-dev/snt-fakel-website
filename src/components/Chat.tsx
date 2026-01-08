@@ -61,8 +61,17 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   const handleDeleteMessage = (messageId: number) => {
     console.log('Delete message attempt:', { messageId, isModerator, userRole });
     
-    if (!isModerator) {
-      toast.error('Только модераторы могут удалять сообщения');
+    const message = messages.find(msg => msg.id === messageId);
+    
+    if (!message) {
+      toast.error('Сообщение не найдено');
+      return;
+    }
+    
+    const isOwnMessage = message.userEmail === currentUserEmail;
+    
+    if (!isModerator && !isOwnMessage) {
+      toast.error('Вы можете удалять только свои сообщения');
       return;
     }
     
