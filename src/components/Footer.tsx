@@ -1,10 +1,54 @@
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 
 interface FooterProps {
   setActiveSection: (section: string) => void;
 }
 
+interface ContactsData {
+  phone: string;
+  email: string;
+}
+
 const Footer = ({ setActiveSection }: FooterProps) => {
+  const [contacts, setContacts] = useState<ContactsData>({
+    phone: '+7 (495) 123-45-67',
+    email: 'info@snt-fakel.ru'
+  });
+
+  useEffect(() => {
+    const loadContacts = () => {
+      const savedContent = localStorage.getItem('pages_content');
+      if (savedContent) {
+        try {
+          const content = JSON.parse(savedContent);
+          if (content.contacts) {
+            setContacts({
+              phone: content.contacts.phone || '+7 (495) 123-45-67',
+              email: content.contacts.email || 'info@snt-fakel.ru'
+            });
+          }
+        } catch (e) {
+          console.error('Error loading contacts:', e);
+        }
+      }
+    };
+
+    loadContacts();
+
+    const handleContentUpdate = () => {
+      loadContacts();
+    };
+
+    window.addEventListener('pages-content-updated', handleContentUpdate);
+    window.addEventListener('storage', handleContentUpdate);
+    
+    return () => {
+      window.removeEventListener('pages-content-updated', handleContentUpdate);
+      window.removeEventListener('storage', handleContentUpdate);
+    };
+  }, []);
+
   return (
     <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white mt-20">
       <div className="container mx-auto px-4 py-12">
@@ -48,11 +92,11 @@ const Footer = ({ setActiveSection }: FooterProps) => {
             <ul className="space-y-2 text-sm text-gray-400">
               <li className="flex items-center gap-2">
                 <Icon name="Phone" size={16} />
-                +7 (495) 123-45-67
+                {contacts.phone}
               </li>
               <li className="flex items-center gap-2">
                 <Icon name="Mail" size={16} />
-                info@snt-fakel.ru
+                {contacts.email}
               </li>
             </ul>
           </div>
