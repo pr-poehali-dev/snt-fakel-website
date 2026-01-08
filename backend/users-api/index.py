@@ -438,6 +438,87 @@ def handler(event: dict, context) -> dict:
                     'isBase64Encoded': False
                 }
             
+            if action == 'bulk_import':
+                users_data = body.get('users', [])
+                
+                if not users_data:
+                    cur.close()
+                    conn.close()
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                        'body': json.dumps({'error': 'No users data provided'}),
+                        'isBase64Encoded': False
+                    }
+                
+                imported_count = 0
+                errors = []
+                
+                for user_data in users_data:
+                    try:
+                        # Проверяем, не существует ли уже пользователь с таким email
+                        cur.execute("SELECT id FROM users WHERE email = %s", (user_data['email'],))
+                        existing = cur.fetchone()
+                        
+                        if existing:
+                            errors.append(f"Email {user_data['email']} уже существует")
+                            continue
+                        
+                        # Вставляем нового пользователя
+                        cur.execute("""
+                            INSERT INTO users (
+                                email, password, first_name, last_name, middle_name, phone,
+                                plot_number, birth_date, role, status, owner_is_same,
+                                owner_first_name, owner_last_name, owner_middle_name,
+                                land_doc_number, house_doc_number, email_verified, phone_verified,
+                                payment_status, registered_at
+                            ) VALUES (
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                            )
+                        """, (
+                            user_data['email'],
+                            user_data['password'],
+                            user_data['firstName'],
+                            user_data['lastName'],
+                            user_data.get('middleName', ''),
+                            user_data['phone'],
+                            user_data['plotNumber'],
+                            user_data['birthDate'],
+                            'member',  # По умолчанию все импортированные - члены СНТ
+                            'active',  # Сразу активные
+                            user_data.get('ownerIsSame', True),
+                            user_data.get('ownerFirstName'),
+                            user_data.get('ownerLastName'),
+                            user_data.get('ownerMiddleName'),
+                            user_data.get('landDocNumber'),
+                            user_data.get('houseDocNumber'),
+                            True,  # Email подтверждён
+                            False,
+                            'unpaid',
+                            datetime.now().isoformat()
+                        ))
+                        
+                        imported_count += 1
+                        
+                    except Exception as e:
+                        errors.append(f"Ошибка импорта {user_data.get('email', 'unknown')}: {str(e)}")
+                        continue
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({
+                        'success': True,
+                        'imported': imported_count,
+                        'errors': errors if errors else []
+                    }),
+                    'isBase64Encoded': False
+                }
+            
             if action == 'send_message':
                 # Отправить новое сообщение в чат
                 cur.execute('''

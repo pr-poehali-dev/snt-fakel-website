@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import * as XLSX from 'xlsx';
+import ImportUsersDialog from './ImportUsersDialog';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -46,6 +47,7 @@ interface RoleManagementProps {
 const RoleManagement = ({ onBack }: RoleManagementProps) => {
   const [users, setUsers] = useState<User[]>([]);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');
@@ -256,6 +258,22 @@ const RoleManagement = ({ onBack }: RoleManagementProps) => {
               <p className="text-muted-foreground">Полная информация о всех зарегистрированных пользователях</p>
             </div>
           </div>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowImportDialog(true)}
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+          >
+            <Icon name="Upload" size={18} className="mr-2" />
+            Импорт из Excel
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportToExcel}
+          >
+            <Icon name="Download" size={18} className="mr-2" />
+            Экспорт в Excel
+          </Button>
         </div>
       </div>
 
@@ -491,6 +509,12 @@ const RoleManagement = ({ onBack }: RoleManagementProps) => {
           </div>
         </CardContent>
       </Card>
+
+      <ImportUsersDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImportSuccess={fetchUsers}
+      />
     </section>
   );
 };
