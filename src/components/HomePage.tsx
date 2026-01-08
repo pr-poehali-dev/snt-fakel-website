@@ -201,11 +201,11 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
 
   const renderHero = () => (
     <section key="hero" className="mb-16 text-center">
-      <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-pink-100 px-4 py-2 rounded-full mb-6">
-        <Icon name="Sparkles" size={18} className="text-orange-600" />
-        <span className="text-sm font-medium text-orange-800">{content.hero.subtitle}</span>
-      </div>
-      <div className="relative inline-block mt-8">
+      <div className="relative inline-block">
+        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-pink-100 px-4 py-2 rounded-full mb-3 relative z-10">
+          <Icon name="Sparkles" size={18} className="text-orange-600" />
+          <span className="text-sm font-medium text-orange-800">{content.hero.subtitle}</span>
+        </div>
         <div className="christmas-lights-garland">
           <div className="garland-light"></div>
           <div className="garland-light"></div>
