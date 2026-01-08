@@ -205,17 +205,20 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       admin: 'Администратор'
     };
 
-    const usersJSON = localStorage.getItem('snt_users');
-    let currentUserName = 'Вы';
-    if (usersJSON && currentUserEmail) {
-      const users = JSON.parse(usersJSON);
-      const user = users.find((u: any) => u.email === currentUserEmail);
-      if (user) {
-        currentUserName = `${user.firstName} ${user.lastName} (уч. ${user.plotNumber})`;
-      }
-    }
-
     const avatar = userRole === 'admin' ? '⭐' : userRole === 'chairman' ? '👑' : userRole === 'board_member' ? '👥' : '👤';
+
+    // Получить имя пользователя из БД
+    let currentUserName = 'Пользователь';
+    try {
+      const userResponse = await fetch(`https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35`);
+      const userData = await userResponse.json();
+      const user = userData.users?.find((u: any) => u.email === currentUserEmail);
+      if (user) {
+        currentUserName = `${user.first_name} ${user.last_name} (уч. ${user.plot_number})`;
+      }
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+    }
 
     try {
       const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
