@@ -152,7 +152,8 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
         toast.success(`Пользователь ${userName} заблокирован`);
         refreshMessages();
       } else {
-        toast.error('Ошибка при блокировке');
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Ошибка при блокировке');
       }
     } catch (error) {
       toast.error('Ошибка соединения');

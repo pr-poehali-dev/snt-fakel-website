@@ -633,11 +633,46 @@ def handler(event: dict, context) -> dict:
             
             if action == 'block_user':
                 # Заблокировать пользователя
+                target_email = body['email']
+                blocker_email = body['blockedBy']
+                
+                # Получаем роли обоих пользователей
+                cur.execute('SELECT role FROM users WHERE email = %s', (target_email,))
+                target_user = cur.fetchone()
+                
+                cur.execute('SELECT role FROM users WHERE email = %s', (blocker_email,))
+                blocker_user = cur.fetchone()
+                
+                if target_user and blocker_user:
+                    target_role = target_user['role']
+                    blocker_role = blocker_user['role']
+                    
+                    # Защита: админ не может блокировать председателя и наоборот
+                    if target_role == 'admin' and blocker_role == 'chairman':
+                        cur.close()
+                        conn.close()
+                        return {
+                            'statusCode': 403,
+                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                            'body': json.dumps({'error': 'Председатель не может заблокировать администратора'}),
+                            'isBase64Encoded': False
+                        }
+                    
+                    if target_role == 'chairman' and blocker_role == 'admin':
+                        cur.close()
+                        conn.close()
+                        return {
+                            'statusCode': 403,
+                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                            'body': json.dumps({'error': 'Администратор не может заблокировать председателя'}),
+                            'isBase64Encoded': False
+                        }
+                
                 cur.execute('''
                     INSERT INTO blocked_chat_users (email, blocked_by, block_reason)
                     VALUES (%s, %s, %s)
                     ON CONFLICT (email) DO UPDATE SET blocked_by = %s, block_reason = %s
-                ''', (body['email'], body['blockedBy'], body.get('reason', ''), body['blockedBy'], body.get('reason', '')))
+                ''', (target_email, blocker_email, body.get('reason', ''), blocker_email, body.get('reason', '')))
                 conn.commit()
                 cur.close()
                 conn.close()
