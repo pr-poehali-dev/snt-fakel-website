@@ -28,7 +28,7 @@ const Footer = ({ setActiveSection }: FooterProps) => {
             setContacts({
               phone: content.contacts.phone || '+7 (495) 123-45-67',
               email: content.contacts.email || 'info@snt-fakel.ru',
-              address: content.contacts.address || 'Московская область'
+              address: content.contacts.addressText || 'Московская область'
             });
           }
         } catch (e) {
