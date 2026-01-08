@@ -9,7 +9,9 @@ def send_role_change_notification(email: str, full_name: str, old_role: str, new
     role_names = {
         'admin': 'Администратор',
         'chairman': 'Председатель',
-        'member': 'Член СНТ'
+        'board_member': 'Член правления',
+        'member': 'Член СНТ',
+        'guest': 'Гость'
     }
     
     old_role_name = role_names.get(old_role, old_role)
