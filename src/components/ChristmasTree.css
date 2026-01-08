@@ -227,117 +227,156 @@
 
 .christmas-lights-garland {
   position: absolute;
-  top: -20px;
-  left: -40px;
-  right: -40px;
-  bottom: -10px;
+  top: -35px;
+  left: -60px;
+  right: -60px;
+  height: 40px;
   pointer-events: none;
   z-index: 5;
 }
 
-.christmas-lights-garland::before,
-.christmas-lights-garland::after {
+.christmas-lights-garland::before {
   content: "";
   position: absolute;
+  top: 15px;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #654321 0%, #8b6914 50%, #654321 100%);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  height: 2px;
+  background: #2a2a2a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.christmas-lights-garland::before {
-  top: 0;
-  border-radius: 50px;
-  transform: translateY(-50%);
+.garland-light {
+  position: absolute;
+  width: 12px;
+  height: 16px;
+  border-radius: 40% 40% 50% 50%;
+  top: 8px;
+  animation: garland-blink 1.5s ease-in-out infinite;
 }
 
-.christmas-lights-garland::after {
-  bottom: 0;
-  border-radius: 50px;
-  transform: translateY(50%);
+.garland-light::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5px;
+  height: 8px;
+  background: #2a2a2a;
 }
 
-.christmas-lights-garland {
-  background-image:
-    radial-gradient(circle at 8% 20px, #ff0000 0, #ff0000 5px, transparent 5px),
-    radial-gradient(
-      circle at 24% 20px,
-      #0066ff 0,
-      #0066ff 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 40% 20px,
-      #ffff00 0,
-      #ffff00 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 56% 20px,
-      #00ff00 0,
-      #00ff00 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 72% 20px,
-      #ff69b4 0,
-      #ff69b4 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 88% 20px,
-      #9370db 0,
-      #9370db 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 8% calc(100% - 20px),
-      #ff8c00 0,
-      #ff8c00 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 24% calc(100% - 20px),
-      #00ffff 0,
-      #00ffff 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 40% calc(100% - 20px),
-      #ff0000 0,
-      #ff0000 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 56% calc(100% - 20px),
-      #0066ff 0,
-      #0066ff 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 72% calc(100% - 20px),
-      #ffff00 0,
-      #ffff00 5px,
-      transparent 5px
-    ),
-    radial-gradient(
-      circle at 88% calc(100% - 20px),
-      #00ff00 0,
-      #00ff00 5px,
-      transparent 5px
-    );
+.garland-light:nth-child(1) {
+  left: 5%;
+  background: radial-gradient(circle at 50% 30%, #ff6666, #ff0000);
+  box-shadow:
+    0 0 12px #ff0000,
+    0 0 25px #ff0000,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 0s;
+}
 
-  animation: garland-blink 2s ease-in-out infinite;
+.garland-light:nth-child(2) {
+  left: 15%;
+  background: radial-gradient(circle at 50% 30%, #6699ff, #0066ff);
+  box-shadow:
+    0 0 12px #0066ff,
+    0 0 25px #0066ff,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 0.2s;
+}
+
+.garland-light:nth-child(3) {
+  left: 25%;
+  background: radial-gradient(circle at 50% 30%, #ffff66, #ffff00);
+  box-shadow:
+    0 0 12px #ffff00,
+    0 0 25px #ffff00,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 0.4s;
+}
+
+.garland-light:nth-child(4) {
+  left: 35%;
+  background: radial-gradient(circle at 50% 30%, #66ff66, #00ff00);
+  box-shadow:
+    0 0 12px #00ff00,
+    0 0 25px #00ff00,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 0.6s;
+}
+
+.garland-light:nth-child(5) {
+  left: 45%;
+  background: radial-gradient(circle at 50% 30%, #ff99cc, #ff69b4);
+  box-shadow:
+    0 0 12px #ff69b4,
+    0 0 25px #ff69b4,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 0.8s;
+}
+
+.garland-light:nth-child(6) {
+  left: 55%;
+  background: radial-gradient(circle at 50% 30%, #b399ff, #9370db);
+  box-shadow:
+    0 0 12px #9370db,
+    0 0 25px #9370db,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 1s;
+}
+
+.garland-light:nth-child(7) {
+  left: 65%;
+  background: radial-gradient(circle at 50% 30%, #ffaa66, #ff8c00);
+  box-shadow:
+    0 0 12px #ff8c00,
+    0 0 25px #ff8c00,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 1.2s;
+}
+
+.garland-light:nth-child(8) {
+  left: 75%;
+  background: radial-gradient(circle at 50% 30%, #66ffff, #00ffff);
+  box-shadow:
+    0 0 12px #00ffff,
+    0 0 25px #00ffff,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 0.3s;
+}
+
+.garland-light:nth-child(9) {
+  left: 85%;
+  background: radial-gradient(circle at 50% 30%, #ff6666, #ff0000);
+  box-shadow:
+    0 0 12px #ff0000,
+    0 0 25px #ff0000,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 0.5s;
+}
+
+.garland-light:nth-child(10) {
+  left: 95%;
+  background: radial-gradient(circle at 50% 30%, #6699ff, #0066ff);
+  box-shadow:
+    0 0 12px #0066ff,
+    0 0 25px #0066ff,
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  animation-delay: 0.7s;
 }
 
 @keyframes garland-blink {
   0%,
   100% {
-    filter: brightness(1.5) drop-shadow(0 0 8px currentColor);
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1.5);
   }
   50% {
-    filter: brightness(0.8) drop-shadow(0 0 4px currentColor);
+    opacity: 0.4;
+    transform: scale(0.95);
+    filter: brightness(0.7);
   }
 }
 

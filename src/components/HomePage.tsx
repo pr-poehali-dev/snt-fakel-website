@@ -206,7 +206,18 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
         <span className="text-sm font-medium text-orange-800">{content.hero.subtitle}</span>
       </div>
       <div className="relative inline-block">
-        <div className="christmas-lights-garland"></div>
+        <div className="christmas-lights-garland">
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+        </div>
         <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight relative z-10">
           {content.hero.title}
         </h2>
