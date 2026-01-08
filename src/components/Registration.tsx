@@ -166,16 +166,30 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       const usersData = await usersResponse.json();
       const existingUsers = usersData.users || [];
       
-      const plotOwner = existingUsers.find((u: any) => u.plot_number === formData.plotNumber);
+      const emailExists = existingUsers.find((u: any) => u.email.toLowerCase() === formData.email.toLowerCase());
+      if (emailExists) {
+        toast.error('Пользователь с таким email уже зарегистрирован');
+        setErrors({ ...errors, email: 'Email уже используется' });
+        return;
+      }
+      
+      const phoneExists = existingUsers.find((u: any) => u.phone === formData.phone);
+      if (phoneExists) {
+        toast.error('Пользователь с таким номером телефона уже зарегистрирован');
+        setErrors({ ...errors, phone: 'Номер телефона уже используется' });
+        return;
+      }
+      
+      const plotOwner = existingUsers.find((u: any) => u.plot_number === formData.plotNumber && u.is_plot_owner === true);
       
       if (plotOwner) {
         const ownerName = `${plotOwner.last_name} ${plotOwner.first_name} ${plotOwner.middle_name || ''}`.trim();
-        toast.error(`Участок №${formData.plotNumber} уже занят пользователем ${ownerName}`);
-        setErrors({ ...errors, plotNumber: 'Этот участок уже занят' });
+        toast.error(`Участок №${formData.plotNumber} уже имеет собственника: ${ownerName}`);
+        setErrors({ ...errors, plotNumber: 'У этого участка уже есть собственник' });
         return;
       }
     } catch (error) {
-      console.error('Ошибка проверки участка:', error);
+      console.error('Ошибка проверки данных:', error);
       toast.error('Ошибка проверки данных. Попробуйте позже.');
       return;
     }
@@ -192,6 +206,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       role: 'member',
       status: 'active',
       ownerIsSame: formData.ownerIsSame,
+      isPlotOwner: formData.ownerIsSame,
       ownerFirstName: formData.ownerFirstName || null,
       ownerLastName: formData.ownerLastName || null,
       ownerMiddleName: formData.ownerMiddleName || null,
