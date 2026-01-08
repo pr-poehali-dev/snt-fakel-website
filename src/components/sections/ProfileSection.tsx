@@ -246,17 +246,21 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
             {roleNames[userRole]}
           </Badge>
         </div>
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-          <p className="text-lg">
-            <span className="font-semibold text-blue-900">
-              {userData.firstName} {userData.lastName}
-            </span>
-            {userData.plotNumber && (
-              <span className="text-blue-700 ml-2">• Участок №{userData.plotNumber}</span>
-            )}
-            <span className="text-blue-600 ml-2">• {userData.email}</span>
-          </p>
-        </div>
+        {userData.firstName && userData.lastName && (
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+            <p className="text-lg">
+              <span className="font-semibold text-blue-900">
+                {userData.firstName} {userData.lastName}
+              </span>
+              {userData.plotNumber && (
+                <span className="text-blue-700 ml-2">• Участок №{userData.plotNumber}</span>
+              )}
+              {userData.email && (
+                <span className="text-blue-600 ml-2">• {userData.email}</span>
+              )}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 mb-6">
