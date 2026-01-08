@@ -55,6 +55,17 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
 
+  const getRoleName = (role: UserRole) => {
+    switch (role) {
+      case 'admin': return 'Администратор';
+      case 'chairman': return 'Председатель';
+      case 'board_member': return 'Член правления';
+      case 'member': return 'Член СНТ';
+      case 'guest': return 'Гость';
+      default: return 'Гость';
+    }
+  };
+
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
     if (usersJSON) {
@@ -228,11 +239,24 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-4xl font-bold">Личный кабинет</h2>
-        <Badge className={`text-lg px-4 py-2 ${userRole === 'admin' ? 'bg-gradient-to-r from-orange-500 to-pink-500' : userRole === 'chairman' ? 'bg-purple-500' : userRole === 'board_member' ? 'bg-green-500' : ''}`}>
-          {roleNames[userRole]}
-        </Badge>
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="flex items-center justify-between">
+          <h2 className="text-4xl font-bold">Личный кабинет</h2>
+          <Badge className={`text-lg px-4 py-2 ${userRole === 'admin' ? 'bg-gradient-to-r from-orange-500 to-pink-500' : userRole === 'chairman' ? 'bg-purple-500' : userRole === 'board_member' ? 'bg-green-500' : ''}`}>
+            {roleNames[userRole]}
+          </Badge>
+        </div>
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+          <p className="text-lg">
+            <span className="font-semibold text-blue-900">
+              {userData.firstName} {userData.lastName}
+            </span>
+            {userData.plotNumber && (
+              <span className="text-blue-700 ml-2">• Участок №{userData.plotNumber}</span>
+            )}
+            <span className="text-blue-600 ml-2">• {userData.email}</span>
+          </p>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 mb-6">
