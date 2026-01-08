@@ -11,6 +11,8 @@ interface ArchivedVotingsProps {
 
 const ArchivedVotings = ({ userRole, setActiveSection }: ArchivedVotingsProps) => {
   const [archivedVotings, setArchivedVotings] = useState<any[]>([]);
+  const [filterYear, setFilterYear] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'title'>('date-desc');
 
   useEffect(() => {
     loadArchivedVotings();
@@ -21,14 +23,33 @@ const ArchivedVotings = ({ userRole, setActiveSection }: ArchivedVotingsProps) =
 
     window.addEventListener('votings-updated', handleUpdate);
     return () => window.removeEventListener('votings-updated', handleUpdate);
-  }, []);
+  }, [filterYear, sortBy]);
 
   const loadArchivedVotings = () => {
     const votingsJSON = localStorage.getItem('snt_votings');
     if (votingsJSON) {
       try {
         const votings = JSON.parse(votingsJSON);
-        const archived = votings.filter((v: any) => v.archived === true);
+        let archived = votings.filter((v: any) => v.archived === true);
+        
+        if (filterYear !== 'all') {
+          archived = archived.filter((v: any) => {
+            const year = new Date(v.endDate).getFullYear().toString();
+            return year === filterYear;
+          });
+        }
+        
+        archived.sort((a: any, b: any) => {
+          if (sortBy === 'date-desc') {
+            return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();
+          } else if (sortBy === 'date-asc') {
+            return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+          } else if (sortBy === 'title') {
+            return a.title.localeCompare(b.title);
+          }
+          return 0;
+        });
+        
         setArchivedVotings(archived);
       } catch (e) {
         console.error('Error loading archived votings:', e);
@@ -57,15 +78,66 @@ const ArchivedVotings = ({ userRole, setActiveSection }: ArchivedVotingsProps) =
     }
   };
 
+  const availableYears = () => {
+    const votingsJSON = localStorage.getItem('snt_votings');
+    if (!votingsJSON) return [];
+    
+    try {
+      const votings = JSON.parse(votingsJSON);
+      const years = new Set<string>();
+      votings.filter((v: any) => v.archived === true).forEach((v: any) => {
+        years.add(new Date(v.endDate).getFullYear().toString());
+      });
+      return Array.from(years).sort().reverse();
+    } catch {
+      return [];
+    }
+  };
+
   return (
     <section>
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-          <Icon name="Archive" className="text-white" size={24} />
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+            <Icon name="Archive" className="text-white" size={24} />
+          </div>
+          <div>
+            <h2 className="text-4xl font-bold">Архив голосований</h2>
+            <p className="text-muted-foreground">История завершённых и архивированных голосований</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-4xl font-bold">Архив голосований</h2>
-          <p className="text-muted-foreground">История завершённых и архивированных голосований</p>
+
+        <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex items-center gap-2">
+            <Icon name="Calendar" size={18} className="text-muted-foreground" />
+            <select
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+              className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="all">Все годы</option>
+              {availableYears().map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Icon name="ArrowUpDown" size={18} className="text-muted-foreground" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="date-desc">Новые первые</option>
+              <option value="date-asc">Старые первые</option>
+              <option value="title">По названию</option>
+            </select>
+          </div>
+
+          <Badge variant="secondary" className="ml-auto px-4 py-2 text-base">
+            {archivedVotings.length} {archivedVotings.length === 1 ? 'голосование' : 'голосований'}
+          </Badge>
         </div>
       </div>
 
@@ -75,8 +147,12 @@ const ArchivedVotings = ({ userRole, setActiveSection }: ArchivedVotingsProps) =
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Icon name="Archive" size={32} className="text-gray-400" />
             </div>
-            <p className="text-lg text-muted-foreground">Архив пуст</p>
-            <p className="text-sm text-muted-foreground mt-2">Архивированные голосования появятся здесь</p>
+            <p className="text-lg text-muted-foreground">
+              {filterYear !== 'all' ? `Нет голосований за ${filterYear} год` : 'Архив пуст'}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {filterYear !== 'all' ? 'Попробуйте выбрать другой год' : 'Архивированные голосования появятся здесь'}
+            </p>
           </CardContent>
         </Card>
       ) : (

@@ -138,7 +138,7 @@ const Index = () => {
     toast.success('Ваш голос учтён!');
   };
 
-  const handleLogin = (email: string, role: UserRole, isOwner?: boolean) => {
+  const handleLogin = (email: string, role: UserRole, isOwner?: boolean, firstName?: string, lastName?: string, plotNumber?: string) => {
     setIsLoggedIn(true);
     setUserRole(role);
     setCurrentUserEmail(email);
@@ -151,8 +151,12 @@ const Index = () => {
       userRole: role,
       currentUserEmail: email,
       isOwner: isOwner === true,
+      firstName: firstName || '',
+      lastName: lastName || '',
+      plotNumber: plotNumber || '',
       expiresAt
     }));
+    localStorage.setItem('current_user_email', email);
   };
 
   const handleShowLogin = () => {
