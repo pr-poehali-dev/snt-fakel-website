@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import { useState, useEffect } from 'react';
 
 interface Message {
   id: number;
@@ -39,6 +40,18 @@ const ChatMessage = ({
   onBlockUser,
   onUnblockUser
 }: ChatMessageProps) => {
+  const [hideDeleted, setHideDeleted] = useState(false);
+
+  useEffect(() => {
+    if (message.deleted) {
+      const timer = setTimeout(() => {
+        setHideDeleted(true);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [message.deleted]);
+
   const formatTimestamp = (timestamp: string) => {
     try {
       const messageDateMoscow = new Date(timestamp);
@@ -76,8 +89,21 @@ const ChatMessage = ({
     showModerationButtons
   });
   
-  if (message.deleted) {
+  if (message.deleted && hideDeleted) {
     return null;
+  }
+
+  if (message.deleted) {
+    return (
+      <div className="flex gap-3 opacity-50">
+        <div className="flex-1 bg-gray-100 rounded-lg px-4 py-2">
+          <p className="text-xs text-muted-foreground italic">
+            <Icon name="Trash2" size={12} className="inline mr-1" />
+            Сообщение удалено
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
