@@ -160,7 +160,26 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const saveUserToDatabase = () => {
+  const saveUserToDatabase = async () => {
+    try {
+      const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const usersData = await usersResponse.json();
+      const existingUsers = usersData.users || [];
+      
+      const plotOwner = existingUsers.find((u: any) => u.plot_number === formData.plotNumber);
+      
+      if (plotOwner) {
+        const ownerName = `${plotOwner.last_name} ${plotOwner.first_name} ${plotOwner.middle_name || ''}`.trim();
+        toast.error(`Участок №${formData.plotNumber} уже занят пользователем ${ownerName}`);
+        setErrors({ ...errors, plotNumber: 'Этот участок уже занят' });
+        return;
+      }
+    } catch (error) {
+      console.error('Ошибка проверки участка:', error);
+      toast.error('Ошибка проверки данных. Попробуйте позже.');
+      return;
+    }
+
     const newUser = {
       email: formData.email,
       password: formData.password,
