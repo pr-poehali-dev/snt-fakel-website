@@ -120,7 +120,7 @@ def handler(event: dict, context) -> dict:
                     })
                 
                 # Получить список заблокированных
-                cur.execute('SELECT email, blocked_by, blocked_at, block_reason FROM blocked_chat_users WHERE blocked_by IS NOT NULL')
+                cur.execute('SELECT email, blocked_by, blocked_at, block_reason FROM blocked_chat_users')
                 blocked_rows = cur.fetchall()
                 
                 blocked = []
@@ -636,8 +636,8 @@ def handler(event: dict, context) -> dict:
                 }
             
             if action == 'unblock_user':
-                # Разблокировать пользователя
-                cur.execute('UPDATE blocked_chat_users SET blocked_by = NULL WHERE email = %s', (body['email'],))
+                # Разблокировать пользователя - удаляем запись из таблицы
+                cur.execute('DELETE FROM blocked_chat_users WHERE email = %s', (body['email'],))
                 conn.commit()
                 cur.close()
                 conn.close()
