@@ -89,9 +89,15 @@ const PageEditor = () => {
   }, []);
 
   const saveContent = () => {
-    localStorage.setItem('pages_content', JSON.stringify(content));
+    const contentToSave = JSON.parse(JSON.stringify(content));
+    localStorage.setItem('pages_content', JSON.stringify(contentToSave));
     toast.success('Изменения сохранены!');
-    window.dispatchEvent(new CustomEvent('pages-content-updated'));
+    
+    // Force immediate update
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('pages-content-updated'));
+      window.dispatchEvent(new Event('storage'));
+    }, 0);
   };
 
   const resetContent = () => {

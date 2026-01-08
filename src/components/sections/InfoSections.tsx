@@ -85,7 +85,8 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
       const savedContent = localStorage.getItem('pages_content');
       if (savedContent) {
         try {
-          setContent(JSON.parse(savedContent));
+          const parsed = JSON.parse(savedContent);
+          setContent(parsed);
         } catch (e) {
           console.error('Error loading pages content:', e);
         }
@@ -98,8 +99,19 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
       loadContent();
     };
 
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'pages_content') {
+        loadContent();
+      }
+    };
+
     window.addEventListener('pages-content-updated', handleContentUpdate);
-    return () => window.removeEventListener('pages-content-updated', handleContentUpdate);
+    window.addEventListener('storage', handleStorageChange as any);
+    
+    return () => {
+      window.removeEventListener('pages-content-updated', handleContentUpdate);
+      window.removeEventListener('storage', handleStorageChange as any);
+    };
   }, []);
   if (activeSection === 'rules') {
     return (
