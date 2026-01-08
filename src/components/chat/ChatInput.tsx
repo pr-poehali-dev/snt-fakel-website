@@ -23,12 +23,17 @@ const ChatInput = ({
 }: ChatInputProps) => {
   if (isCurrentUserBlocked) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-        <div className="flex items-center gap-2 text-red-700">
-          <Icon name="Ban" size={18} />
-          <p className="text-sm font-medium">
-            Вы заблокированы модератором и не можете писать в чат
-          </p>
+      <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
+        <div className="flex items-start gap-3 text-red-700">
+          <Icon name="Ban" size={24} className="flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold mb-1">
+              ❌ Вы заблокированы модератором
+            </p>
+            <p className="text-xs text-red-600">
+              Вы не можете отправлять сообщения в чат. Для разблокировки обратитесь к администратору или председателю СНТ.
+            </p>
+          </div>
         </div>
       </div>
     );

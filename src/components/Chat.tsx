@@ -335,7 +335,14 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     }
     
     if (isCurrentUserBlocked) {
-      toast.error('Вы заблокированы модератором и не можете писать в чат');
+      toast.error('❌ Вы заблокированы модератором и не можете писать в чат. Для разблокировки обратитесь к администратору.', {
+        duration: 5000,
+        style: {
+          background: '#fee2e2',
+          border: '1px solid #ef4444',
+          color: '#991b1b'
+        }
+      });
       return;
     }
 
@@ -408,7 +415,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
             <div className="h-[500px] overflow-y-auto p-6" ref={scrollRef}>
               <div className="space-y-4">
                 {messages.map((message) => {
-                  const isOwnMessage = message.userId === 999;
+                  const isOwnMessage = message.userEmail === currentUserEmail;
                   const isBlocked = message.userEmail && blockedUsers.some(u => u.email === message.userEmail);
                   
                   return (
@@ -418,6 +425,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                       isOwnMessage={isOwnMessage}
                       isBlocked={!!isBlocked}
                       isModerator={isModerator}
+                      currentUserEmail={currentUserEmail}
                       onDeleteMessage={handleDeleteMessage}
                       onBlockUser={handleBlockUser}
                       onUnblockUser={handleUnblockUser}

@@ -21,6 +21,7 @@ interface ChatMessageProps {
   isOwnMessage: boolean;
   isBlocked: boolean;
   isModerator: boolean;
+  currentUserEmail: string;
   onDeleteMessage: (messageId: number) => void;
   onBlockUser: (userEmail: string, userName: string) => void;
   onUnblockUser: (userEmail: string) => void;
@@ -31,6 +32,7 @@ const ChatMessage = ({
   isOwnMessage,
   isBlocked,
   isModerator,
+  currentUserEmail,
   onDeleteMessage,
   onBlockUser,
   onUnblockUser
@@ -80,13 +82,16 @@ const ChatMessage = ({
           >
             <p className="text-sm">{message.text}</p>
           </div>
-          {isModerator && !isOwnMessage && message.userEmail && (
+          {isModerator && message.userEmail && message.userEmail !== currentUserEmail && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 p-0"
-                onClick={() => onDeleteMessage(message.id)}
+                className="h-6 w-6 p-0 hover:bg-red-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteMessage(message.id);
+                }}
                 title="Удалить сообщение"
               >
                 <Icon name="Trash2" size={14} className="text-red-500" />
@@ -95,8 +100,11 @@ const ChatMessage = ({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-6 w-6 p-0"
-                  onClick={() => onBlockUser(message.userEmail!, message.userName)}
+                  className="h-6 w-6 p-0 hover:bg-orange-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onBlockUser(message.userEmail!, message.userName);
+                  }}
                   title="Заблокировать пользователя"
                 >
                   <Icon name="Ban" size={14} className="text-orange-500" />
@@ -105,8 +113,11 @@ const ChatMessage = ({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-6 w-6 p-0"
-                  onClick={() => onUnblockUser(message.userEmail!)}
+                  className="h-6 w-6 p-0 hover:bg-green-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnblockUser(message.userEmail!);
+                  }}
                   title="Разблокировать пользователя"
                 >
                   <Icon name="CheckCircle" size={14} className="text-green-500" />
