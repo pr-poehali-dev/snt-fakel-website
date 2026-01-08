@@ -222,7 +222,7 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
           <div className="garland-light"></div>
           <div className="garland-light"></div>
         </div>
-        <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight relative z-10">
+        <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight relative z-10 mt-8">
           {content.hero.title}
         </h2>
       </div>
