@@ -5,6 +5,7 @@ from psycopg2.extras import RealDictCursor
 import requests
 import secrets
 from datetime import datetime, timedelta
+import pytz
 
 # Force redeploy to fix network issues
 
@@ -98,15 +99,24 @@ def handler(event: dict, context) -> dict:
             if action == 'chat_messages':
                 cur.execute('''
                     SELECT id, user_email, user_name, user_role, avatar, 
-                           message_text, created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow' as created_at_msk,
-                           is_removed, removed_by
+                           message_text, created_at, is_removed, removed_by
                     FROM chat_messages
                     ORDER BY created_at ASC
                 ''')
                 rows = cur.fetchall()
                 
+                moscow_tz = pytz.timezone('Europe/Moscow')
                 messages = []
                 for row in rows:
+                    timestamp_utc = row['created_at']
+                    if timestamp_utc:
+                        if timestamp_utc.tzinfo is None:
+                            timestamp_utc = pytz.utc.localize(timestamp_utc)
+                        timestamp_moscow = timestamp_utc.astimezone(moscow_tz)
+                        timestamp_str = timestamp_moscow.isoformat()
+                    else:
+                        timestamp_str = ''
+                    
                     messages.append({
                         'id': row['id'],
                         'userEmail': row['user_email'],
@@ -114,7 +124,7 @@ def handler(event: dict, context) -> dict:
                         'userRole': row['user_role'],
                         'avatar': row['avatar'],
                         'text': row['message_text'],
-                        'timestamp': row['created_at_msk'].isoformat() if row['created_at_msk'] else '',
+                        'timestamp': timestamp_str,
                         'deleted': row['is_removed'],
                         'deletedBy': row['removed_by']
                     })
@@ -661,14 +671,34 @@ def handler(event: dict, context) -> dict:
                 conn.commit()
                 
                 cur.execute('''
-                    SELECT u.email, u.first_name, u.last_name, u.plot_number, u.role, 
-                           o.last_seen AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow' as last_seen
+                    SELECT u.email, u.first_name, u.last_name, u.plot_number, u.role, o.last_seen
                     FROM online_users o
                     JOIN users u ON o.email = u.email
                     WHERE o.last_seen >= CURRENT_TIMESTAMP - INTERVAL '2 minutes'
                     ORDER BY o.last_seen DESC
                 ''')
-                online_users = cur.fetchall()
+                rows = cur.fetchall()
+                
+                moscow_tz = pytz.timezone('Europe/Moscow')
+                online_users = []
+                for row in rows:
+                    last_seen_utc = row['last_seen']
+                    if last_seen_utc:
+                        if last_seen_utc.tzinfo is None:
+                            last_seen_utc = pytz.utc.localize(last_seen_utc)
+                        last_seen_moscow = last_seen_utc.astimezone(moscow_tz)
+                        last_seen_str = last_seen_moscow.isoformat()
+                    else:
+                        last_seen_str = ''
+                    
+                    online_users.append({
+                        'email': row['email'],
+                        'first_name': row['first_name'],
+                        'last_name': row['last_name'],
+                        'plot_number': row['plot_number'],
+                        'role': row['role'],
+                        'last_seen': last_seen_str
+                    })
                 
                 cur.close()
                 conn.close()
