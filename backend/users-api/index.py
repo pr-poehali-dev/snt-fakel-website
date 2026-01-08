@@ -2,6 +2,57 @@ import json
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import requests
+
+def send_role_change_notification(email: str, full_name: str, old_role: str, new_role: str):
+    '''Отправка уведомления о смене роли'''
+    role_names = {
+        'admin': 'Администратор',
+        'chairman': 'Председатель',
+        'member': 'Член СНТ'
+    }
+    
+    old_role_name = role_names.get(old_role, old_role)
+    new_role_name = role_names.get(new_role, new_role)
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
+            <h2 style="color: #f97316;">🔔 Изменение роли в СНТ Факел</h2>
+            <p>Здравствуйте, {full_name}!</p>
+            <p>Ваша роль в системе СНТ Факел была изменена.</p>
+            <div style="background-color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Предыдущая роль:</strong> {old_role_name}</p>
+                <p><strong>Новая роль:</strong> {new_role_name}</p>
+            </div>
+            <p>Если у вас есть вопросы, пожалуйста, свяжитесь с администрацией.</p>
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+            <p style="font-size: 12px; color: #888;">СНТ Факел - Система управления садовым товариществом</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    try:
+        response = requests.post(
+            'https://functions.poehali.dev/2672fb97-4151-4228-bb1c-4d0b3a502216',
+            json={
+                'to_email': email,
+                'subject': 'Изменение роли в СНТ Факел',
+                'html_content': html_content,
+                'text_content': f'Ваша роль изменена с "{old_role_name}" на "{new_role_name}"'
+            },
+            timeout=10
+        )
+        return response.status_code == 200
+    except Exception as e:
+        print(f'Error sending role change notification: {e}')
+        return False
 
 def handler(event: dict, context) -> dict:
     '''API для управления пользователями'''
@@ -177,12 +228,30 @@ def handler(event: dict, context) -> dict:
                 }
             
             cur.execute("""
+                SELECT email, first_name, last_name, role
+                FROM users 
+                WHERE id = %s
+            """, (user_id,))
+            old_user_data = cur.fetchone()
+            old_role = old_user_data['role'] if old_user_data else None
+            
+            cur.execute("""
                 UPDATE users 
                 SET role = %s, payment_status = %s, updated_at = CURRENT_TIMESTAMP
                 WHERE id = %s
             """, (body.get('role'), body.get('paymentStatus'), user_id))
             
             conn.commit()
+            
+            new_role = body.get('role')
+            if old_role and new_role and old_role != new_role and old_user_data:
+                send_role_change_notification(
+                    old_user_data['email'],
+                    f"{old_user_data['first_name']} {old_user_data['last_name']}",
+                    old_role,
+                    new_role
+                )
+            
             cur.close()
             conn.close()
             
