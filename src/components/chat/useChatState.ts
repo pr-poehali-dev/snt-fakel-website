@@ -13,6 +13,7 @@ export interface Message {
   userEmail?: string;
   deleted?: boolean;
   deletedBy?: string;
+  deletedAt?: string;
 }
 
 export interface BlockedUser {
@@ -47,7 +48,8 @@ export const useChatState = () => {
           avatar: msg.avatar,
           userEmail: msg.userEmail,
           deleted: msg.deleted,
-          deletedBy: msg.deletedBy
+          deletedBy: msg.deletedBy,
+          deletedAt: msg.deletedAt
         }));
         setMessages(formattedMessages);
       }

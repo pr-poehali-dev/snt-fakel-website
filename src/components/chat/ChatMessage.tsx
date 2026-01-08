@@ -15,6 +15,7 @@ interface Message {
   userEmail?: string;
   deleted?: boolean;
   deletedBy?: string;
+  deletedAt?: string;
 }
 
 interface ChatMessageProps {
@@ -43,14 +44,24 @@ const ChatMessage = ({
   const [hideDeleted, setHideDeleted] = useState(false);
 
   useEffect(() => {
-    if (message.deleted) {
+    if (message.deleted && message.deletedAt) {
+      const deletedTime = new Date(message.deletedAt).getTime();
+      const currentTime = Date.now();
+      const elapsed = currentTime - deletedTime;
+      const remaining = 10000 - elapsed;
+
+      if (remaining <= 0) {
+        setHideDeleted(true);
+        return;
+      }
+
       const timer = setTimeout(() => {
         setHideDeleted(true);
-      }, 10000);
+      }, remaining);
 
       return () => clearTimeout(timer);
     }
-  }, [message.deleted]);
+  }, [message.deleted, message.deletedAt]);
 
   const formatTimestamp = (timestamp: string) => {
     try {

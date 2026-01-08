@@ -99,7 +99,7 @@ def handler(event: dict, context) -> dict:
             if action == 'chat_messages':
                 cur.execute('''
                     SELECT id, user_email, user_name, user_role, avatar, 
-                           message_text, created_at, is_removed, removed_by
+                           message_text, created_at, is_removed, removed_by, removed_at
                     FROM chat_messages
                     ORDER BY created_at ASC
                 ''')
@@ -117,6 +117,14 @@ def handler(event: dict, context) -> dict:
                     else:
                         timestamp_str = ''
                     
+                    removed_at_str = ''
+                    if row['removed_at']:
+                        removed_at_utc = row['removed_at']
+                        if removed_at_utc.tzinfo is None:
+                            removed_at_utc = pytz.utc.localize(removed_at_utc)
+                        removed_at_moscow = removed_at_utc.astimezone(moscow_tz)
+                        removed_at_str = removed_at_moscow.isoformat()
+                    
                     messages.append({
                         'id': row['id'],
                         'userEmail': row['user_email'],
@@ -126,7 +134,8 @@ def handler(event: dict, context) -> dict:
                         'text': row['message_text'],
                         'timestamp': timestamp_str,
                         'deleted': row['is_removed'],
-                        'deletedBy': row['removed_by']
+                        'deletedBy': row['removed_by'],
+                        'deletedAt': removed_at_str
                     })
                 
                 # Получить список заблокированных
@@ -617,7 +626,7 @@ def handler(event: dict, context) -> dict:
                 # Удалить сообщение в чате
                 cur.execute('''
                     UPDATE chat_messages 
-                    SET is_removed = TRUE, removed_by = %s
+                    SET is_removed = TRUE, removed_by = %s, removed_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                 ''', (body['deletedBy'], body['messageId']))
                 conn.commit()
