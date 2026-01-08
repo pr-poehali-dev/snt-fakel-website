@@ -39,14 +39,21 @@ const Login = ({ onSuccess, onCancel, onRegisterClick, onPasswordResetClick }: L
     setIsLoading(true);
 
     try {
-      const url = `https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?action=login&email=${encodeURIComponent(formData.email)}&password=${encodeURIComponent(formData.password)}`;
-      console.log('Отправка запроса на авторизацию:', url);
+      const url = 'https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35';
+      console.log('Отправка запроса на авторизацию');
+      console.log('Email:', formData.email);
       
       const response = await fetch(url, {
-        method: 'GET',
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Accept': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          action: 'login',
+          email: formData.email,
+          password: formData.password
+        })
       });
       
       console.log('Получен ответ:', response.status, response.statusText);
