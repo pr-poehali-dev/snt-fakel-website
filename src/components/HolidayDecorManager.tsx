@@ -172,12 +172,28 @@ const HolidayDecorManager = ({ onBack }: HolidayDecorManagerProps) => {
 
             <div className="space-y-2">
               <Label>Эмодзи / Символ</Label>
-              <Input
-                value={formData.emoji}
-                onChange={(e) => setFormData({ ...formData, emoji: e.target.value })}
-                placeholder="🎄 ❄️ 🎉 💖 🎈"
-                className="text-2xl"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={formData.emoji}
+                  onChange={(e) => setFormData({ ...formData, emoji: e.target.value })}
+                  placeholder="🎄"
+                  className="text-3xl text-center flex-1"
+                  maxLength={4}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {['🎄', '❄️', '⛄', '🎅', '🎁', '🎉', '🎊', '🎈', '💖', '❤️', '🌹', '💐', '🍀', '☘️', '🎃', '👻', '🦃', '🐰', '🥚', '🌸', '🌺', '🎆', '✨', '⭐', '🌟'].map(emoji => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, emoji })}
+                    className={`text-3xl p-2 rounded hover:bg-gray-100 transition-colors ${formData.emoji === emoji ? 'bg-primary/10 ring-2 ring-primary' : ''}`}
+                    title={emoji}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2">
