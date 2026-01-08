@@ -225,6 +225,122 @@
   }
 }
 
+.christmas-lights-garland {
+  position: absolute;
+  top: -20px;
+  left: -40px;
+  right: -40px;
+  bottom: -10px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.christmas-lights-garland::before,
+.christmas-lights-garland::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #654321 0%, #8b6914 50%, #654321 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.christmas-lights-garland::before {
+  top: 0;
+  border-radius: 50px;
+  transform: translateY(-50%);
+}
+
+.christmas-lights-garland::after {
+  bottom: 0;
+  border-radius: 50px;
+  transform: translateY(50%);
+}
+
+.christmas-lights-garland {
+  background-image:
+    radial-gradient(circle at 8% 20px, #ff0000 0, #ff0000 5px, transparent 5px),
+    radial-gradient(
+      circle at 24% 20px,
+      #0066ff 0,
+      #0066ff 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 40% 20px,
+      #ffff00 0,
+      #ffff00 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 56% 20px,
+      #00ff00 0,
+      #00ff00 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 72% 20px,
+      #ff69b4 0,
+      #ff69b4 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 88% 20px,
+      #9370db 0,
+      #9370db 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 8% calc(100% - 20px),
+      #ff8c00 0,
+      #ff8c00 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 24% calc(100% - 20px),
+      #00ffff 0,
+      #00ffff 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 40% calc(100% - 20px),
+      #ff0000 0,
+      #ff0000 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 56% calc(100% - 20px),
+      #0066ff 0,
+      #0066ff 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 72% calc(100% - 20px),
+      #ffff00 0,
+      #ffff00 5px,
+      transparent 5px
+    ),
+    radial-gradient(
+      circle at 88% calc(100% - 20px),
+      #00ff00 0,
+      #00ff00 5px,
+      transparent 5px
+    );
+
+  animation: garland-blink 2s ease-in-out infinite;
+}
+
+@keyframes garland-blink {
+  0%,
+  100% {
+    filter: brightness(1.5) drop-shadow(0 0 8px currentColor);
+  }
+  50% {
+    filter: brightness(0.8) drop-shadow(0 0 4px currentColor);
+  }
+}
+
 @media (max-width: 1200px) {
   .christmas-tree {
     display: none;
