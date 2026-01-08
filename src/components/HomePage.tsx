@@ -69,6 +69,7 @@ const defaultContent: HomePageContent = {
 
 const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setActiveSection }: HomePageProps) => {
   const [content, setContent] = useState<HomePageContent>(defaultContent);
+  const [activeVotings, setActiveVotings] = useState<any[]>([]);
 
   useEffect(() => {
     const loadContent = () => {
@@ -82,14 +83,40 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
       }
     };
 
+    const loadVotings = () => {
+      const votingsJSON = localStorage.getItem('snt_votings');
+      if (votingsJSON) {
+        try {
+          const votings = JSON.parse(votingsJSON);
+          const now = new Date();
+          const active = votings.filter((v: any) => {
+            const endDate = new Date(v.endDate);
+            return v.status === 'active' && endDate >= now;
+          });
+          setActiveVotings(active);
+        } catch (e) {
+          console.error('Error loading votings:', e);
+        }
+      }
+    };
+
     loadContent();
+    loadVotings();
 
     const handleContentUpdate = () => {
       loadContent();
     };
 
+    const handleVotingsUpdate = () => {
+      loadVotings();
+    };
+
     window.addEventListener('site-content-updated', handleContentUpdate);
-    return () => window.removeEventListener('site-content-updated', handleContentUpdate);
+    window.addEventListener('votings-updated', handleVotingsUpdate);
+    return () => {
+      window.removeEventListener('site-content-updated', handleContentUpdate);
+      window.removeEventListener('votings-updated', handleVotingsUpdate);
+    };
   }, []);
 
   const renderHero = () => (
@@ -171,71 +198,102 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
           </div>
           <h3 className="text-3xl font-bold">Активные голосования</h3>
         </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          {polls.map((poll) => (
-            <Card key={poll.id} className="border-2 hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <Badge className="bg-gradient-to-r from-orange-500 to-pink-500">
-                    {poll.status === 'active' ? 'Активно' : 'Завершено'}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Icon name="Clock" size={14} />
-                    до {poll.deadline}
-                  </span>
-                </div>
-                <CardTitle className="text-xl">{poll.title}</CardTitle>
-                <CardDescription>{poll.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {poll.options.map((option, idx) => {
-                  const total = poll.options.reduce((sum, o) => sum + o.votes, 0);
-                  const percentage = Math.round((option.votes / total) * 100);
-                  const isVoted = votes[poll.id] === idx;
-                  return (
-                    <div key={idx} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{option.text}</span>
-                        <span className="text-sm text-muted-foreground">{percentage}%</span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
-                        <div 
-                          className="bg-gradient-to-r from-orange-500 to-pink-500 h-full transition-all duration-500" 
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">{option.votes} голосов</span>
-                        {isLoggedIn && (userRole === 'member' || userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && !isVoted && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleVote(poll.id, idx)}
-                            className="text-primary hover:text-primary"
-                          >
-                            <Icon name="CheckCircle" size={16} className="mr-1" />
-                            Выбрать
-                          </Button>
-                        )}
-                        {isVoted && (
-                          <Badge variant="outline" className="text-green-600 border-green-600">
-                            <Icon name="Check" size={14} className="mr-1" />
-                            Ваш выбор
-                          </Badge>
-                        )}
-                      </div>
+        {activeVotings.length === 0 ? (
+          <Card className="border-2">
+            <CardContent className="pt-12 pb-12 text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icon name="Vote" size={32} className="text-gray-400" />
+              </div>
+              <p className="text-lg text-muted-foreground">Нет активных голосований</p>
+              <p className="text-sm text-muted-foreground mt-2">Новые голосования появятся здесь</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {activeVotings.map((voting) => {
+              const currentEmail = localStorage.getItem('current_user_email') || 'guest';
+              const userVotesJSON = localStorage.getItem(`voting_${voting.id}_${currentEmail}`);
+              const userVotes = userVotesJSON ? JSON.parse(userVotesJSON) : [];
+              const hasVoted = userVotes.length > 0;
+              
+              return (
+                <Card key={voting.id} className="border-2 hover:shadow-xl transition-all duration-300">
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-2">
+                      <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500">
+                        Активно
+                      </Badge>
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Icon name="Clock" size={14} />
+                        до {new Date(voting.endDate).toLocaleDateString('ru-RU')}
+                      </span>
                     </div>
-                  );
-                })}
-                {(!isLoggedIn || userRole === 'guest') && (
-                  <p className="text-sm text-muted-foreground italic pt-2 border-t">
-                    {!isLoggedIn ? 'Войдите в личный кабинет для участия в голосовании' : 'Только члены СНТ могут участвовать в голосовании'}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    <CardTitle className="text-xl">{voting.title}</CardTitle>
+                    <CardDescription>{voting.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {voting.options.map((option: string, idx: number) => {
+                      const optionVotes = voting.votes?.[idx] || 0;
+                      const totalVotes = Object.values(voting.votes || {}).reduce((sum: number, v: any) => sum + v, 0);
+                      const percentage = totalVotes > 0 ? Math.round((optionVotes / (totalVotes as number)) * 100) : 0;
+                      const isVoted = userVotes.includes(idx);
+                      
+                      return (
+                        <div key={idx} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{option}</span>
+                            <span className="text-sm text-muted-foreground">{percentage}%</span>
+                          </div>
+                          <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+                            <div 
+                              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-500" 
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">{optionVotes} голосов</span>
+                            {isLoggedIn && (userRole === 'member' || userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && !hasVoted && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const votingsJSON = localStorage.getItem('snt_votings');
+                                  if (votingsJSON) {
+                                    const votings = JSON.parse(votingsJSON);
+                                    const votingIndex = votings.findIndex((v: any) => v.id === voting.id);
+                                    if (votingIndex !== -1) {
+                                      if (!votings[votingIndex].votes) votings[votingIndex].votes = {};
+                                      votings[votingIndex].votes[idx] = (votings[votingIndex].votes[idx] || 0) + 1;
+                                      localStorage.setItem('snt_votings', JSON.stringify(votings));
+                                      
+                                      localStorage.setItem(`voting_${voting.id}_${currentEmail}`, JSON.stringify([idx]));
+                                      
+                                      window.dispatchEvent(new Event('votings-updated'));
+                                    }
+                                  }
+                                }}
+                                className="text-primary hover:text-primary"
+                              >
+                                <Icon name="CheckCircle" size={16} className="mr-1" />
+                                Голосовать
+                              </Button>
+                            )}
+                            {isVoted && (
+                              <Badge variant="outline" className="text-green-600 border-green-600">
+                                <Icon name="Check" size={14} className="mr-1" />
+                                Проголосовали
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section>

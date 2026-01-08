@@ -78,7 +78,57 @@ const CreateVoting = ({ onBack }: CreateVotingProps) => {
     votings.push(votingData);
     localStorage.setItem('snt_votings', JSON.stringify(votings));
 
-    toast.success('Голосование создано успешно');
+    window.dispatchEvent(new Event('votings-updated'));
+
+    const sendNotifications = async () => {
+      try {
+        const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        const usersData = await usersResponse.json();
+        const activeUsers = usersData.users?.filter((u: any) => u.status === 'active' && u.email_verified) || [];
+
+        for (const user of activeUsers) {
+          await fetch('https://functions.poehali.dev/2672fb97-4151-4228-bb1c-4d0b3a502216', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: user.email,
+              subject: `Новое голосование: ${title.trim()}`,
+              html: `
+                <!DOCTYPE html>
+                <html>
+                <head><meta charset="utf-8"></head>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                  <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
+                    <h2 style="color: #6366f1;">🗳️ Новое голосование в СНТ Факел</h2>
+                    <p>Здравствуйте, ${user.first_name}!</p>
+                    <p>Создано новое голосование, в котором вы можете принять участие:</p>
+                    <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                      <h3 style="margin-top: 0; color: #6366f1;">${title.trim()}</h3>
+                      <p>${description.trim()}</p>
+                      <p><strong>Дата окончания:</strong> ${new Date(endDate).toLocaleDateString('ru-RU')}</p>
+                      <p><strong>Варианты ответа:</strong></p>
+                      <ul>
+                        ${validOptions.map(opt => `<li>${opt}</li>`).join('')}
+                      </ul>
+                    </div>
+                    <p>Пройдите на сайт СНТ Факел, чтобы проголосовать.</p>
+                    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #888;">СНТ Факел - Система управления садовым товариществом</p>
+                  </div>
+                </body>
+                </html>
+              `
+            })
+          });
+        }
+      } catch (error) {
+        console.error('Error sending notifications:', error);
+      }
+    };
+
+    sendNotifications();
+
+    toast.success('Голосование создано и разослано всем участникам');
     
     setTitle('');
     setDescription('');
