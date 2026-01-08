@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface VotingResultsProps {
   votingId: number;
@@ -94,11 +96,10 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
     }
   };
 
-  const exportToExcel = () => {
+  const exportToCSV = () => {
     if (!voting) return;
 
-    // Создать CSV данные
-    let csv = '\uFEFF'; // UTF-8 BOM для корректного отображения кириллицы в Excel
+    let csv = '\uFEFF';
     csv += 'Голосование,' + voting.title + '\n';
     csv += 'Описание,' + voting.description + '\n';
     csv += 'Дата окончания,' + new Date(voting.endDate).toLocaleDateString('ru-RU') + '\n';
@@ -107,11 +108,10 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
     csv += 'Фамилия,Имя,Участок,Email,Выбранный вариант,Дата голосования\n';
     
     voteDetails.forEach(detail => {
-      const optionText = voting.options[detail.optionIndex] || 'Неизвестно';
-      csv += `${detail.lastName},${detail.firstName},${detail.plotNumber},${detail.email},"${optionText}",${new Date(detail.timestamp).toLocaleString('ru-RU')}\n`;
+      const options = detail.optionIndexes?.map((idx: number) => voting.options[idx]).join('; ') || voting.options[detail.optionIndex] || 'Неизвестно';
+      csv += `${detail.lastName},${detail.firstName},${detail.plotNumber},${detail.email},"${options}",${new Date(detail.timestamp).toLocaleString('ru-RU')}\n`;
     });
 
-    // Добавить статистику по вариантам
     csv += '\n\nСтатистика по вариантам\n';
     csv += 'Вариант,Количество голосов,Процент\n';
     
@@ -122,7 +122,6 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
       csv += `"${option}",${votes},${percentage}%\n`;
     });
 
-    // Создать blob и скачать
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -136,6 +135,65 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
     document.body.removeChild(link);
     
     toast.success('Результаты экспортированы в CSV');
+  };
+
+  const exportToPDF = () => {
+    if (!voting) return;
+
+    const doc = new jsPDF();
+    
+    // Используем базовый шрифт (helvetica поддерживает Latin1)
+    doc.setFont('helvetica');
+    
+    // Заголовок
+    doc.setFontSize(18);
+    doc.text('Rezultaty golosovaniya', 14, 20);
+    
+    // Информация о голосовании
+    doc.setFontSize(12);
+    doc.text(`Nazvanie: ${voting.title}`, 14, 30);
+    doc.text(`Data okonchaniya: ${new Date(voting.endDate).toLocaleDateString('ru-RU')}`, 14, 38);
+    doc.text(`Vsego golosov: ${voteDetails.length}`, 14, 46);
+    
+    // Статистика
+    const statsData = voting.options.map((option: string, idx: number) => {
+      const votes = voting.votes?.[idx] || 0;
+      const totalVotes = Object.values(voting.votes || {}).reduce((sum: number, v: any) => sum + v, 0);
+      const percentage = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : '0';
+      return [option, votes.toString(), percentage + '%'];
+    });
+    
+    autoTable(doc, {
+      startY: 54,
+      head: [['Variant', 'Golosa', 'Procent']],
+      body: statsData,
+      theme: 'grid',
+      headStyles: { fillColor: [99, 102, 241] },
+    });
+    
+    // Детальный список
+    const tableData = voteDetails.map(detail => {
+      const options = detail.optionIndexes?.map((idx: number) => voting.options[idx]).join(', ') || voting.options[detail.optionIndex] || '';
+      return [
+        detail.plotNumber,
+        `${detail.lastName} ${detail.firstName}`,
+        detail.email,
+        options,
+        new Date(detail.timestamp).toLocaleString('ru-RU')
+      ];
+    });
+    
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Uchastok', 'FIO', 'Email', 'Vybor', 'Data']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [99, 102, 241] },
+      styles: { fontSize: 8 },
+    });
+    
+    doc.save(`golosovanie_${votingId}_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('Результаты экспортированы в PDF');
   };
 
   if (!voting) {
@@ -235,11 +293,19 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
             Отправить уведомления
           </Button>
           <Button
-            onClick={exportToExcel}
-            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            onClick={exportToCSV}
+            variant="outline"
+            className="border-green-500 text-green-600 hover:bg-green-50"
           >
-            <Icon name="Download" size={18} className="mr-2" />
-            Экспорт в CSV
+            <Icon name="FileSpreadsheet" size={18} className="mr-2" />
+            CSV
+          </Button>
+          <Button
+            onClick={exportToPDF}
+            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+          >
+            <Icon name="FileText" size={18} className="mr-2" />
+            PDF
           </Button>
         </div>
       </div>

@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import Registration from '@/components/Registration';
 import Login from '@/components/Login';
 import PasswordReset from '@/components/PasswordReset';
+import VotingPage from '@/components/VotingPage';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -314,6 +315,14 @@ const Index = () => {
                 userRole={userRole}
                 votes={votes}
                 handleVote={handleVote}
+                setActiveSection={setActiveSection}
+              />
+            )}
+
+            {activeSection === 'voting' && (
+              <VotingPage
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
                 setActiveSection={setActiveSection}
               />
             )}
