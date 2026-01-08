@@ -129,6 +129,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
 
   useEffect(() => {
     localStorage.setItem('snt_chat_messages', JSON.stringify(messages));
+    window.dispatchEvent(new Event('chat-updated'));
   }, [messages]);
   
   useEffect(() => {

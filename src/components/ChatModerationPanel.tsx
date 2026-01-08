@@ -19,6 +19,27 @@ interface UserInfo {
   plotNumber: string;
 }
 
+interface Message {
+  id: number;
+  userId: number;
+  userName: string;
+  userRole: string;
+  text: string;
+  timestamp: string;
+  avatar: string;
+  userEmail?: string;
+  deleted?: boolean;
+  deletedBy?: string;
+}
+
+interface ModerationStats {
+  totalMessages: number;
+  deletedMessages: number;
+  activeUsers: number;
+  blockedUsers: number;
+  deletedToday: number;
+}
+
 interface ChatModerationPanelProps {
   onBack: () => void;
 }
@@ -26,18 +47,38 @@ interface ChatModerationPanelProps {
 const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [userInfoMap, setUserInfoMap] = useState<Map<string, UserInfo>>(new Map());
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [stats, setStats] = useState<ModerationStats>({
+    totalMessages: 0,
+    deletedMessages: 0,
+    activeUsers: 0,
+    blockedUsers: 0,
+    deletedToday: 0
+  });
 
   useEffect(() => {
     loadBlockedUsers();
     loadUserInfo();
+    loadMessages();
+    calculateStats();
 
     const handleStorageChange = () => {
       loadBlockedUsers();
+      loadMessages();
+      calculateStats();
     };
 
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('chat-updated', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('chat-updated', handleStorageChange);
+    };
   }, []);
+
+  useEffect(() => {
+    calculateStats();
+  }, [messages, blockedUsers]);
 
   const loadBlockedUsers = () => {
     const saved = localStorage.getItem('snt_blocked_users');
@@ -69,6 +110,39 @@ const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
         console.error('Error loading user info:', e);
       }
     }
+  };
+
+  const loadMessages = () => {
+    const saved = localStorage.getItem('snt_chat_messages');
+    if (saved) {
+      try {
+        setMessages(JSON.parse(saved));
+      } catch (e) {
+        console.error('Error loading messages:', e);
+      }
+    }
+  };
+
+  const calculateStats = () => {
+    const totalMessages = messages.length;
+    const deletedMessages = messages.filter(m => m.deleted).length;
+    const uniqueUsers = new Set(messages.filter(m => m.userEmail).map(m => m.userEmail)).size;
+    
+    // Подсчитываем удалённые сообщения за сегодня
+    const today = new Date().toLocaleDateString('ru-RU');
+    const deletedToday = messages.filter(m => {
+      if (!m.deleted) return false;
+      // Предполагаем, что сообщения удаляются в день их создания или позже
+      return true; // Упрощённо считаем все удалённые
+    }).length;
+
+    setStats({
+      totalMessages,
+      deletedMessages,
+      activeUsers: uniqueUsers,
+      blockedUsers: blockedUsers.length,
+      deletedToday: 0 // Будем обновлять при реальной реализации с датами удаления
+    });
   };
 
   const handleUnblock = (userEmail: string) => {
@@ -115,6 +189,70 @@ const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
       </div>
 
       <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Всего сообщений</p>
+                  <p className="text-2xl font-bold mt-1">{stats.totalMessages}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Icon name="MessageCircle" className="text-blue-600" size={24} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Удалено</p>
+                  <p className="text-2xl font-bold mt-1">{stats.deletedMessages}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stats.totalMessages > 0 
+                      ? `${Math.round((stats.deletedMessages / stats.totalMessages) * 100)}%`
+                      : '0%'
+                    }
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <Icon name="Trash2" className="text-orange-600" size={24} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Активных участников</p>
+                  <p className="text-2xl font-bold mt-1">{stats.activeUsers}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <Icon name="Users" className="text-green-600" size={24} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Заблокировано</p>
+                  <p className="text-2xl font-bold mt-1">{stats.blockedUsers}</p>
+                </div>
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <Icon name="Ban" className="text-red-600" size={24} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -191,6 +329,64 @@ const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
                         <Icon name="Unlock" size={16} className="mr-1" />
                         Разблокировать
                       </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Icon name="Trash2" className="text-orange-500" />
+              Удалённые сообщения
+              <Badge variant="outline" className="ml-auto">
+                {stats.deletedMessages}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.deletedMessages === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Icon name="MessageCircle" size={48} className="mx-auto mb-3 text-gray-400" />
+                <p>Нет удалённых сообщений</p>
+                <p className="text-sm mt-1">Все сообщения в порядке</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {messages.filter(m => m.deleted).map((msg) => {
+                  const userInfo = msg.userEmail ? userInfoMap.get(msg.userEmail) : null;
+                  const deletedByInfo = msg.deletedBy ? userInfoMap.get(msg.deletedBy) : null;
+                  
+                  return (
+                    <div
+                      key={msg.id}
+                      className="p-3 border rounded-lg bg-orange-50 border-orange-200"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-orange-900">
+                            {userInfo 
+                              ? `${userInfo.firstName} ${userInfo.lastName}` 
+                              : msg.userName
+                            }
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {msg.userRole}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{msg.timestamp}</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-700 italic line-through mb-2">{msg.text}</p>
+                      <p className="text-xs text-orange-600">
+                        <Icon name="Shield" size={12} className="inline mr-1" />
+                        Удалил: {deletedByInfo 
+                          ? `${deletedByInfo.firstName} ${deletedByInfo.lastName}` 
+                          : msg.deletedBy || 'Модератор'
+                        }
+                      </p>
                     </div>
                   );
                 })}
