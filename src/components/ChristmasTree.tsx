@@ -46,14 +46,25 @@ const ChristmasTree = ({ side }: ChristmasTreeProps) => {
     const progress = i / 20;
     const spiralTurns = 4;
     const angle = progress * spiralTurns * 360;
-    const radius = 35 + progress * 5;
-    const topPos = 12 + progress * 68;
+    
+    const layerWidths = [40, 50, 60, 70, 80];
+    const layerTops = [20, 40, 63, 90, 120];
+    const layerHeights = [27, 30, 33, 37, 40];
+    
+    const layerIndex = Math.floor(progress * 5);
+    const actualLayer = Math.min(layerIndex, 4);
+    const layerProgress = (progress * 5) % 1;
+    
+    const maxRadius = (layerWidths[actualLayer] / 2) - 8;
+    const currentRadius = maxRadius * (0.3 + Math.cos(angle * Math.PI / 180) * 0.7);
+    
+    const topPos = ((layerTops[actualLayer] + layerProgress * layerHeights[actualLayer]) / 213) * 100;
     
     const colors = ['red', 'blue', 'yellow', 'green', 'pink', 'purple', 'orange', 'cyan'];
     
     return {
       top: `${topPos}%`,
-      left: `${50 + Math.cos(angle * Math.PI / 180) * radius}%`,
+      left: `${50 + Math.sin(angle * Math.PI / 180) * currentRadius / 0.8}%`,
       color: colors[i % colors.length]
     };
   });
