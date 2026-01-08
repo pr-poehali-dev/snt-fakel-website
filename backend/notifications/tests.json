@@ -1,0 +1,51 @@
+{
+  "tests": [
+    {
+      "name": "Mass notification - valid request",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "type": "mass",
+        "recipients": [
+          {
+            "email": "test@example.com",
+            "firstName": "Иван",
+            "lastName": "Петров",
+            "plotNumber": "42"
+          }
+        ],
+        "subject": "Тестовое уведомление",
+        "message": "Это тестовое сообщение"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "sent": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Admin notification - valid request",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "type": "admin_registration",
+        "user_data": {
+          "firstName": "Иван",
+          "lastName": "Петров",
+          "middleName": "Сергеевич",
+          "email": "test@example.com",
+          "phone": "+7 900 123-45-67",
+          "plotNumber": "42",
+          "birthDate": "1980-01-15",
+          "registeredAt": "2026-01-08T10:30:00Z"
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

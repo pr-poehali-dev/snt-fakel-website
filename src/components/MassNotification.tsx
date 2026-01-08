@@ -67,12 +67,13 @@ const MassNotification = () => {
         plotNumber: u.plotNumber
       }));
 
-      const response = await fetch('https://functions.poehali.dev/5ac0ef97-9284-4e76-8898-7c4815df6101', {
+      const response = await fetch('https://functions.poehali.dev/92ff7699-756a-4d4c-b3ab-dceb5c33e4f8', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          type: 'mass',
           recipients: emailList,
           subject,
           message

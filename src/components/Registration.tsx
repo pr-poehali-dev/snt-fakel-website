@@ -192,10 +192,10 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     .then(data => {
       console.log('Пользователь сохранен в БД:', data);
       
-      fetch('https://functions.poehali.dev/cf474001-23d9-421d-a5b8-99244efdddfc', {
+      fetch('https://functions.poehali.dev/92ff7699-756a-4d4c-b3ab-dceb5c33e4f8', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_data: newUser })
+        body: JSON.stringify({ type: 'admin_registration', user_data: newUser })
       }).catch(error => {
         console.warn('Ошибка отправки уведомления администратору:', error);
       });
