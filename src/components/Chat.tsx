@@ -208,9 +208,25 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                 <Icon name="MessageCircle" className="text-primary" size={24} />
                 Общий чат
               </CardTitle>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                {onlineUsers.length + 1} онлайн
+              <div className="flex items-center gap-3">
+                {(userRole === 'admin' || userRole === 'chairman') && (
+                  <button
+                    onClick={() => {
+                      if (confirm('Вы уверены? Это удалит ВСЕ сообщения из чата безвозвратно!')) {
+                        setMessages([]);
+                        toast.success('Чат очищен');
+                      }
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+                  >
+                    <Icon name="Trash2" size={14} />
+                    Очистить чат
+                  </button>
+                )}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  {onlineUsers.length + 1} онлайн
+                </div>
               </div>
             </div>
           </CardHeader>
