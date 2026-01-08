@@ -41,9 +41,10 @@ const ChatMessage = ({
 }: ChatMessageProps) => {
   const formatTimestamp = (timestamp: string) => {
     try {
-      const date = new Date(timestamp);
-      const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
+      const messageDateMoscow = new Date(timestamp);
+      const nowMoscow = new Date();
+      
+      const diffMs = nowMoscow.getTime() - messageDateMoscow.getTime();
       const diffMins = Math.floor(diffMs / 60000);
       
       if (diffMins < 1) return 'только что';
@@ -52,8 +53,7 @@ const ChatMessage = ({
       const diffHours = Math.floor(diffMins / 60);
       if (diffHours < 24) return `${diffHours} ч. назад`;
       
-      return date.toLocaleString('ru-RU', { 
-        timeZone: 'Europe/Moscow',
+      return messageDateMoscow.toLocaleString('ru-RU', { 
         day: 'numeric', 
         month: 'short', 
         hour: '2-digit', 

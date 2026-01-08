@@ -96,10 +96,10 @@ def handler(event: dict, context) -> dict:
             action = query_params.get('action') if query_params else None
             
             if action == 'chat_messages':
-                # Получить все сообщения чата
                 cur.execute('''
                     SELECT id, user_email, user_name, user_role, avatar, 
-                           message_text, created_at, is_removed, removed_by
+                           message_text, created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow' as created_at_msk,
+                           is_removed, removed_by
                     FROM chat_messages
                     ORDER BY created_at ASC
                 ''')
@@ -114,7 +114,7 @@ def handler(event: dict, context) -> dict:
                         'userRole': row['user_role'],
                         'avatar': row['avatar'],
                         'text': row['message_text'],
-                        'timestamp': row['created_at'].strftime('%H:%M') if row['created_at'] else '',
+                        'timestamp': row['created_at_msk'].isoformat() if row['created_at_msk'] else '',
                         'deleted': row['is_removed'],
                         'deletedBy': row['removed_by']
                     })
@@ -636,9 +636,10 @@ def handler(event: dict, context) -> dict:
                 }
             
             if action == 'update_online_status':
-                # Обновить онлайн статус пользователя
                 email = body.get('email')
                 if not email:
+                    cur.close()
+                    conn.close()
                     return {
                         'statusCode': 400,
                         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
@@ -646,7 +647,6 @@ def handler(event: dict, context) -> dict:
                         'isBase64Encoded': False
                     }
                 
-                # Обновляем или создаем запись об онлайн статусе
                 cur.execute('''
                     INSERT INTO online_users (email, last_seen)
                     VALUES (%s, CURRENT_TIMESTAMP)
@@ -654,16 +654,15 @@ def handler(event: dict, context) -> dict:
                 ''', (email,))
                 conn.commit()
                 
-                # Удаляем устаревшие записи (старше 2 минут)
                 cur.execute('''
                     DELETE FROM online_users 
                     WHERE last_seen < CURRENT_TIMESTAMP - INTERVAL '2 minutes'
                 ''')
                 conn.commit()
                 
-                # Получаем список онлайн пользователей с данными из users
                 cur.execute('''
-                    SELECT u.email, u.first_name, u.last_name, u.plot_number, u.role, o.last_seen
+                    SELECT u.email, u.first_name, u.last_name, u.plot_number, u.role, 
+                           o.last_seen AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow' as last_seen
                     FROM online_users o
                     JOIN users u ON o.email = u.email
                     WHERE o.last_seen >= CURRENT_TIMESTAMP - INTERVAL '2 minutes'
