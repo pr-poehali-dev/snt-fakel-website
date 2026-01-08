@@ -53,20 +53,27 @@ const HolidayDecor = () => {
 
   return (
     <div className="holiday-decor-container">
-      {Array.from({ length: 30 }).map((_, i) => (
-        <div
-          key={i}
-          className={decorClass}
-          style={{
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${5 + Math.random() * 5}s`,
-            fontSize: `${20 + Math.random() * 20}px`
-          }}
-        >
-          {activeDecor.emoji}
-        </div>
-      ))}
+      {Array.from({ length: 30 }).map((_, i) => {
+        const randomX = Math.random() * 2 - 1;
+        const randomY = Math.random() * 2 - 1;
+        
+        return (
+          <div
+            key={i}
+            className={decorClass}
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${5 + Math.random() * 5}s`,
+              fontSize: `${20 + Math.random() * 20}px`,
+              ['--x' as any]: randomX,
+              ['--y' as any]: randomY
+            }}
+          >
+            {activeDecor.emoji}
+          </div>
+        );
+      })}
     </div>
   );
 };

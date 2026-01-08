@@ -44,7 +44,15 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
         
         // Загрузить документы
         const docsJSON = localStorage.getItem('snt_documents');
-        const docsCount = docsJSON ? JSON.parse(docsJSON).length : 0;
+        let docsCount = 0;
+        if (docsJSON) {
+          try {
+            const docs = JSON.parse(docsJSON);
+            docsCount = Array.isArray(docs) ? docs.filter((d: any) => d && d.fileUrl).length : 0;
+          } catch (e) {
+            console.error('Error parsing documents:', e);
+          }
+        }
         
         setStats({
           members: membersCount,
