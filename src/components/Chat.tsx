@@ -112,6 +112,30 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       return;
     }
     
+    // Получаем роль пользователя, которого пытаемся заблокировать
+    let targetUserRole: string | null = null;
+    try {
+      const userResponse = await fetch(`https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35`);
+      const userData = await userResponse.json();
+      const targetUser = userData.users?.find((u: any) => u.email === userEmail);
+      if (targetUser) {
+        targetUserRole = targetUser.role;
+      }
+    } catch (err) {
+      console.error('Error fetching target user role:', err);
+    }
+    
+    // Защита: админ не может блокировать председателя и наоборот
+    if (targetUserRole === 'admin' && userRole === 'chairman') {
+      toast.error('Председатель не может заблокировать администратора');
+      return;
+    }
+    
+    if (targetUserRole === 'chairman' && userRole === 'admin') {
+      toast.error('Администратор не может заблокировать председателя');
+      return;
+    }
+    
     try {
       const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
         method: 'PUT',
