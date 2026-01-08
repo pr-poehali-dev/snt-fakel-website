@@ -17,6 +17,16 @@ interface Message {
   text: string;
   timestamp: string;
   avatar: string;
+  userEmail?: string;
+  deleted?: boolean;
+  deletedBy?: string;
+}
+
+interface BlockedUser {
+  email: string;
+  blockedBy: string;
+  blockedAt: string;
+  reason?: string;
 }
 
 interface ChatProps {
@@ -87,9 +97,29 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     return defaultMessages;
   });
 
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>(() => {
+    const saved = localStorage.getItem('snt_blocked_users');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [newMessage, setNewMessage] = useState('');
   const [onlineUsers] = useState(12);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const isModerator = userRole === 'chairman' || userRole === 'admin';
+  const isCurrentUserBlocked = blockedUsers.some(u => u.email === currentUserEmail);
+  
+  // Список матерных слов
+  const profanityList = [
+    'хуй', 'хуя', 'хуи', 'хуё', 'хер', 'пизд', 'ебал', 'ебан', 'ебат', 'ебл', 'ебу', 'еби',
+    'бля', 'блят', 'сука', 'суки', 'сучк', 'говн', 'дерьм', 'срат', 'срал',
+    'пидар', 'пидор', 'педик', 'даун', 'дебил', 'мудак', 'уёб', 'уеб'
+  ];
+  
+  const containsProfanity = (text: string): boolean => {
+    const lowerText = text.toLowerCase();
+    return profanityList.some(word => lowerText.includes(word));
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -100,6 +130,48 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   useEffect(() => {
     localStorage.setItem('snt_chat_messages', JSON.stringify(messages));
   }, [messages]);
+  
+  useEffect(() => {
+    localStorage.setItem('snt_blocked_users', JSON.stringify(blockedUsers));
+  }, [blockedUsers]);
+
+  const handleDeleteMessage = (messageId: number) => {
+    if (!isModerator) return;
+    
+    const updatedMessages = messages.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, deleted: true, deletedBy: currentUserEmail } 
+        : msg
+    );
+    setMessages(updatedMessages);
+    toast.success('Сообщение удалено');
+  };
+  
+  const handleBlockUser = (userEmail: string, userName: string) => {
+    if (!isModerator) return;
+    
+    if (blockedUsers.some(u => u.email === userEmail)) {
+      toast.error('Пользователь уже заблокирован');
+      return;
+    }
+    
+    const newBlock: BlockedUser = {
+      email: userEmail,
+      blockedBy: currentUserEmail,
+      blockedAt: new Date().toISOString(),
+      reason: 'Нарушение правил чата'
+    };
+    
+    setBlockedUsers([...blockedUsers, newBlock]);
+    toast.success(`Пользователь ${userName} заблокирован`);
+  };
+  
+  const handleUnblockUser = (userEmail: string) => {
+    if (!isModerator) return;
+    
+    setBlockedUsers(blockedUsers.filter(u => u.email !== userEmail));
+    toast.success('Пользователь разблокирован');
+  };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,8 +185,18 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       toast.error('Только члены СНТ могут писать в чат');
       return;
     }
+    
+    if (isCurrentUserBlocked) {
+      toast.error('Вы заблокированы модератором и не можете писать в чат');
+      return;
+    }
 
     if (newMessage.trim() === '') {
+      return;
+    }
+    
+    if (containsProfanity(newMessage)) {
+      toast.error('Сообщение содержит недопустимые слова');
       return;
     }
 
@@ -147,7 +229,8 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       userRole: roleNames[userRole],
       text: newMessage,
       timestamp: `${hours}:${minutes}`,
-      avatar: userRole === 'admin' ? '⭐' : userRole === 'chairman' ? '👑' : userRole === 'board_member' ? '👥' : '👤'
+      avatar: userRole === 'admin' ? '⭐' : userRole === 'chairman' ? '👑' : userRole === 'board_member' ? '👥' : '👤',
+      userEmail: currentUserEmail
     };
 
     const updatedMessages = [...messages, message];
@@ -179,10 +262,25 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
               <div className="space-y-4">
                 {messages.map((message) => {
                   const isOwnMessage = message.userId === 999;
+                  const isBlocked = message.userEmail && blockedUsers.some(u => u.email === message.userEmail);
+                  
+                  if (message.deleted) {
+                    return (
+                      <div key={message.id} className="flex gap-3 opacity-50">
+                        <div className="flex-1 bg-gray-100 rounded-lg px-4 py-2">
+                          <p className="text-xs text-muted-foreground italic">
+                            <Icon name="Trash2" size={12} className="inline mr-1" />
+                            Сообщение удалено модератором
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
                   return (
                     <div
                       key={message.id}
-                      className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
+                      className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''} group`}
                     >
                       <Avatar className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 text-2xl">
                         {message.avatar}
@@ -195,16 +293,57 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                               {message.userRole}
                             </Badge>
                           )}
+                          {isBlocked && (
+                            <Badge variant="outline" className="text-xs bg-red-100 border-red-300 text-red-700">
+                              Заблокирован
+                            </Badge>
+                          )}
                           <span className="text-xs text-muted-foreground">{message.timestamp}</span>
                         </div>
-                        <div
-                          className={`rounded-2xl px-4 py-2 max-w-lg ${
-                            isOwnMessage
-                              ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white ml-auto'
-                              : 'bg-secondary'
-                          }`}
-                        >
-                          <p className="text-sm">{message.text}</p>
+                        <div className="flex items-start gap-2">
+                          <div
+                            className={`rounded-2xl px-4 py-2 max-w-lg ${
+                              isOwnMessage
+                                ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white ml-auto'
+                                : 'bg-secondary'
+                            }`}
+                          >
+                            <p className="text-sm">{message.text}</p>
+                          </div>
+                          {isModerator && !isOwnMessage && message.userEmail && (
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0"
+                                onClick={() => handleDeleteMessage(message.id)}
+                                title="Удалить сообщение"
+                              >
+                                <Icon name="Trash2" size={14} className="text-red-500" />
+                              </Button>
+                              {!isBlocked ? (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => handleBlockUser(message.userEmail!, message.userName)}
+                                  title="Заблокировать пользователя"
+                                >
+                                  <Icon name="Ban" size={14} className="text-orange-500" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => handleUnblockUser(message.userEmail!)}
+                                  title="Разблокировать пользователя"
+                                >
+                                  <Icon name="CheckCircle" size={14} className="text-green-500" />
+                                </Button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -214,21 +353,36 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
             </div>
             
             <div className="border-t p-4">
-              {isLoggedIn && (userRole === 'member' || userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') ? (
-                <form onSubmit={handleSendMessage} className="flex gap-2">
-                  <Input
-                    placeholder="Написать сообщение..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    type="submit" 
-                    className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
-                  >
-                    <Icon name="Send" size={18} />
-                  </Button>
-                </form>
+              {isCurrentUserBlocked ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-red-700">
+                    <Icon name="Ban" size={18} />
+                    <p className="text-sm font-medium">
+                      Вы заблокированы модератором и не можете писать в чат
+                    </p>
+                  </div>
+                </div>
+              ) : isLoggedIn && (userRole === 'member' || userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') ? (
+                <>
+                  <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <Input
+                      placeholder="Написать сообщение..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button 
+                      type="submit" 
+                      className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+                    >
+                      <Icon name="Send" size={18} />
+                    </Button>
+                  </form>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    <Icon name="ShieldAlert" size={12} className="inline mr-1" />
+                    Использование ненормативной лексики запрещено
+                  </p>
+                </>
               ) : (
                 <div className="text-center py-2">
                   <p className="text-sm text-muted-foreground">
