@@ -40,8 +40,18 @@ const Login = ({ onSuccess, onCancel, onRegisterClick, onPasswordResetClick }: L
 
     try {
       const url = `https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?action=login&email=${encodeURIComponent(formData.email)}&password=${encodeURIComponent(formData.password)}`;
-      const response = await fetch(url);
+      console.log('Отправка запроса на авторизацию:', url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('Получен ответ:', response.status, response.statusText);
       const data = await response.json();
+      console.log('Данные ответа:', data);
 
       setIsLoading(false);
 

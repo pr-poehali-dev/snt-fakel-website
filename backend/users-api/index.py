@@ -4,6 +4,8 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import requests
 
+# Force redeploy to fix network issues
+
 def send_role_change_notification(email: str, full_name: str, old_role: str, new_role: str):
     '''Отправка уведомления о смене роли'''
     role_names = {
