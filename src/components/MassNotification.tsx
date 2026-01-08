@@ -8,7 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
-const MassNotification = () => {
+interface MassNotificationProps {
+  onBack?: () => void;
+}
+
+const MassNotification = ({ onBack }: MassNotificationProps) => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [selectedRecipients, setSelectedRecipients] = useState<'all' | 'paid' | 'unpaid' | 'partial'>('all');
@@ -161,6 +165,17 @@ const MassNotification = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {onBack && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="gap-2"
+        >
+          <Icon name="ArrowLeft" size={18} />
+          Назад
+        </Button>
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

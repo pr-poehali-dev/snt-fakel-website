@@ -94,27 +94,27 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
   }
 
   if (activeSection === 'role-management' && userRole === 'admin') {
-    return <RoleManagement />;
+    return <RoleManagement onBack={() => setActiveSection('profile')} />;
   }
 
   if (activeSection === 'members-list' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {
-    return <MembersList />;
+    return <MembersList onBack={() => setActiveSection('profile')} />;
   }
 
   if (activeSection === 'mass-notification' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {
-    return <MassNotification />;
+    return <MassNotification onBack={() => setActiveSection('profile')} />;
   }
 
   if (activeSection === 'site-settings' && userRole === 'admin') {
-    return <SiteSettings />;
+    return <SiteSettings onBack={() => setActiveSection('profile')} />;
   }
 
   if (activeSection === 'page-editor' && (userRole === 'admin' || userRole === 'chairman')) {
-    return <PageEditor />;
+    return <PageEditor onBack={() => setActiveSection('profile')} />;
   }
 
   if (activeSection === 'meter-readings' && (userRole === 'admin' || userRole === 'chairman')) {
-    return <MeterReadingsManager />;
+    return <MeterReadingsManager onBack={() => setActiveSection('profile')} />;
   }
 
   if (activeSection === 'chat-moderation' && (userRole === 'admin' || userRole === 'chairman')) {

@@ -27,6 +27,10 @@ interface HomePageContent {
   blockOrder: string[];
 }
 
+interface SiteSettingsProps {
+  onBack?: () => void;
+}
+
 const defaultContent: HomePageContent = {
   hero: {
     title: 'СНТ "Факел"',
@@ -66,7 +70,7 @@ const defaultContent: HomePageContent = {
   blockOrder: ['hero', 'benefits', 'about']
 };
 
-const SiteSettings = () => {
+const SiteSettings = ({ onBack }: SiteSettingsProps) => {
   const [content, setContent] = useState<HomePageContent>(defaultContent);
   const [draggedBlock, setDraggedBlock] = useState<string | null>(null);
 
@@ -155,6 +159,17 @@ const SiteSettings = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
+      {onBack && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="gap-2"
+        >
+          <Icon name="ArrowLeft" size={18} />
+          Назад
+        </Button>
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

@@ -39,7 +39,11 @@ interface User {
   payment_status?: string;
 }
 
-const RoleManagement = () => {
+interface RoleManagementProps {
+  onBack?: () => void;
+}
+
+const RoleManagement = ({ onBack }: RoleManagementProps) => {
   const [users, setUsers] = useState<User[]>([]);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
@@ -230,13 +234,28 @@ const RoleManagement = () => {
 
   return (
     <section>
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-          <Icon name="UserCog" className="text-white" size={24} />
-        </div>
-        <div>
-          <h2 className="text-4xl font-bold">База пользователей</h2>
-          <p className="text-muted-foreground">Полная информация о всех зарегистрированных пользователях</p>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="gap-2"
+            >
+              <Icon name="ArrowLeft" size={18} />
+              Назад
+            </Button>
+          )}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Icon name="UserCog" className="text-white" size={24} />
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold">База пользователей</h2>
+              <p className="text-muted-foreground">Полная информация о всех зарегистрированных пользователях</p>
+            </div>
+          </div>
         </div>
       </div>
 

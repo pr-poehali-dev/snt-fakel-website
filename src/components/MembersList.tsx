@@ -27,7 +27,11 @@ interface User {
   paymentStatus?: 'paid' | 'unpaid' | 'partial';
 }
 
-const MembersList = () => {
+interface MembersListProps {
+  onBack?: () => void;
+}
+
+const MembersList = ({ onBack }: MembersListProps) => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPayment, setFilterPayment] = useState<'all' | 'paid' | 'unpaid' | 'partial'>('all');
@@ -145,13 +149,28 @@ const MembersList = () => {
 
   return (
     <section>
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-          <Icon name="Users" className="text-white" size={24} />
-        </div>
-        <div>
-          <h2 className="text-4xl font-bold">Список участников</h2>
-          <p className="text-muted-foreground">Обобщённые данные по всем участникам СНТ</p>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="gap-2"
+            >
+              <Icon name="ArrowLeft" size={18} />
+              Назад
+            </Button>
+          )}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Icon name="Users" className="text-white" size={24} />
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold">Список участников</h2>
+              <p className="text-muted-foreground">Обобщённые данные по всем участникам СНТ</p>
+            </div>
+          </div>
         </div>
       </div>
 

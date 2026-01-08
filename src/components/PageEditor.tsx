@@ -73,7 +73,11 @@ const defaultContent: PageContent = {
   }
 };
 
-const PageEditor = () => {
+interface PageEditorProps {
+  onBack?: () => void;
+}
+
+const PageEditor = ({ onBack }: PageEditorProps) => {
   const [content, setContent] = useState<PageContent>(defaultContent);
   const [activeTab, setActiveTab] = useState<string>('rules');
 
@@ -140,6 +144,17 @@ const PageEditor = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
+      {onBack && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="gap-2"
+        >
+          <Icon name="ArrowLeft" size={18} />
+          Назад
+        </Button>
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

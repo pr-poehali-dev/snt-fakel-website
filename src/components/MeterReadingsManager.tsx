@@ -33,7 +33,11 @@ interface User {
   meterNumber?: string;
 }
 
-const MeterReadingsManager = () => {
+interface MeterReadingsManagerProps {
+  onBack?: () => void;
+}
+
+const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
   const [readings, setReadings] = useState<MeterReading[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -131,6 +135,17 @@ const MeterReadingsManager = () => {
 
   return (
     <section>
+      {onBack && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="gap-2 mb-6"
+        >
+          <Icon name="ArrowLeft" size={18} />
+          Назад
+        </Button>
+      )}
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-4xl font-bold">Показания приборов учёта</h2>
         <div className="flex items-center gap-3">
