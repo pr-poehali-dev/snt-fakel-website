@@ -26,6 +26,8 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
   const [isMeterLocked, setIsMeterLocked] = useState(false);
   const [plotNumber, setPlotNumber] = useState('');
   const [canSubmit, setCanSubmit] = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [submittedBy, setSubmittedBy] = useState('');
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -33,10 +35,30 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
       const users = JSON.parse(usersJSON);
       const user = users.find((u: any) => u.email === currentUserEmail);
       if (user) {
-        setPlotNumber(user.plotNumber || '');
+        const userPlot = user.plotNumber || '';
+        setPlotNumber(userPlot);
         if (user.meterNumber) {
           setMeterNumber(user.meterNumber);
           setIsMeterLocked(true);
+        }
+
+        const readingsJSON = localStorage.getItem('snt_meter_readings');
+        if (readingsJSON && userPlot) {
+          const readings: MeterReading[] = JSON.parse(readingsJSON);
+          const now = new Date();
+          const currentMonth = now.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+          
+          const plotReading = readings.find(
+            (r) => r.plotNumber === userPlot && r.month === currentMonth
+          );
+          
+          if (plotReading) {
+            setAlreadySubmitted(true);
+            const submitter = users.find((u: any) => u.email === plotReading.email);
+            if (submitter) {
+              setSubmittedBy(`${submitter.firstName} ${submitter.lastName}`);
+            }
+          }
         }
       }
     }
@@ -58,6 +80,11 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
 
     if (!canSubmit) {
       toast.error('Показания принимаются только с 22 по 25 число месяца');
+      return;
+    }
+
+    if (alreadySubmitted) {
+      toast.error(`Показания по участку №${plotNumber} уже переданы в этом месяце`);
       return;
     }
 
@@ -92,6 +119,16 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
     readings.push(newReading);
     localStorage.setItem('snt_meter_readings', JSON.stringify(readings));
 
+    const usersJSON = localStorage.getItem('snt_users');
+    if (usersJSON) {
+      const users = JSON.parse(usersJSON);
+      const user = users.find((u: any) => u.email === currentUserEmail);
+      if (user) {
+        setSubmittedBy(`${user.firstName} ${user.lastName}`);
+        setAlreadySubmitted(true);
+      }
+    }
+
     toast.success('Показания успешно переданы');
     setReading('');
 
@@ -107,62 +144,83 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className={`${canSubmit ? 'bg-green-50 border-green-200 text-green-800' : 'bg-blue-50 border-blue-200 text-blue-800'} border rounded-lg p-3 text-sm`}>
-          <Icon name="Info" size={16} className="inline mr-2" />
-          {canSubmit 
-            ? `Сегодня ${new Date().getDate()} число — период приёма показаний открыт!` 
-            : 'Показания принимаются с 22 по 25 число каждого месяца'
-          }
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <Label>Номер прибора учёта</Label>
-            <div className="flex gap-2">
-              <Input
-                value={meterNumber}
-                onChange={(e) => setMeterNumber(e.target.value)}
-                disabled={isMeterLocked}
-                placeholder="Введите номер ПУ"
-              />
-              {isMeterLocked && (
-                <div className="flex items-center">
-                  <Icon name="Lock" className="text-muted-foreground" size={20} />
-                </div>
-              )}
+        {alreadySubmitted ? (
+          <div className="bg-green-50 border-green-200 border rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Icon name="CheckCircle" size={24} className="text-green-600 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-green-900">
+                  Показания по участку №{plotNumber} уже переданы
+                </p>
+                <p className="text-sm text-green-700 mt-1">
+                  Показания передал: <span className="font-medium">{submittedBy}</span>
+                </p>
+                <p className="text-xs text-green-600 mt-2">
+                  В текущем месяце можно передать показания только один раз на участок
+                </p>
+              </div>
             </div>
-            {isMeterLocked && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Для изменения номера обратитесь к администратору
+          </div>
+        ) : (
+          <>
+            <div className={`${canSubmit ? 'bg-green-50 border-green-200 text-green-800' : 'bg-blue-50 border-blue-200 text-blue-800'} border rounded-lg p-3 text-sm`}>
+              <Icon name="Info" size={16} className="inline mr-2" />
+              {canSubmit 
+                ? `Сегодня ${new Date().getDate()} число — период приёма показаний открыт!` 
+                : 'Показания принимаются с 22 по 25 число каждого месяца'
+              }
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>Номер прибора учёта</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={meterNumber}
+                    onChange={(e) => setMeterNumber(e.target.value)}
+                    disabled={isMeterLocked}
+                    placeholder="Введите номер ПУ"
+                  />
+                  {isMeterLocked && (
+                    <div className="flex items-center">
+                      <Icon name="Lock" className="text-muted-foreground" size={20} />
+                    </div>
+                  )}
+                </div>
+                {isMeterLocked && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Для изменения номера обратитесь к администратору
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label>Текущие показания (кВт⋅ч)</Label>
+                <Input
+                  type="number"
+                  value={reading}
+                  onChange={(e) => setReading(e.target.value)}
+                  placeholder="Введите показания"
+                  disabled={!canSubmit}
+                />
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={!canSubmit || !meterNumber.trim() || !reading.trim()}
+              className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+            >
+              <Icon name="Send" size={18} className="mr-2" />
+              Передать показания
+            </Button>
+
+            {!canSubmit && (
+              <p className="text-sm text-center text-muted-foreground">
+                Передача показаний будет доступна с 22 по 25 число месяца
               </p>
             )}
-          </div>
-
-          <div>
-            <Label>Текущие показания (кВт⋅ч)</Label>
-            <Input
-              type="number"
-              value={reading}
-              onChange={(e) => setReading(e.target.value)}
-              placeholder="Введите показания"
-              disabled={!canSubmit}
-            />
-          </div>
-        </div>
-
-        <Button
-          onClick={handleSubmit}
-          disabled={!canSubmit || !meterNumber.trim() || !reading.trim()}
-          className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
-        >
-          <Icon name="Send" size={18} className="mr-2" />
-          Передать показания
-        </Button>
-
-        {!canSubmit && (
-          <p className="text-sm text-center text-muted-foreground">
-            Передача показаний будет доступна с 22 по 25 число месяца
-          </p>
+          </>
         )}
       </CardContent>
     </Card>
