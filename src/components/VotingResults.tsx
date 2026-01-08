@@ -51,40 +51,34 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
     
     setVoting(currentVoting);
 
-    // Загрузить детали голосов
+    // Загрузить детали голосов из localStorage
     const details: VoteDetail[] = [];
     
     try {
-      const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
-      const usersData = await usersResponse.json();
-      const users = usersData.users || [];
-
-      for (const user of users) {
-        const voteJSON = localStorage.getItem(`voting_${votingId}_${user.email}`);
-        if (voteJSON) {
-          const votes = JSON.parse(voteJSON);
-          if (votes.length > 0) {
-            const detailJSON = localStorage.getItem(`voting_detail_${votingId}_${user.email}`);
-            let timestamp = new Date().toISOString();
+      // Получаем все ключи из localStorage
+      const allKeys = Object.keys(localStorage);
+      const voteDetailKeys = allKeys.filter(key => key.startsWith(`voting_detail_${votingId}_`));
+      
+      for (const key of voteDetailKeys) {
+        try {
+          const detailJSON = localStorage.getItem(key);
+          if (detailJSON) {
+            const voteDetail = JSON.parse(detailJSON);
             
-            if (detailJSON) {
-              try {
-                const voteDetail = JSON.parse(detailJSON);
-                timestamp = voteDetail.timestamp || timestamp;
-              } catch (e) {
-                console.error('Error parsing vote detail:', e);
-              }
-            }
+            // Извлекаем email из ключа
+            const email = key.replace(`voting_detail_${votingId}_`, '');
             
             details.push({
-              email: user.email,
-              firstName: user.first_name,
-              lastName: user.last_name,
-              plotNumber: user.plot_number,
-              optionIndex: votes[0],
-              timestamp
+              email: voteDetail.email || email,
+              firstName: voteDetail.firstName || '',
+              lastName: voteDetail.lastName || '',
+              plotNumber: voteDetail.plotNumber || '',
+              optionIndex: voteDetail.optionIndex,
+              timestamp: voteDetail.timestamp || new Date().toISOString()
             });
           }
+        } catch (e) {
+          console.error('Error parsing vote detail:', e);
         }
       }
 
