@@ -98,10 +98,16 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
               Модерация чата
             </Button>
           )}
-          <Button variant="outline" className="w-full justify-start">
-            <Icon name="Vote" size={18} className="mr-2" />
-            Создать голосование
-          </Button>
+          {(userRole === 'admin' || userRole === 'chairman') && (
+            <Button 
+              variant="outline" 
+              className="w-full justify-start border-indigo-500 text-indigo-600 hover:bg-indigo-50"
+              onClick={() => onNavigate?.('create-voting')}
+            >
+              <Icon name="Vote" size={18} className="mr-2" />
+              Создать голосование
+            </Button>
+          )}
           <Button variant="outline" className="w-full justify-start">
             <Icon name="FileText" size={18} className="mr-2" />
             Управление документами

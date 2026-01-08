@@ -13,6 +13,7 @@ import DocumentsManager from './DocumentsManager';
 import MeterReadingsManager from './MeterReadingsManager';
 import ChatModerationPanel from './ChatModerationPanel';
 import BoardAppeal from './BoardAppeal';
+import CreateVoting from './CreateVoting';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -129,6 +130,10 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
         onBack={() => setActiveSection('profile')}
       />
     );
+  }
+
+  if (activeSection === 'create-voting' && (userRole === 'admin' || userRole === 'chairman')) {
+    return <CreateVoting onBack={() => setActiveSection('profile')} />;
   }
 
   return null;
