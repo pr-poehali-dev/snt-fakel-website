@@ -314,6 +314,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                 {messages.map((message) => {
                   const isOwnMessage = message.userEmail === currentUserEmail;
                   const isBlocked = message.userEmail && blockedUsers.some(u => u.email === message.userEmail);
+                  const isUserOnline = message.userEmail ? onlineUsers.some(u => u.email === message.userEmail) : false;
                   
                   return (
                     <ChatMessage
@@ -323,6 +324,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                       isBlocked={!!isBlocked}
                       isModerator={isModerator}
                       currentUserEmail={currentUserEmail}
+                      isUserOnline={isUserOnline}
                       onDeleteMessage={handleDeleteMessage}
                       onBlockUser={handleBlockUser}
                       onUnblockUser={handleUnblockUser}

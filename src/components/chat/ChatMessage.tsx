@@ -22,6 +22,7 @@ interface ChatMessageProps {
   isBlocked: boolean;
   isModerator: boolean;
   currentUserEmail: string;
+  isUserOnline?: boolean;
   onDeleteMessage: (messageId: number) => void;
   onBlockUser: (userEmail: string, userName: string) => void;
   onUnblockUser: (userEmail: string) => void;
@@ -33,10 +34,29 @@ const ChatMessage = ({
   isBlocked,
   isModerator,
   currentUserEmail,
+  isUserOnline = false,
   onDeleteMessage,
   onBlockUser,
   onUnblockUser
 }: ChatMessageProps) => {
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      if (diffMins < 1) return 'только что';
+      if (diffMins < 60) return `${diffMins} мин. назад`;
+      
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours} ч. назад`;
+      
+      return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return timestamp;
+    }
+  };
   const showModerationButtons = isModerator && message.userEmail && message.userEmail !== currentUserEmail;
   
   // Debug log
@@ -67,8 +87,11 @@ const ChatMessage = ({
     <div
       className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''} group`}
     >
-      <Avatar className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 text-2xl">
+      <Avatar className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 text-2xl relative">
         {message.avatar}
+        {isUserOnline && !isOwnMessage && (
+          <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+        )}
       </Avatar>
       <div className={`flex-1 ${isOwnMessage ? 'items-end' : ''}`}>
         <div className="flex items-center gap-2 mb-1">
@@ -83,7 +106,12 @@ const ChatMessage = ({
               Заблокирован
             </Badge>
           )}
-          <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+          {isUserOnline && !isOwnMessage && (
+            <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700">
+              Онлайн
+            </Badge>
+          )}
+          <span className="text-xs text-muted-foreground">{formatTimestamp(message.timestamp)}</span>
         </div>
         <div className="flex items-start gap-2">
           <div
