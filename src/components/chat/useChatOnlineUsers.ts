@@ -30,59 +30,62 @@ export const useChatOnlineUsers = (
     if (!currentUserEmail) return;
 
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
-      const data = await response.json();
+      // Загружаем пользователей из БД
+      const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const usersData = await usersResponse.json();
       
-      if (!data.users) return;
+      if (!usersData.users) return;
       
-      const users = data.users.map((u: any) => ({
-        email: u.email,
-        firstName: u.first_name,
-        lastName: u.last_name,
-        plotNumber: u.plot_number,
-        role: u.role,
-        status: u.status
-      }));
+      // Загружаем сообщения из чата
+      const messagesResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?action=chat_messages');
+      const messagesData = await messagesResponse.json();
       
-      const currentUser = users.find((u: User) => u.email === currentUserEmail);
-      if (!currentUser) return;
-
-      const onlineJSON = localStorage.getItem('snt_online_users');
-      const onlineList: OnlineUser[] = onlineJSON ? JSON.parse(onlineJSON) : [];
-
-      const userIndex = onlineList.findIndex((u) => u.email === currentUserEmail);
-      const onlineUser: OnlineUser = {
-        email: currentUserEmail,
-        name: `${currentUser.firstName} ${currentUser.lastName}`,
-        plotNumber: currentUser.plotNumber,
-        role: currentUser.role,
-        avatar: getRoleAvatar(currentUser.role),
-        lastSeen: Date.now()
-      };
-
-      if (userIndex >= 0) {
-        onlineList[userIndex] = onlineUser;
-      } else {
-        onlineList.push(onlineUser);
-      }
-
-      localStorage.setItem('snt_online_users', JSON.stringify(onlineList));
-      setOnlineUsers(onlineList.filter((u) => u.email !== currentUserEmail));
+      if (!messagesData.messages) return;
+      
+      // Определяем онлайн пользователей по последней активности (5 минут)
+      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+      const activeEmails = new Set<string>();
+      
+      messagesData.messages.forEach((msg: any) => {
+        const msgTime = new Date(msg.timestamp).getTime();
+        if (msgTime > fiveMinutesAgo && msg.userEmail && msg.userEmail !== currentUserEmail) {
+          activeEmails.add(msg.userEmail);
+        }
+      });
+      
+      // Формируем список онлайн пользователей
+      const onlineList: OnlineUser[] = [];
+      
+      usersData.users.forEach((u: any) => {
+        if (activeEmails.has(u.email)) {
+          // Находим последнее сообщение этого пользователя
+          const userMessages = messagesData.messages
+            .filter((m: any) => m.userEmail === u.email)
+            .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          
+          const lastMsg = userMessages[0];
+          const lastSeen = lastMsg ? new Date(lastMsg.timestamp).getTime() : Date.now();
+          
+          onlineList.push({
+            email: u.email,
+            name: `${u.first_name} ${u.last_name}`,
+            plotNumber: u.plot_number,
+            role: u.role,
+            avatar: getRoleAvatar(u.role),
+            lastSeen
+          });
+        }
+      });
+      
+      setOnlineUsers(onlineList);
     } catch (error) {
       console.error('Error updating online status:', error);
     }
   };
 
   const cleanupInactiveUsers = () => {
-    const onlineJSON = localStorage.getItem('snt_online_users');
-    if (!onlineJSON) return;
-
-    const onlineList: OnlineUser[] = JSON.parse(onlineJSON);
-    const now = Date.now();
-    const activeUsers = onlineList.filter((u) => now - u.lastSeen < 120000);
-
-    localStorage.setItem('snt_online_users', JSON.stringify(activeUsers));
-    setOnlineUsers(activeUsers.filter((u) => u.email !== currentUserEmail));
+    // Очистка теперь происходит автоматически через updateOnlineStatus
+    // Эта функция оставлена для совместимости
   };
 
   const loadUnreadCounts = () => {
