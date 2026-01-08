@@ -259,7 +259,37 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                 Общий чат
               </CardTitle>
               <div className="flex items-center gap-3">
-
+                {(userRole === 'admin' || userRole === 'chairman') && (
+                  <button
+                    onClick={async () => {
+                      if (confirm('Вы уверены? Это удалит ВСЕ сообщения из чата безвозвратно!')) {
+                        try {
+                          // Удалить все сообщения через API
+                          const allMessages = messages.filter(m => !m.deleted);
+                          for (const msg of allMessages) {
+                            await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                action: 'delete_message',
+                                messageId: msg.id,
+                                deletedBy: currentUserEmail
+                              })
+                            });
+                          }
+                          toast.success('Чат очищен');
+                          refreshMessages();
+                        } catch (error) {
+                          toast.error('Ошибка при очистке чата');
+                        }
+                      }
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+                  >
+                    <Icon name="Trash2" size={14} />
+                    Очистить чат
+                  </button>
+                )}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                   {onlineUsers.length + 1} онлайн
