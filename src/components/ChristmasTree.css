@@ -98,11 +98,15 @@
 
 .tree-light {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   animation: light-blink 1.5s ease-in-out infinite;
-  box-shadow: 0 0 10px currentColor;
+  box-shadow:
+    0 0 20px currentColor,
+    0 0 40px currentColor,
+    0 0 60px currentColor;
+  filter: brightness(1.5);
 }
 
 .light-red {
@@ -150,22 +154,72 @@
   100% {
     opacity: 1;
     transform: scale(1);
-    filter: brightness(1);
+    filter: brightness(1.8);
   }
   25% {
-    opacity: 0.3;
-    transform: scale(0.8);
-    filter: brightness(0.5);
+    opacity: 0.4;
+    transform: scale(0.85);
+    filter: brightness(0.8);
   }
   50% {
     opacity: 1;
-    transform: scale(1.2);
-    filter: brightness(1.5);
+    transform: scale(1.4);
+    filter: brightness(2.5);
   }
   75% {
-    opacity: 0.5;
-    transform: scale(0.9);
-    filter: brightness(0.7);
+    opacity: 0.6;
+    transform: scale(1);
+    filter: brightness(1.2);
+  }
+}
+
+.tree-snow {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 20px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: snow-glow 2s ease-in-out infinite;
+}
+
+@keyframes snow-glow {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.05);
+  }
+}
+
+.snowflake-falling {
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  animation: snowflake-fall linear infinite;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+
+@keyframes snowflake-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(400px) rotate(360deg);
+    opacity: 0;
   }
 }
 

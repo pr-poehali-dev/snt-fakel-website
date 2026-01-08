@@ -60,6 +60,12 @@ const ChristmasTree = ({ side }: ChristmasTreeProps) => {
     { top: '80%', color: 'orange' },
   ];
 
+  const snowflakes = Array.from({ length: 8 }, (_, i) => ({
+    left: `${10 + i * 10}%`,
+    delay: `${Math.random() * 5}s`,
+    duration: `${3 + Math.random() * 2}s`
+  }));
+
   return (
     <div className={`christmas-tree ${side}`}>
       <div className="tree-container">
@@ -72,6 +78,7 @@ const ChristmasTree = ({ side }: ChristmasTreeProps) => {
         <div className="tree-layer tree-layer-5"></div>
         
         <div className="tree-trunk"></div>
+        <div className="tree-snow"></div>
         
         {lights.map((light, index) => (
           <div
@@ -83,6 +90,20 @@ const ChristmasTree = ({ side }: ChristmasTreeProps) => {
               animationDelay: `${Math.random() * 2}s`
             }}
           />
+        ))}
+        
+        {snowflakes.map((flake, index) => (
+          <div
+            key={`snow-${index}`}
+            className="snowflake-falling"
+            style={{
+              left: flake.left,
+              animationDelay: flake.delay,
+              animationDuration: flake.duration
+            }}
+          >
+            ❄️
+          </div>
         ))}
       </div>
     </div>
