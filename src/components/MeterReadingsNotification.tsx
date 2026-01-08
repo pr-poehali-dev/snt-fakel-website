@@ -16,11 +16,8 @@ const MeterReadingsNotification = ({ onNavigateToProfile }: MeterReadingsNotific
       const today = new Date();
       const currentDay = today.getDate();
       
-      // Показываем уведомление с 20 по 25 число
       if (currentDay >= 20 && currentDay <= 25) {
         setShowNotification(true);
-        
-        // Вычисляем сколько дней осталось до конца периода
         const daysRemaining = 25 - currentDay;
         setDaysLeft(daysRemaining);
       } else {
@@ -30,7 +27,6 @@ const MeterReadingsNotification = ({ onNavigateToProfile }: MeterReadingsNotific
 
     checkReadingsPeriod();
     
-    // Проверяем каждые 6 часов
     const interval = setInterval(checkReadingsPeriod, 6 * 60 * 60 * 1000);
     
     return () => clearInterval(interval);
