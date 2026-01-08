@@ -30,6 +30,8 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [submittedBy, setSubmittedBy] = useState('');
   const [confirmed, setConfirmed] = useState(false);
+  const [submittedReading, setSubmittedReading] = useState<number | null>(null);
+  const [submittedDate, setSubmittedDate] = useState('');
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -56,6 +58,8 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
           
           if (plotReading) {
             setAlreadySubmitted(true);
+            setSubmittedReading(plotReading.reading);
+            setSubmittedDate(plotReading.date);
             const submitter = users.find((u: any) => u.email === plotReading.email);
             if (submitter) {
               setSubmittedBy(`${submitter.firstName} ${submitter.lastName}`);
@@ -133,6 +137,8 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
       if (user) {
         setSubmittedBy(`${user.firstName} ${user.lastName}`);
         setAlreadySubmitted(true);
+        setSubmittedReading(Number(reading));
+        setSubmittedDate(new Date().toLocaleDateString('ru-RU'));
       }
     }
 
@@ -152,16 +158,17 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {alreadySubmitted ? (
+        {alreadySubmitted && (
           <div className="bg-green-50 border-green-200 border rounded-lg p-4">
             <div className="flex items-start gap-3">
               <Icon name="CheckCircle" size={24} className="text-green-600 flex-shrink-0" />
-              <div>
+              <div className="flex-1">
                 <p className="font-semibold text-green-900">
                   Показания по участку №{plotNumber} уже переданы
                 </p>
                 <p className="text-sm text-green-700 mt-1">
                   Показания передал: <span className="font-medium">{submittedBy}</span>
+                  {submittedDate && <span className="ml-2">• {submittedDate}</span>}
                 </p>
                 <p className="text-xs text-green-600 mt-2">
                   В текущем месяце можно передать показания только один раз на участок
@@ -169,7 +176,9 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
               </div>
             </div>
           </div>
-        ) : (
+        )}
+
+        {!alreadySubmitted ? (
           <>
             <div className={`${canSubmit ? 'bg-green-50 border-green-200 text-green-800' : 'bg-blue-50 border-blue-200 text-blue-800'} border rounded-lg p-3 text-sm`}>
               <Icon name="Info" size={16} className="inline mr-2" />
@@ -213,6 +222,16 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
                 />
               </div>
             </div>
+
+            {submittedReading !== null && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <p className="text-sm text-muted-foreground">
+                  <Icon name="FileCheck" size={16} className="inline mr-2" />
+                  Переданные показания: <span className="font-semibold text-gray-700">{submittedReading} кВт⋅ч</span>
+                  {submittedDate && <span className="ml-2">• {submittedDate}</span>}
+                </p>
+              </div>
+            )}
 
             <div className="flex items-start space-x-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <Checkbox
