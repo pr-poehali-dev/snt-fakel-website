@@ -56,7 +56,7 @@ const ChatMessage = ({
         <div className="flex-1 bg-gray-100 rounded-lg px-4 py-2">
           <p className="text-xs text-muted-foreground italic">
             <Icon name="Trash2" size={12} className="inline mr-1" />
-            Сообщение удалено модератором
+            Сообщение удалено
           </p>
         </div>
       </div>
@@ -95,6 +95,22 @@ const ChatMessage = ({
           >
             <p className="text-sm">{message.text}</p>
           </div>
+          {isOwnMessage && (
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0 hover:bg-red-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteMessage(message.id);
+                }}
+                title="Удалить своё сообщение"
+              >
+                <Icon name="Trash2" size={14} className="text-red-500" />
+              </Button>
+            </div>
+          )}
           {showModerationButtons && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
               <Button
