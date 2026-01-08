@@ -22,65 +22,60 @@ export interface BlockedUser {
   reason?: string;
 }
 
-export const defaultMessages: Message[] = [];
+const API_URL = 'https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35';
 
 export const useChatState = () => {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    const savedMessages = localStorage.getItem('snt_chat_messages');
-    if (savedMessages) {
-      try {
-        return JSON.parse(savedMessages);
-      } catch (e) {
-        console.error('Error loading chat messages:', e);
-        return defaultMessages;
-      }
-    }
-    return defaultMessages;
-  });
-
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>(() => {
-    const saved = localStorage.getItem('snt_blocked_users');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Сохранение в localStorage + синхронизация через storage event
-  useEffect(() => {
-    localStorage.setItem('snt_chat_messages', JSON.stringify(messages));
-  }, [messages]);
-
-  useEffect(() => {
-    localStorage.setItem('snt_blocked_users', JSON.stringify(blockedUsers));
-  }, [blockedUsers]);
-
-  // Слушаем изменения storage от других вкладок/браузеров
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'snt_chat_messages' && e.newValue) {
-        try {
-          const newMessages = JSON.parse(e.newValue);
-          setMessages(newMessages);
-        } catch (err) {
-          console.error('Error parsing messages:', err);
-        }
+  // Загрузка сообщений из базы данных
+  const loadMessages = async () => {
+    try {
+      const response = await fetch(`${API_URL}?action=chat_messages`);
+      const data = await response.json();
+      
+      if (data.messages) {
+        const formattedMessages = data.messages.map((msg: any) => ({
+          id: msg.id,
+          userId: 0,
+          userName: msg.userName,
+          userRole: msg.userRole,
+          text: msg.text,
+          timestamp: msg.timestamp,
+          avatar: msg.avatar,
+          userEmail: msg.userEmail,
+          deleted: msg.deleted,
+          deletedBy: msg.deletedBy
+        }));
+        setMessages(formattedMessages);
       }
       
-      if (e.key === 'snt_blocked_users' && e.newValue) {
-        try {
-          const newBlocked = JSON.parse(e.newValue);
-          setBlockedUsers(newBlocked);
-        } catch (err) {
-          console.error('Error parsing blocked users:', err);
-        }
+      if (data.blocked) {
+        const formattedBlocked = data.blocked.map((b: any) => ({
+          email: b.email,
+          blockedBy: b.blockedBy,
+          blockedAt: b.blockedAt,
+          reason: b.reason
+        }));
+        setBlockedUsers(formattedBlocked);
       }
-    };
+    } catch (error) {
+      console.error('Error loading chat messages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    window.addEventListener('storage', handleStorageChange);
+  // Загрузка при монтировании
+  useEffect(() => {
+    loadMessages();
     
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
+    // Автообновление каждые 3 секунды
+    const interval = setInterval(loadMessages, 3000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   return {
@@ -89,6 +84,8 @@ export const useChatState = () => {
     blockedUsers,
     setBlockedUsers,
     newMessage,
-    setNewMessage
+    setNewMessage,
+    loading,
+    refreshMessages: loadMessages
   };
 };

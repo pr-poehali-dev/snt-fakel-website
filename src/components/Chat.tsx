@@ -23,7 +23,9 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     blockedUsers,
     setBlockedUsers,
     newMessage,
-    setNewMessage
+    setNewMessage,
+    loading,
+    refreshMessages
   } = useChatState();
 
   const {
@@ -58,7 +60,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     setPrivateChatOpen(userEmail);
   };
 
-  const handleDeleteMessage = (messageId: number) => {
+  const handleDeleteMessage = async (messageId: number) => {
     console.log('Delete message attempt:', { messageId, isModerator, userRole });
     
     const message = messages.find(msg => msg.id === messageId);
@@ -75,16 +77,29 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       return;
     }
     
-    const updatedMessages = messages.map(msg => 
-      msg.id === messageId 
-        ? { ...msg, deleted: true, deletedBy: currentUserEmail } 
-        : msg
-    );
-    setMessages(updatedMessages);
-    toast.success('Сообщение удалено');
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete_message',
+          messageId,
+          deletedBy: currentUserEmail
+        })
+      });
+      
+      if (response.ok) {
+        toast.success('Сообщение удалено');
+        refreshMessages();
+      } else {
+        toast.error('Ошибка при удалении сообщения');
+      }
+    } catch (error) {
+      toast.error('Ошибка соединения');
+    }
   };
   
-  const handleBlockUser = (userEmail: string, userName: string) => {
+  const handleBlockUser = async (userEmail: string, userName: string) => {
     console.log('Block user attempt:', { userEmail, userName, isModerator, userRole });
     
     if (!isModerator) {
@@ -97,20 +112,30 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       return;
     }
     
-    const newBlock = {
-      email: userEmail,
-      blockedBy: currentUserEmail,
-      blockedAt: new Date().toISOString(),
-      reason: 'Нарушение правил чата'
-    };
-    
-    const updatedBlockedUsers = [...blockedUsers, newBlock];
-    setBlockedUsers(updatedBlockedUsers);
-    console.log('User blocked successfully:', newBlock);
-    toast.success(`Пользователь ${userName} заблокирован`);
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'block_user',
+          email: userEmail,
+          blockedBy: currentUserEmail,
+          reason: 'Нарушение правил чата'
+        })
+      });
+      
+      if (response.ok) {
+        toast.success(`Пользователь ${userName} заблокирован`);
+        refreshMessages();
+      } else {
+        toast.error('Ошибка при блокировке');
+      }
+    } catch (error) {
+      toast.error('Ошибка соединения');
+    }
   };
   
-  const handleUnblockUser = (userEmail: string) => {
+  const handleUnblockUser = async (userEmail: string) => {
     console.log('Unblock user attempt:', { userEmail, isModerator, userRole });
     
     if (!isModerator) {
@@ -118,13 +143,28 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       return;
     }
     
-    const updatedBlockedUsers = blockedUsers.filter(u => u.email !== userEmail);
-    setBlockedUsers(updatedBlockedUsers);
-    console.log('User unblocked successfully');
-    toast.success('Пользователь разблокирован');
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'unblock_user',
+          email: userEmail
+        })
+      });
+      
+      if (response.ok) {
+        toast.success('Пользователь разблокирован');
+        refreshMessages();
+      } else {
+        toast.error('Ошибка при разблокировке');
+      }
+    } catch (error) {
+      toast.error('Ошибка соединения');
+    }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!isLoggedIn) {
@@ -158,10 +198,6 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       return;
     }
 
-    const currentTime = new Date();
-    const hours = currentTime.getHours().toString().padStart(2, '0');
-    const minutes = currentTime.getMinutes().toString().padStart(2, '0');
-
     const roleNames: Record<'member' | 'board_member' | 'chairman' | 'admin', string> = {
       member: 'Участник',
       board_member: 'Член правления',
@@ -179,21 +215,32 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       }
     }
 
-    const message: Message = {
-      id: messages.length + 1,
-      userId: 999,
-      userName: currentUserName,
-      userRole: roleNames[userRole],
-      text: newMessage,
-      timestamp: `${hours}:${minutes}`,
-      avatar: userRole === 'admin' ? '⭐' : userRole === 'chairman' ? '👑' : userRole === 'board_member' ? '👥' : '👤',
-      userEmail: currentUserEmail
-    };
+    const avatar = userRole === 'admin' ? '⭐' : userRole === 'chairman' ? '👑' : userRole === 'board_member' ? '👥' : '👤';
 
-    const updatedMessages = [...messages, message];
-    setMessages(updatedMessages);
-    setNewMessage('');
-    toast.success('Сообщение отправлено');
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_message',
+          userEmail: currentUserEmail,
+          userName: currentUserName,
+          userRole: roleNames[userRole],
+          avatar: avatar,
+          text: newMessage
+        })
+      });
+      
+      if (response.ok) {
+        setNewMessage('');
+        toast.success('Сообщение отправлено');
+        refreshMessages();
+      } else {
+        toast.error('Ошибка при отправке сообщения');
+      }
+    } catch (error) {
+      toast.error('Ошибка соединения');
+    }
   };
 
   return (
@@ -209,20 +256,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                 Общий чат
               </CardTitle>
               <div className="flex items-center gap-3">
-                {(userRole === 'admin' || userRole === 'chairman') && (
-                  <button
-                    onClick={() => {
-                      if (confirm('Вы уверены? Это удалит ВСЕ сообщения из чата безвозвратно!')) {
-                        setMessages([]);
-                        toast.success('Чат очищен');
-                      }
-                    }}
-                    className="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
-                  >
-                    <Icon name="Trash2" size={14} />
-                    Очистить чат
-                  </button>
-                )}
+
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                   {onlineUsers.length + 1} онлайн

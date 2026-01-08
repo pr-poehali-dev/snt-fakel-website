@@ -89,6 +89,53 @@ def handler(event: dict, context) -> dict:
             query_params = event.get('queryStringParameters', {}) or {}
             action = query_params.get('action')
             
+            if action == 'chat_messages':
+                # Получить все сообщения чата
+                cur.execute('''
+                    SELECT id, user_email, user_name, user_role, avatar, 
+                           message_text, created_at, is_removed, removed_by
+                    FROM chat_messages
+                    ORDER BY created_at ASC
+                ''')
+                rows = cur.fetchall()
+                
+                messages = []
+                for row in rows:
+                    messages.append({
+                        'id': row['id'],
+                        'userEmail': row['user_email'],
+                        'userName': row['user_name'],
+                        'userRole': row['user_role'],
+                        'avatar': row['avatar'],
+                        'text': row['message_text'],
+                        'timestamp': row['created_at'].strftime('%H:%M') if row['created_at'] else '',
+                        'deleted': row['is_removed'],
+                        'deletedBy': row['removed_by']
+                    })
+                
+                # Получить список заблокированных
+                cur.execute('SELECT email, blocked_by, blocked_at, block_reason FROM blocked_chat_users WHERE blocked_by IS NOT NULL')
+                blocked_rows = cur.fetchall()
+                
+                blocked = []
+                for row in blocked_rows:
+                    blocked.append({
+                        'email': row['email'],
+                        'blockedBy': row['blocked_by'],
+                        'blockedAt': row['blocked_at'].isoformat() if row['blocked_at'] else '',
+                        'reason': row['block_reason']
+                    })
+                
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'messages': messages, 'blocked': blocked}),
+                    'isBase64Encoded': False
+                }
+            
             if action == 'login':
                 email = query_params.get('email')
                 password = query_params.get('password')
@@ -170,6 +217,37 @@ def handler(event: dict, context) -> dict:
         
         elif method == 'POST':
             body = json.loads(event.get('body', '{}'))
+            action = body.get('action')
+            
+            if action == 'send_message':
+                # Отправить новое сообщение в чат
+                cur.execute('''
+                    INSERT INTO chat_messages 
+                    (user_email, user_name, user_role, avatar, message_text)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id, created_at
+                ''', (
+                    body['userEmail'],
+                    body['userName'],
+                    body['userRole'],
+                    body['avatar'],
+                    body['text']
+                ))
+                
+                row = cur.fetchone()
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 201,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({
+                        'id': row['id'],
+                        'timestamp': row['created_at'].strftime('%H:%M') if row['created_at'] else ''
+                    }),
+                    'isBase64Encoded': False
+                }
             
             cur.execute("""
                 INSERT INTO users (
@@ -219,6 +297,58 @@ def handler(event: dict, context) -> dict:
         
         elif method == 'PUT':
             body = json.loads(event.get('body', '{}'))
+            action = body.get('action')
+            
+            if action == 'delete_message':
+                # Удалить сообщение в чате
+                cur.execute('''
+                    UPDATE chat_messages 
+                    SET is_removed = TRUE, removed_by = %s
+                    WHERE id = %s
+                ''', (body['deletedBy'], body['messageId']))
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'success': True}),
+                    'isBase64Encoded': False
+                }
+            
+            if action == 'block_user':
+                # Заблокировать пользователя
+                cur.execute('''
+                    INSERT INTO blocked_chat_users (email, blocked_by, block_reason)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (email) DO UPDATE SET blocked_by = %s, block_reason = %s
+                ''', (body['email'], body['blockedBy'], body.get('reason', ''), body['blockedBy'], body.get('reason', '')))
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'success': True}),
+                    'isBase64Encoded': False
+                }
+            
+            if action == 'unblock_user':
+                # Разблокировать пользователя
+                cur.execute('UPDATE blocked_chat_users SET blocked_by = NULL WHERE email = %s', (body['email'],))
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'success': True}),
+                    'isBase64Encoded': False
+                }
+            
             user_id = body.get('id')
             
             if not user_id:
