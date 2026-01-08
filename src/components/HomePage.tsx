@@ -90,7 +90,25 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
         try {
           const votings = JSON.parse(votingsJSON);
           const now = new Date();
-          const active = votings.filter((v: any) => {
+          let updated = false;
+          
+          // Автоматически закрываем истекшие голосования
+          const updatedVotings = votings.map((v: any) => {
+            const endDate = new Date(v.endDate);
+            if (v.status === 'active' && endDate < now) {
+              updated = true;
+              return { ...v, status: 'completed' };
+            }
+            return v;
+          });
+          
+          // Сохраняем обновленные голосования, если были изменения
+          if (updated) {
+            localStorage.setItem('snt_votings', JSON.stringify(updatedVotings));
+            window.dispatchEvent(new Event('votings-updated'));
+          }
+          
+          const active = updatedVotings.filter((v: any) => {
             const endDate = new Date(v.endDate);
             return v.status === 'active' && endDate >= now;
           });
@@ -112,9 +130,15 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
       loadVotings();
     };
 
+    // Периодическая проверка истекших голосований (каждые 60 секунд)
+    const interval = setInterval(() => {
+      loadVotings();
+    }, 60000);
+
     window.addEventListener('site-content-updated', handleContentUpdate);
     window.addEventListener('votings-updated', handleVotingsUpdate);
     return () => {
+      clearInterval(interval);
       window.removeEventListener('site-content-updated', handleContentUpdate);
       window.removeEventListener('votings-updated', handleVotingsUpdate);
     };
@@ -262,6 +286,15 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => {
+                                  // Проверяем, не истек ли срок голосования
+                                  const now = new Date();
+                                  const endDate = new Date(voting.endDate);
+                                  if (endDate < now) {
+                                    toast.error('Голосование завершено');
+                                    window.dispatchEvent(new Event('votings-updated'));
+                                    return;
+                                  }
+                                  
                                   const votingsJSON = localStorage.getItem('snt_votings');
                                   if (votingsJSON) {
                                     const votings = JSON.parse(votingsJSON);

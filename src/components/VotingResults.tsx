@@ -32,9 +32,23 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
     if (!votingsJSON) return;
 
     const votings = JSON.parse(votingsJSON);
-    const currentVoting = votings.find((v: any) => v.id === votingId);
+    let currentVoting = votings.find((v: any) => v.id === votingId);
     
     if (!currentVoting) return;
+    
+    // Проверяем, не истек ли срок голосования
+    const now = new Date();
+    const endDate = new Date(currentVoting.endDate);
+    if (currentVoting.status === 'active' && endDate < now) {
+      // Обновляем статус на завершено
+      currentVoting = { ...currentVoting, status: 'completed' };
+      const updatedVotings = votings.map((v: any) => 
+        v.id === votingId ? currentVoting : v
+      );
+      localStorage.setItem('snt_votings', JSON.stringify(updatedVotings));
+      window.dispatchEvent(new Event('votings-updated'));
+    }
+    
     setVoting(currentVoting);
 
     // Загрузить детали голосов
