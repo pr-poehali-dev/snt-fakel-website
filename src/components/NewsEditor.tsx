@@ -29,6 +29,21 @@ const NewsEditor = () => {
 
   useEffect(() => {
     loadNews();
+    
+    // Проверить, есть ли новость для редактирования
+    const editingId = localStorage.getItem('editing_news_id');
+    if (editingId) {
+      const id = parseInt(editingId);
+      const savedNews = localStorage.getItem('snt_news');
+      if (savedNews) {
+        const allNews = JSON.parse(savedNews);
+        const itemToEdit = allNews.find((n: NewsItem) => n.id === id);
+        if (itemToEdit) {
+          handleEdit(itemToEdit);
+        }
+      }
+      localStorage.removeItem('editing_news_id');
+    }
   }, []);
 
   const loadNews = () => {

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -10,6 +11,69 @@ interface AdminDashboardCardProps {
 }
 
 const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) => {
+  const [stats, setStats] = useState({
+    members: 0,
+    activeVotings: 0,
+    news: 0,
+    documents: 0
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      // Загрузить количество участников
+      try {
+        const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        const data = await response.json();
+        const membersCount = data.users?.length || 0;
+        
+        // Загрузить голосования
+        const votingsJSON = localStorage.getItem('snt_votings');
+        let activeVotingsCount = 0;
+        if (votingsJSON) {
+          const votings = JSON.parse(votingsJSON);
+          const now = new Date();
+          activeVotingsCount = votings.filter((v: any) => {
+            const endDate = new Date(v.endDate);
+            return v.status === 'active' && endDate >= now;
+          }).length;
+        }
+        
+        // Загрузить новости
+        const newsJSON = localStorage.getItem('snt_news');
+        const newsCount = newsJSON ? JSON.parse(newsJSON).length : 0;
+        
+        // Загрузить документы
+        const docsJSON = localStorage.getItem('snt_documents');
+        const docsCount = docsJSON ? JSON.parse(docsJSON).length : 0;
+        
+        setStats({
+          members: membersCount,
+          activeVotings: activeVotingsCount,
+          news: newsCount,
+          documents: docsCount
+        });
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    };
+    
+    loadStats();
+    
+    // Обновлять статистику при изменениях
+    const handleUpdate = () => loadStats();
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('votings-updated', handleUpdate);
+    window.addEventListener('news-updated', handleUpdate);
+    window.addEventListener('documents-updated', handleUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('votings-updated', handleUpdate);
+      window.removeEventListener('news-updated', handleUpdate);
+      window.removeEventListener('documents-updated', handleUpdate);
+    };
+  }, []);
+
   return (
     <>
       <Card className="md:col-span-2">
@@ -23,19 +87,19 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Всего участников</p>
-              <p className="text-2xl font-bold" id="total-members-count">-</p>
+              <p className="text-2xl font-bold">{stats.members}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Активных голосований</p>
-              <p className="text-2xl font-bold">2</p>
+              <p className="text-2xl font-bold">{stats.activeVotings}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Новостей</p>
-              <p className="text-2xl font-bold">12</p>
+              <p className="text-2xl font-bold">{stats.news}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Документов</p>
-              <p className="text-2xl font-bold">24</p>
+              <p className="text-2xl font-bold">{stats.documents}</p>
             </div>
           </div>
         </CardContent>
@@ -52,7 +116,7 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
           >
             <Icon name="Users" size={18} className="mr-2" />
             Список участников
-            <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full" id="members-badge">-</span>
+            <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{stats.members}</span>
           </Button>
           <Button 
             variant="outline" 

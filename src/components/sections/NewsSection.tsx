@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
+import { toast } from 'sonner';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -23,6 +24,23 @@ interface NewsSectionProps {
 
 const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionProps) => {
   const [news, setNews] = useState<NewsItem[]>(initialNews);
+  
+  const handleEdit = (item: NewsItem) => {
+    // Сохранить ID редактируемой новости и перейти к редактору
+    localStorage.setItem('editing_news_id', item.id.toString());
+    onNavigate?.('news-editor');
+  };
+  
+  const handleDelete = (item: NewsItem) => {
+    const confirmed = window.confirm(`Удалить новость "${item.title}"?`);
+    if (!confirmed) return;
+    
+    const updatedNews = news.filter(n => n.id !== item.id);
+    localStorage.setItem('snt_news', JSON.stringify(updatedNews));
+    setNews(updatedNews);
+    window.dispatchEvent(new CustomEvent('news-updated'));
+    toast.success('Новость удалена');
+  };
 
   useEffect(() => {
     const loadNews = () => {
@@ -77,10 +95,21 @@ const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionPro
                     <span className="text-sm text-muted-foreground">{item.date}</span>
                     {(userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && (
                       <div className="flex gap-1">
-                        <Button size="sm" variant="ghost">
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => handleEdit(item)}
+                          title="Редактировать"
+                        >
                           <Icon name="Pencil" size={14} />
                         </Button>
-                        <Button size="sm" variant="ghost">
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => handleDelete(item)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Удалить"
+                        >
                           <Icon name="Trash2" size={14} />
                         </Button>
                       </div>
