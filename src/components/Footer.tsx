@@ -8,12 +8,14 @@ interface FooterProps {
 interface ContactsData {
   phone: string;
   email: string;
+  address: string;
 }
 
 const Footer = ({ setActiveSection }: FooterProps) => {
   const [contacts, setContacts] = useState<ContactsData>({
     phone: '+7 (495) 123-45-67',
-    email: 'info@snt-fakel.ru'
+    email: 'info@snt-fakel.ru',
+    address: 'Московская область'
   });
 
   useEffect(() => {
@@ -25,7 +27,8 @@ const Footer = ({ setActiveSection }: FooterProps) => {
           if (content.contacts) {
             setContacts({
               phone: content.contacts.phone || '+7 (495) 123-45-67',
-              email: content.contacts.email || 'info@snt-fakel.ru'
+              email: content.contacts.email || 'info@snt-fakel.ru',
+              address: content.contacts.address || 'Московская область'
             });
           }
         } catch (e) {
@@ -97,6 +100,10 @@ const Footer = ({ setActiveSection }: FooterProps) => {
               <li className="flex items-center gap-2">
                 <Icon name="Mail" size={16} />
                 {contacts.email}
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="MapPin" size={16} />
+                {contacts.address}
               </li>
             </ul>
           </div>
