@@ -125,6 +125,12 @@ export const useChatOnlineUsers = (
   };
 
   useEffect(() => {
+    if (!currentUserEmail) {
+      console.log('Online status: waiting for currentUserEmail');
+      return;
+    }
+
+    console.log('Online status: initializing for', currentUserEmail);
     updateOnlineStatus();
     loadUnreadCounts();
 
