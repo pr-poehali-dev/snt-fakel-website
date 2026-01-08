@@ -137,13 +137,16 @@ const HolidayDecorManager = ({ onBack }: HolidayDecorManagerProps) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Button onClick={onBack} variant="outline">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+        <Button onClick={onBack} variant="outline" size="sm">
           <Icon name="ArrowLeft" size={18} className="mr-2" />
           Назад
         </Button>
-        <h1 className="text-3xl font-bold">Праздничный декор</h1>
+        <div className="flex items-center gap-3">
+          <div className="text-4xl">✨</div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Праздничный декор</h1>
+        </div>
       </div>
 
       <Card>
@@ -248,13 +251,13 @@ const HolidayDecorManager = ({ onBack }: HolidayDecorManagerProps) => {
             </div>
           ) : (
             decors.map((decor) => (
-              <Card key={decor.id} className="border-2">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="text-5xl">{decor.emoji}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+              <Card key={decor.id} className="border-2 hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 w-full sm:w-auto">
+                      <div className="text-5xl flex-shrink-0">{decor.emoji}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
                           <h3 className="font-semibold text-lg">{decor.name}</h3>
                           <Badge variant={decor.isActive ? 'default' : 'secondary'}>
                             {decor.isActive ? 'Активен' : 'Отключён'}
@@ -265,17 +268,18 @@ const HolidayDecorManager = ({ onBack }: HolidayDecorManagerProps) => {
                         </p>
                         {decor.cssClass && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            Класс: <code className="bg-gray-100 px-1 rounded">{decor.cssClass}</code>
+                            Класс: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{decor.cssClass}</code>
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-shrink-0">
                       <Button
                         onClick={() => toggleActive(decor.id)}
                         variant="ghost"
                         size="sm"
                         title={decor.isActive ? 'Отключить' : 'Включить'}
+                        className="hover:bg-gray-100"
                       >
                         <Icon name={decor.isActive ? 'Eye' : 'EyeOff'} size={16} />
                       </Button>
@@ -284,6 +288,7 @@ const HolidayDecorManager = ({ onBack }: HolidayDecorManagerProps) => {
                         variant="ghost"
                         size="sm"
                         title="Редактировать"
+                        className="hover:bg-blue-50 hover:text-blue-600"
                       >
                         <Icon name="Pencil" size={16} />
                       </Button>
