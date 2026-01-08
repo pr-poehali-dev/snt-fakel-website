@@ -34,11 +34,15 @@ export const useChatOnlineUsers = (
       const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
       const usersData = await usersResponse.json();
       
+      console.log('Online status: loaded users', usersData.users?.length);
+      
       if (!usersData.users) return;
       
       // Загружаем сообщения из чата
       const messagesResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?action=chat_messages');
       const messagesData = await messagesResponse.json();
+      
+      console.log('Online status: loaded messages', messagesData.messages?.length);
       
       if (!messagesData.messages) return;
       
@@ -50,8 +54,11 @@ export const useChatOnlineUsers = (
         const msgTime = new Date(msg.timestamp).getTime();
         if (msgTime > fiveMinutesAgo && msg.userEmail && msg.userEmail !== currentUserEmail) {
           activeEmails.add(msg.userEmail);
+          console.log('Online status: active user found', msg.userEmail, 'message time:', msg.timestamp);
         }
       });
+      
+      console.log('Online status: active emails', Array.from(activeEmails));
       
       // Формируем список онлайн пользователей
       const onlineList: OnlineUser[] = [];
@@ -76,6 +83,8 @@ export const useChatOnlineUsers = (
           });
         }
       });
+      
+      console.log('Online status: final online list', onlineList);
       
       setOnlineUsers(onlineList);
     } catch (error) {
