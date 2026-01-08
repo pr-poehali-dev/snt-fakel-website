@@ -181,7 +181,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
           </div>
         )}
 
-        {!alreadySubmitted ? (
+        {!alreadySubmitted && (
           <>
             <div className={`${canSubmit ? 'bg-green-50 border-green-200 text-green-800' : 'bg-blue-50 border-blue-200 text-blue-800'} border rounded-lg p-3 text-sm`}>
               <Icon name="Info" size={16} className="inline mr-2" />
