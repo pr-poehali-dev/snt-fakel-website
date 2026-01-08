@@ -115,7 +115,7 @@ const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps)
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{result.option}</span>
-                          {userVotedIndex === idx && (
+                          {(userVotedIndex === idx || (Array.isArray(userVotes) && userVotes.includes(idx))) && (
                             <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700">
                               Ваш выбор
                             </Badge>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -15,13 +16,16 @@ interface VoteDetail {
   firstName: string;
   lastName: string;
   plotNumber: string;
-  optionIndex: number;
+  optionIndex?: number;
+  optionIndexes?: number[];
   timestamp: string;
 }
 
 const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
   const [voting, setVoting] = useState<any>(null);
   const [voteDetails, setVoteDetails] = useState<VoteDetail[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterOption, setFilterOption] = useState<number | null>(null);
 
   useEffect(() => {
     loadVotingData();
@@ -74,6 +78,7 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
               lastName: voteDetail.lastName || '',
               plotNumber: voteDetail.plotNumber || '',
               optionIndex: voteDetail.optionIndex,
+              optionIndexes: voteDetail.optionIndexes,
               timestamp: voteDetail.timestamp || new Date().toISOString()
             });
           }
@@ -142,6 +147,22 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
   }
 
   const totalVotes = Object.values(voting.votes || {}).reduce((sum: number, v: any) => sum + v, 0);
+
+  // Фильтрация и поиск
+  const filteredVoteDetails = voteDetails.filter(detail => {
+    const matchesSearch = searchTerm === '' || 
+      detail.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      detail.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      detail.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      detail.plotNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filterOption === null || 
+      (detail.optionIndexes 
+        ? detail.optionIndexes.includes(filterOption) 
+        : detail.optionIndex === filterOption);
+    
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <section>
@@ -282,12 +303,58 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Детальный список голосов</CardTitle>
-            <CardDescription>Кто и за что проголосовал</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Детальный список голосов</CardTitle>
+                <CardDescription>Кто и за что проголосовал</CardDescription>
+              </div>
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                {filteredVoteDetails.length} {filteredVoteDetails.length === 1 ? 'голос' : 'голосов'}
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent>
-            {voteDetails.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">Голосов пока нет</p>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Поиск по ФИО, участку или email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={filterOption === null ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilterOption(null)}
+                >
+                  Все варианты
+                </Button>
+                {voting?.options.map((option: string, idx: number) => (
+                  <Button
+                    key={idx}
+                    variant={filterOption === idx ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilterOption(idx)}
+                    className={filterOption === idx ? "bg-indigo-500 hover:bg-indigo-600" : ""}
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {filteredVoteDetails.length === 0 ? (
+              <div className="text-center py-12">
+                <Icon name="SearchX" size={48} className="mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  {voteDetails.length === 0 ? 'Голосов пока нет' : 'Ничего не найдено'}
+                </p>
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -301,15 +368,25 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {voteDetails.map((detail, idx) => (
+                    {filteredVoteDetails.map((detail, idx) => (
                       <tr key={idx} className="border-b hover:bg-muted/50">
                         <td className="py-3 px-2">{detail.plotNumber}</td>
                         <td className="py-3 px-2">{detail.lastName} {detail.firstName}</td>
                         <td className="py-3 px-2 text-sm text-muted-foreground">{detail.email}</td>
                         <td className="py-3 px-2">
-                          <Badge variant="outline" className="bg-indigo-50 border-indigo-300 text-indigo-700">
-                            {voting.options[detail.optionIndex]}
-                          </Badge>
+                          {detail.optionIndexes && detail.optionIndexes.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {detail.optionIndexes.map((optIdx: number) => (
+                                <Badge key={optIdx} variant="outline" className="bg-indigo-50 border-indigo-300 text-indigo-700">
+                                  {voting.options[optIdx]}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <Badge variant="outline" className="bg-indigo-50 border-indigo-300 text-indigo-700">
+                              {voting.options[detail.optionIndex]}
+                            </Badge>
+                          )}
                         </td>
                         <td className="py-3 px-2 text-sm text-muted-foreground">
                           {new Date(detail.timestamp).toLocaleString('ru-RU')}

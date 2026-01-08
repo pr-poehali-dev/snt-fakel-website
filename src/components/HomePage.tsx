@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import MeterReadingsNotification from './MeterReadingsNotification';
 import CompletedVotings from './CompletedVotings';
+import VotingCard from './VotingCard';
 import { toast } from 'sonner';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
@@ -282,137 +283,15 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            {activeVotings.map((voting) => {
-              const currentEmail = localStorage.getItem('current_user_email') || 'guest';
-              const userVotesJSON = localStorage.getItem(`voting_${voting.id}_${currentEmail}`);
-              const userVotes = userVotesJSON ? JSON.parse(userVotesJSON) : [];
-              const hasVoted = userVotes.length > 0;
-              
-              // Проверка на собственность участка
-              const sessionJSON = localStorage.getItem('snt_session');
-              const isOwner = sessionJSON ? JSON.parse(sessionJSON).isOwner === true : false;
-              
-              return (
-                <Card key={voting.id} className="border-2 hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex items-start justify-between mb-2">
-                      <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500">
-                        Активно
-                      </Badge>
-                      <span className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Icon name="Clock" size={14} />
-                        до {new Date(voting.endDate).toLocaleDateString('ru-RU')}
-                      </span>
-                    </div>
-                    <CardTitle className="text-xl">{voting.title}</CardTitle>
-                    <CardDescription>{voting.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {voting.options.map((option: string, idx: number) => {
-                      const optionVotes = voting.votes?.[idx] || 0;
-                      const totalVotes = Object.values(voting.votes || {}).reduce((sum: number, v: any) => sum + v, 0);
-                      const percentage = totalVotes > 0 ? Math.round((optionVotes / (totalVotes as number)) * 100) : 0;
-                      const isVoted = userVotes.includes(idx);
-                      
-                      return (
-                        <div key={idx} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">{option}</span>
-                            <span className="text-sm text-muted-foreground">{percentage}%</span>
-                          </div>
-                          <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
-                            <div 
-                              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-500" 
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">{optionVotes} голосов</span>
-                            {isLoggedIn && isOwner && (userRole === 'member' || userRole === 'board_member' || userRole === 'chairman' || userRole === 'admin') && !hasVoted && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  // Проверяем, не истек ли срок голосования
-                                  const now = new Date();
-                                  const endDate = new Date(voting.endDate);
-                                  if (endDate < now) {
-                                    toast.error('Голосование завершено');
-                                    window.dispatchEvent(new Event('votings-updated'));
-                                    return;
-                                  }
-                                  
-                                  const votingsJSON = localStorage.getItem('snt_votings');
-                                  if (votingsJSON) {
-                                    const votings = JSON.parse(votingsJSON);
-                                    const votingIndex = votings.findIndex((v: any) => v.id === voting.id);
-                                    if (votingIndex !== -1) {
-                                      if (!votings[votingIndex].votes) votings[votingIndex].votes = {};
-                                      votings[votingIndex].votes[idx] = (votings[votingIndex].votes[idx] || 0) + 1;
-                                      localStorage.setItem('snt_votings', JSON.stringify(votings));
-                                      
-                                      // Получаем данные пользователя из сессии
-                                      const sessionJSON = localStorage.getItem('snt_session');
-                                      const session = sessionJSON ? JSON.parse(sessionJSON) : null;
-                                      
-                                      const voteData = {
-                                        optionIndex: idx,
-                                        timestamp: new Date().toISOString(),
-                                        firstName: session?.firstName || '',
-                                        lastName: session?.lastName || '',
-                                        plotNumber: session?.plotNumber || '',
-                                        email: currentEmail
-                                      };
-                                      localStorage.setItem(`voting_${voting.id}_${currentEmail}`, JSON.stringify([idx]));
-                                      localStorage.setItem(`voting_detail_${voting.id}_${currentEmail}`, JSON.stringify(voteData));
-                                      
-                                      window.dispatchEvent(new Event('votings-updated'));
-                                      toast.success('Ваш голос учтён!');
-                                    }
-                                  }
-                                }}
-                                className="text-primary hover:text-primary"
-                              >
-                                <Icon name="CheckCircle" size={16} className="mr-1" />
-                                Голосовать
-                              </Button>
-                            )}
-                            {isLoggedIn && !isOwner && !hasVoted && (
-                              <span className="text-xs text-muted-foreground italic">
-                                Только собственники
-                              </span>
-                            )}
-                            {isVoted && (
-                              <Badge variant="outline" className="text-green-600 border-green-600">
-                                <Icon name="Check" size={14} className="mr-1" />
-                                Проголосовали
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="mt-4 pt-4 border-t space-y-3">
-                      <p className="text-xs text-muted-foreground flex items-start gap-2">
-                        <Icon name="Info" size={14} className="mt-0.5 flex-shrink-0" />
-                        <span>Голосовать могут только собственники участков. Перевыбор невозможен. Голосование завершится {new Date(voting.endDate).toLocaleDateString('ru-RU')}.</span>
-                      </p>
-                      {(userRole === 'admin' || userRole === 'chairman') && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setActiveSection(`voting-results-${voting.id}`)}
-                          className="w-full border-indigo-500 text-indigo-600 hover:bg-indigo-50"
-                        >
-                          <Icon name="BarChart3" size={16} className="mr-2" />
-                          Просмотреть результаты
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {activeVotings.map((voting) => (
+              <VotingCard
+                key={voting.id}
+                voting={voting}
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+                setActiveSection={setActiveSection}
+              />
+            ))}
           </div>
         )}
       </section>
