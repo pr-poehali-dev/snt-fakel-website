@@ -7,6 +7,7 @@ import MeterReadingsNotification from './MeterReadingsNotification';
 import CompletedVotings from './CompletedVotings';
 import VotingCard from './VotingCard';
 import HolidayDecor from './HolidayDecor';
+import ChristmasTree from './ChristmasTree';
 import { toast } from 'sonner';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
@@ -330,6 +331,8 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
       </section>
       
       <HolidayDecor />
+      <ChristmasTree side="left" />
+      <ChristmasTree side="right" />
     </>
   );
 };
