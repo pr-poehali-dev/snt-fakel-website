@@ -181,8 +181,8 @@ const HolidayDecorManager = ({ onBack }: HolidayDecorManagerProps) => {
                   maxLength={4}
                 />
               </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {['🎄', '❄️', '⛄', '🎅', '🎁', '🎉', '🎊', '🎈', '💖', '❤️', '🌹', '💐', '🍀', '☘️', '🎃', '👻', '🦃', '🐰', '🥚', '🌸', '🌺', '🎆', '✨', '⭐', '🌟'].map(emoji => (
+              <div className="grid grid-cols-8 sm:grid-cols-10 gap-2 mt-2 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-lg">
+                {['🎄', '❄️', '⛄', '☃️', '🎅', '🤶', '🎁', '🔔', '🕯️', '🧦', '🎉', '🎊', '🎈', '🎀', '🎂', '🍰', '🥳', '🪅', '💖', '❤️', '💝', '💕', '💗', '💓', '💞', '💘', '🌹', '🌷', '💐', '🌺', '🌸', '🌼', '🌻', '🌵', '🍀', '☘️', '🌿', '🍃', '🎃', '👻', '💀', '🦇', '🕷️', '🕸️', '🧙', '🧛', '🧟', '🦃', '🍂', '🍁', '🥧', '🐰', '🥚', '🐣', '🐥', '🌱', '🎆', '🎇', '✨', '⭐', '🌟', '💫', '🌠', '🎭', '🎨', '🎪', '🎡', '🎢', '🎠', '🚀', '🛸', '🌈', '☀️', '🌙', '⚡', '🔥', '💧', '🌊', '🎵', '🎶', '🎸', '🎹', '🎺', '🎷', '🥁', '🏆', '🥇', '🏅', '🎖️', '👑', '💎', '💰', '🎓', '📚', '✏️', '🖊️', '🍕', '🍔', '🍟', '🌭', '🍿', '🧁', '🍩', '🍪', '🍬', '🍭', '🍫', '🍦', '🍧', '🎂', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉'].map(emoji => (
                   <button
                     key={emoji}
                     type="button"
@@ -216,15 +216,36 @@ const HolidayDecorManager = ({ onBack }: HolidayDecorManagerProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label>CSS класс (необязательно)</Label>
+            <Label>Анимация</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { value: 'falling-emoji', label: '⬇️ Падение', desc: 'Обычное падение' },
+                { value: 'snowflake', label: '❄️ Снегопад', desc: 'Плавное падение со смещением' },
+                { value: 'confetti', label: '🎊 Конфетти', desc: 'Вращение при падении' },
+                { value: 'hearts', label: '💖 Полёт', desc: 'Плавное движение вверх-вниз' }
+              ].map(option => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, cssClass: option.value })}
+                  className={`p-3 rounded-lg border-2 text-left transition-all hover:shadow-md ${
+                    formData.cssClass === option.value 
+                      ? 'border-primary bg-primary/5 shadow-md' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  title={option.desc}
+                >
+                  <div className="font-semibold text-sm mb-1">{option.label}</div>
+                  <div className="text-xs text-muted-foreground">{option.desc}</div>
+                </button>
+              ))}
+            </div>
             <Input
               value={formData.cssClass}
               onChange={(e) => setFormData({ ...formData, cssClass: e.target.value })}
-              placeholder="snowflake, confetti, hearts"
+              placeholder="Или введите свой класс"
+              className="mt-2"
             />
-            <p className="text-xs text-muted-foreground">
-              Для кастомной анимации. Стандартные: snowflake (падающий снег), confetti (конфетти), hearts (сердечки)
-            </p>
           </div>
 
           <div className="flex gap-3">
