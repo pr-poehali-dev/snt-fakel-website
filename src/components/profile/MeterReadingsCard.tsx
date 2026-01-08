@@ -32,6 +32,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
   const [confirmed, setConfirmed] = useState(false);
   const [submittedReading, setSubmittedReading] = useState<number | null>(null);
   const [submittedDate, setSubmittedDate] = useState('');
+  const [readingsHistory, setReadingsHistory] = useState<MeterReading[]>([]);
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -52,9 +53,11 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
           const now = new Date();
           const currentMonth = now.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
           
-          const plotReading = readings.find(
-            (r) => r.plotNumber === userPlot && r.month === currentMonth
-          );
+          const plotReadings = readings.filter((r) => r.plotNumber === userPlot);
+          plotReadings.sort((a, b) => new Date(b.date.split('.').reverse().join('-')).getTime() - new Date(a.date.split('.').reverse().join('-')).getTime());
+          setReadingsHistory(plotReadings);
+          
+          const plotReading = plotReadings.find((r) => r.month === currentMonth);
           
           if (plotReading) {
             setAlreadySubmitted(true);
@@ -223,16 +226,6 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
               </div>
             </div>
 
-            {submittedReading !== null && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                <p className="text-sm text-muted-foreground">
-                  <Icon name="FileCheck" size={16} className="inline mr-2" />
-                  Переданные показания: <span className="font-semibold text-gray-700">{submittedReading} кВт⋅ч</span>
-                  {submittedDate && <span className="ml-2">• {submittedDate}</span>}
-                </p>
-              </div>
-            )}
-
             <div className="flex items-start space-x-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <Checkbox
                 id="confirm-readings"
@@ -268,6 +261,46 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
               </p>
             )}
           </>
+        )}
+
+        {readingsHistory.length > 0 && (
+          <div className="mt-6 border-t pt-4">
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <Icon name="History" size={18} />
+              История показаний
+            </h4>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {readingsHistory.map((record, index) => (
+                <div
+                  key={record.id}
+                  className={`flex items-center justify-between p-3 rounded-lg ${
+                    index === 0
+                      ? 'bg-blue-50 border border-blue-200'
+                      : 'bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      {record.month}
+                      {index === 0 && (
+                        <span className="ml-2 text-xs bg-blue-500 text-white px-2 py-0.5 rounded">
+                          Текущий
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {record.date}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-gray-700">
+                      {record.reading} <span className="text-sm font-normal">кВт⋅ч</span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
