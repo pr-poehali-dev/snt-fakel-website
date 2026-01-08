@@ -183,20 +183,26 @@ const NewsEditor = () => {
           <div className="flex gap-3">
             {isEditing ? (
               <>
-                <Button onClick={handleUpdate} className="flex-1">
+                <Button onClick={handleUpdate} className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600">
                   <Icon name="Save" size={18} className="mr-2" />
                   Сохранить изменения
                 </Button>
-                <Button onClick={resetForm} variant="outline">
+                <Button onClick={resetForm} variant="outline" className="border-gray-300">
                   <Icon name="X" size={18} className="mr-2" />
                   Отмена
                 </Button>
               </>
             ) : (
-              <Button onClick={handleAdd} className="flex-1">
-                <Icon name="Plus" size={18} className="mr-2" />
-                Добавить новость
-              </Button>
+              <>
+                <Button onClick={handleAdd} className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
+                  <Icon name="Plus" size={18} className="mr-2" />
+                  Добавить новость
+                </Button>
+                <Button onClick={resetForm} variant="outline" className="border-gray-300">
+                  <Icon name="RotateCcw" size={18} className="mr-2" />
+                  Очистить форму
+                </Button>
+              </>
             )}
           </div>
         </CardContent>
