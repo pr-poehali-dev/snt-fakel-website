@@ -149,6 +149,17 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
         u.email === currentUserEmail ? { ...u, ...userData } : u
       );
       localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
+      
+      if (userData.email !== currentUserEmail) {
+        const session = localStorage.getItem('snt_session');
+        if (session) {
+          const sessionData = JSON.parse(session);
+          sessionData.currentUserEmail = userData.email;
+          sessionData.expiresAt = sessionData.expiresAt || Date.now() + (7 * 24 * 60 * 60 * 1000);
+          localStorage.setItem('snt_session', JSON.stringify(sessionData));
+        }
+      }
+      
       setIsEditing(false);
       setOriginalEmail(userData.email);
       setOriginalPhone(userData.phone);

@@ -11,9 +11,58 @@ import PasswordReset from '@/components/PasswordReset';
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
 const Index = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState<UserRole>('guest');
-  const [currentUserEmail, setCurrentUserEmail] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    const saved = localStorage.getItem('snt_session');
+    if (!saved) return false;
+    
+    try {
+      const session = JSON.parse(saved);
+      const expiresAt = session.expiresAt || 0;
+      
+      if (Date.now() > expiresAt) {
+        localStorage.removeItem('snt_session');
+        return false;
+      }
+      
+      return session.isLoggedIn;
+    } catch {
+      return false;
+    }
+  });
+  const [userRole, setUserRole] = useState<UserRole>(() => {
+    const saved = localStorage.getItem('snt_session');
+    if (!saved) return 'guest';
+    
+    try {
+      const session = JSON.parse(saved);
+      const expiresAt = session.expiresAt || 0;
+      
+      if (Date.now() > expiresAt) {
+        return 'guest';
+      }
+      
+      return session.userRole;
+    } catch {
+      return 'guest';
+    }
+  });
+  const [currentUserEmail, setCurrentUserEmail] = useState(() => {
+    const saved = localStorage.getItem('snt_session');
+    if (!saved) return '';
+    
+    try {
+      const session = JSON.parse(saved);
+      const expiresAt = session.expiresAt || 0;
+      
+      if (Date.now() > expiresAt) {
+        return '';
+      }
+      
+      return session.currentUserEmail;
+    } catch {
+      return '';
+    }
+  });
   const [activeSection, setActiveSection] = useState('home');
   const [votes, setVotes] = useState<{ [key: number]: number }>({});
   const [showRegistration, setShowRegistration] = useState(false);
@@ -73,6 +122,14 @@ const Index = () => {
     setCurrentUserEmail(email);
     setShowLogin(false);
     setActiveSection('home');
+    
+    const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000);
+    localStorage.setItem('snt_session', JSON.stringify({
+      isLoggedIn: true,
+      userRole: role,
+      currentUserEmail: email,
+      expiresAt
+    }));
   };
 
   const handleShowLogin = () => {
@@ -85,6 +142,8 @@ const Index = () => {
     setUserRole('guest');
     setCurrentUserEmail('');
     setActiveSection('home');
+    
+    localStorage.removeItem('snt_session');
     toast.success('Вы вышли из личного кабинета');
   };
 
@@ -99,6 +158,14 @@ const Index = () => {
     setUserRole(role);
     setCurrentUserEmail(email);
     setActiveSection('home');
+    
+    const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000);
+    localStorage.setItem('snt_session', JSON.stringify({
+      isLoggedIn: true,
+      userRole: role,
+      currentUserEmail: email,
+      expiresAt
+    }));
   };
 
   const handleRegistrationCancel = () => {
