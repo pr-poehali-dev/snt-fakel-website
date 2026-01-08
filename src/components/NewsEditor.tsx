@@ -193,7 +193,11 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
                 </Button>
                 <Button onClick={resetForm} variant="outline" className="border-gray-300">
                   <Icon name="X" size={18} className="mr-2" />
-                  Отмена
+                  Сбросить
+                </Button>
+                <Button onClick={() => onNavigate?.('news')} variant="outline" className="border-orange-300">
+                  <Icon name="ArrowLeft" size={18} className="mr-2" />
+                  К новостям
                 </Button>
               </>
             ) : (
@@ -208,7 +212,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
                 </Button>
                 <Button onClick={() => onNavigate?.('news')} variant="outline" className="border-orange-300">
                   <Icon name="ArrowLeft" size={18} className="mr-2" />
-                  Отмена
+                  К новостям
                 </Button>
               </>
             )}
