@@ -30,55 +30,40 @@ export const useChatOnlineUsers = (
     if (!currentUserEmail) return;
 
     try {
-      // Загружаем пользователей из БД
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      // Обновляем свой статус на сервере и получаем список онлайн пользователей
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_online_status',
+          email: currentUserEmail
+        })
+      });
+      
       const data = await response.json();
       
-      if (!data.users) return;
+      if (!data.onlineUsers) return;
       
-      const users: User[] = data.users;
-      const currentUser = users.find((u: User) => u.email === currentUserEmail);
-      if (!currentUser) return;
-
-      // Обновляем свой статус в localStorage
-      const onlineJSON = localStorage.getItem('snt_online_users');
-      const onlineList: OnlineUser[] = onlineJSON ? JSON.parse(onlineJSON) : [];
-
-      const userIndex = onlineList.findIndex((u) => u.email === currentUserEmail);
-      const onlineUser: OnlineUser = {
-        email: currentUserEmail,
-        name: `${currentUser.first_name} ${currentUser.last_name}`,
-        plotNumber: currentUser.plot_number,
-        role: currentUser.role,
-        avatar: getRoleAvatar(currentUser.role),
-        lastSeen: Date.now()
-      };
-
-      if (userIndex >= 0) {
-        onlineList[userIndex] = onlineUser;
-      } else {
-        onlineList.push(onlineUser);
-      }
-
-      localStorage.setItem('snt_online_users', JSON.stringify(onlineList));
+      // Преобразуем список онлайн пользователей
+      const onlineList: OnlineUser[] = data.onlineUsers
+        .filter((u: any) => u.email !== currentUserEmail)
+        .map((u: any) => ({
+          email: u.email,
+          name: `${u.first_name} ${u.last_name}`,
+          plotNumber: u.plot_number,
+          role: u.role,
+          avatar: getRoleAvatar(u.role),
+          lastSeen: new Date(u.last_seen).getTime()
+        }));
       
-      // Показываем других онлайн пользователей (исключая себя)
-      setOnlineUsers(onlineList.filter((u) => u.email !== currentUserEmail));
+      setOnlineUsers(onlineList);
     } catch (error) {
       console.error('Error updating online status:', error);
     }
   };
 
   const cleanupInactiveUsers = () => {
-    const onlineJSON = localStorage.getItem('snt_online_users');
-    if (!onlineJSON) return;
-
-    const onlineList: OnlineUser[] = JSON.parse(onlineJSON);
-    const now = Date.now();
-    const activeUsers = onlineList.filter((u) => now - u.lastSeen < 120000); // 2 минуты
-
-    localStorage.setItem('snt_online_users', JSON.stringify(activeUsers));
-    setOnlineUsers(activeUsers.filter((u) => u.email !== currentUserEmail));
+    // Очистка теперь происходит на сервере автоматически
   };
 
   const loadUnreadCounts = () => {

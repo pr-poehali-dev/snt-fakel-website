@@ -52,7 +52,13 @@ const ChatMessage = ({
       const diffHours = Math.floor(diffMins / 60);
       if (diffHours < 24) return `${diffHours} ч. назад`;
       
-      return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleString('ru-RU', { 
+        timeZone: 'Europe/Moscow',
+        day: 'numeric', 
+        month: 'short', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
     } catch (e) {
       return timestamp;
     }

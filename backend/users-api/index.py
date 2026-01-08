@@ -635,6 +635,52 @@ def handler(event: dict, context) -> dict:
                     'isBase64Encoded': False
                 }
             
+            if action == 'update_online_status':
+                # Обновить онлайн статус пользователя
+                email = body.get('email')
+                if not email:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Email required'}),
+                        'isBase64Encoded': False
+                    }
+                
+                # Обновляем или создаем запись об онлайн статусе
+                cur.execute('''
+                    INSERT INTO online_users (email, last_seen)
+                    VALUES (%s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (email) DO UPDATE SET last_seen = CURRENT_TIMESTAMP
+                ''', (email,))
+                conn.commit()
+                
+                # Удаляем устаревшие записи (старше 2 минут)
+                cur.execute('''
+                    DELETE FROM online_users 
+                    WHERE last_seen < CURRENT_TIMESTAMP - INTERVAL '2 minutes'
+                ''')
+                conn.commit()
+                
+                # Получаем список онлайн пользователей с данными из users
+                cur.execute('''
+                    SELECT u.email, u.first_name, u.last_name, u.plot_number, u.role, o.last_seen
+                    FROM online_users o
+                    JOIN users u ON o.email = u.email
+                    WHERE o.last_seen >= CURRENT_TIMESTAMP - INTERVAL '2 minutes'
+                    ORDER BY o.last_seen DESC
+                ''')
+                online_users = cur.fetchall()
+                
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'onlineUsers': online_users}),
+                    'isBase64Encoded': False
+                }
+            
             if action == 'unblock_user':
                 # Разблокировать пользователя - удаляем запись из таблицы
                 cur.execute('DELETE FROM blocked_chat_users WHERE email = %s', (body['email'],))
