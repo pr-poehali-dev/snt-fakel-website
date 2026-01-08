@@ -28,7 +28,7 @@ const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps)
     if (votingsJSON) {
       try {
         const votings = JSON.parse(votingsJSON);
-        const completed = votings.filter((v: any) => v.status === 'completed');
+        const completed = votings.filter((v: any) => v.status === 'completed' && !v.archived);
         setCompletedVotings(completed);
       } catch (e) {
         console.error('Error loading completed votings:', e);

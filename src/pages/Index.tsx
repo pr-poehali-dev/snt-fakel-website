@@ -8,6 +8,7 @@ import Registration from '@/components/Registration';
 import Login from '@/components/Login';
 import PasswordReset from '@/components/PasswordReset';
 import VotingPage from '@/components/VotingPage';
+import ArchivedVotings from '@/components/ArchivedVotings';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -322,6 +323,13 @@ const Index = () => {
             {activeSection === 'voting' && (
               <VotingPage
                 isLoggedIn={isLoggedIn}
+                userRole={userRole}
+                setActiveSection={setActiveSection}
+              />
+            )}
+
+            {activeSection === 'archive' && (
+              <ArchivedVotings
                 userRole={userRole}
                 setActiveSection={setActiveSection}
               />

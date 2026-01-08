@@ -248,6 +248,28 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
           </div>
         </div>
         <div className="flex gap-2">
+          {voting.status === 'completed' && !voting.archived && (
+            <Button
+              onClick={() => {
+                const votingsJSON = localStorage.getItem('snt_votings');
+                if (votingsJSON) {
+                  const votings = JSON.parse(votingsJSON);
+                  const updatedVotings = votings.map((v: any) => 
+                    v.id === votingId ? { ...v, archived: true } : v
+                  );
+                  localStorage.setItem('snt_votings', JSON.stringify(updatedVotings));
+                  window.dispatchEvent(new Event('votings-updated'));
+                  toast.success('Голосование перемещено в архив');
+                  if (onBack) onBack();
+                }
+              }}
+              variant="outline"
+              className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+            >
+              <Icon name="Archive" size={18} className="mr-2" />
+              Архивировать
+            </Button>
+          )}
           <Button
             onClick={async () => {
               try {
