@@ -167,7 +167,7 @@ def handler(event: dict, context) -> dict:
                     }
                 
                 cur.execute("""
-                    SELECT id, email, first_name, last_name, role, password, owner_is_same
+                    SELECT id, email, first_name, last_name, role, password, owner_is_same, plot_number
                     FROM users 
                     WHERE email = %s AND status = 'active'
                 """, (email,))
@@ -188,7 +188,8 @@ def handler(event: dict, context) -> dict:
                                 'first_name': user['first_name'],
                                 'last_name': user['last_name'],
                                 'role': user['role'],
-                                'owner_is_same': user['owner_is_same']
+                                'owner_is_same': user['owner_is_same'],
+                                'plot_number': user['plot_number']
                             }
                         }),
                         'isBase64Encoded': False
