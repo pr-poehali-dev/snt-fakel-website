@@ -77,16 +77,7 @@ const ChatMessage = ({
   });
   
   if (message.deleted) {
-    return (
-      <div className="flex gap-3 opacity-50">
-        <div className="flex-1 bg-gray-100 rounded-lg px-4 py-2">
-          <p className="text-xs text-muted-foreground italic">
-            <Icon name="Trash2" size={12} className="inline mr-1" />
-            Сообщение удалено
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
