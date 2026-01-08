@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import PrivateChat from './PrivateChat';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -27,6 +28,24 @@ interface BlockedUser {
   blockedBy: string;
   blockedAt: string;
   reason?: string;
+}
+
+interface User {
+  email: string;
+  firstName: string;
+  lastName: string;
+  plotNumber: string;
+  role: string;
+  status: string;
+}
+
+interface OnlineUser {
+  email: string;
+  name: string;
+  plotNumber: string;
+  role: string;
+  avatar: string;
+  lastSeen: number;
 }
 
 interface ChatProps {
@@ -103,7 +122,9 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   });
 
   const [newMessage, setNewMessage] = useState('');
-  const [onlineUsers] = useState(12);
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [privateChatOpen, setPrivateChatOpen] = useState<string | null>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const isModerator = userRole === 'chairman' || userRole === 'admin';
@@ -135,6 +156,105 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   useEffect(() => {
     localStorage.setItem('snt_blocked_users', JSON.stringify(blockedUsers));
   }, [blockedUsers]);
+
+  useEffect(() => {
+    updateOnlineStatus();
+    loadUnreadCounts();
+
+    const interval = setInterval(() => {
+      updateOnlineStatus();
+      cleanupInactiveUsers();
+    }, 30000); // Обновление каждые 30 секунд
+
+    const handlePrivateMessagesUpdate = () => {
+      loadUnreadCounts();
+    };
+
+    window.addEventListener('private-messages-updated', handlePrivateMessagesUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('private-messages-updated', handlePrivateMessagesUpdate);
+    };
+  }, [currentUserEmail]);
+
+  const updateOnlineStatus = () => {
+    if (!currentUserEmail) return;
+
+    const usersJSON = localStorage.getItem('snt_users');
+    if (!usersJSON) return;
+
+    const users: User[] = JSON.parse(usersJSON);
+    const currentUser = users.find((u) => u.email === currentUserEmail);
+    if (!currentUser) return;
+
+    const onlineJSON = localStorage.getItem('snt_online_users');
+    const onlineList: OnlineUser[] = onlineJSON ? JSON.parse(onlineJSON) : [];
+
+    const userIndex = onlineList.findIndex((u) => u.email === currentUserEmail);
+    const onlineUser: OnlineUser = {
+      email: currentUserEmail,
+      name: `${currentUser.firstName} ${currentUser.lastName}`,
+      plotNumber: currentUser.plotNumber,
+      role: currentUser.role,
+      avatar: getRoleAvatar(currentUser.role),
+      lastSeen: Date.now()
+    };
+
+    if (userIndex >= 0) {
+      onlineList[userIndex] = onlineUser;
+    } else {
+      onlineList.push(onlineUser);
+    }
+
+    localStorage.setItem('snt_online_users', JSON.stringify(onlineList));
+    setOnlineUsers(onlineList.filter((u) => u.email !== currentUserEmail));
+  };
+
+  const cleanupInactiveUsers = () => {
+    const onlineJSON = localStorage.getItem('snt_online_users');
+    if (!onlineJSON) return;
+
+    const onlineList: OnlineUser[] = JSON.parse(onlineJSON);
+    const now = Date.now();
+    const activeUsers = onlineList.filter((u) => now - u.lastSeen < 120000); // 2 минуты
+
+    localStorage.setItem('snt_online_users', JSON.stringify(activeUsers));
+    setOnlineUsers(activeUsers.filter((u) => u.email !== currentUserEmail));
+  };
+
+  const getRoleAvatar = (role: string): string => {
+    switch (role) {
+      case 'admin': return '⭐';
+      case 'chairman': return '👑';
+      case 'board_member': return '👥';
+      default: return '👤';
+    }
+  };
+
+  const loadUnreadCounts = () => {
+    const saved = localStorage.getItem('snt_private_messages');
+    if (!saved) return;
+
+    try {
+      const allMessages = JSON.parse(saved);
+      const counts: Record<string, number> = {};
+
+      allMessages.forEach((msg: any) => {
+        if (msg.toEmail === currentUserEmail && !msg.read) {
+          counts[msg.fromEmail] = (counts[msg.fromEmail] || 0) + 1;
+        }
+      });
+
+      setUnreadCounts(counts);
+    } catch (e) {
+      console.error('Error loading unread counts:', e);
+    }
+  };
+
+  const handleOpenPrivateChat = (userEmail: string) => {
+    setPrivateChatOpen(userEmail);
+  };
 
   const handleDeleteMessage = (messageId: number) => {
     if (!isModerator) return;
@@ -244,8 +364,8 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     <section>
       <h2 className="text-4xl font-bold mb-8">Общий чат СНТ</h2>
       
-      <div className="grid lg:grid-cols-4 gap-6">
-        <Card className="lg:col-span-3">
+      <div className="grid lg:grid-cols-5 gap-6">
+        <Card className="lg:col-span-4">
           <CardHeader className="border-b">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -254,7 +374,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
               </CardTitle>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                {onlineUsers} онлайн
+                {onlineUsers.length + 1} онлайн
               </div>
             </div>
           </CardHeader>
@@ -397,61 +517,98 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Правила чата</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icon name="Users" className="text-green-500" />
+              Онлайн
+              <Badge variant="outline" className="ml-auto">
+                {onlineUsers.length + 1}
+              </Badge>
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <div className="flex items-start gap-2">
-                <Icon name="Check" size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
-                <span>Будьте вежливы и уважайте других участников</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Icon name="Check" size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
-                <span>Обсуждайте только вопросы, касающиеся СНТ</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Icon name="X" size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
-                <span>Не используйте нецензурную лексику</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Icon name="X" size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
-                <span>Не размещайте рекламу и спам</span>
-              </div>
-            </div>
+          <CardContent className="p-0">
+            <div className="max-h-[500px] overflow-y-auto">
+              {/* Текущий пользователь */}
+              {isLoggedIn && (
+                <div className="p-3 border-b bg-blue-50">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-400 text-xl">
+                      {getRoleAvatar(userRole)}
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold">Вы (онлайн)</p>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                        <span className="text-xs text-muted-foreground">В сети</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-            <div className="pt-4 border-t space-y-2">
-              <h4 className="font-semibold text-sm mb-3">Быстрые темы</h4>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full justify-start text-xs"
-                onClick={() => isLoggedIn ? setNewMessage('Когда следующее собрание?') : toast.error('Войдите для отправки')}
-              >
-                <Icon name="Calendar" size={14} className="mr-2" />
-                Общее собрание
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full justify-start text-xs"
-                onClick={() => isLoggedIn ? setNewMessage('Подскажите график дежурств') : toast.error('Войдите для отправки')}
-              >
-                <Icon name="Users" size={14} className="mr-2" />
-                График дежурств
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full justify-start text-xs"
-                onClick={() => isLoggedIn ? setNewMessage('Как подать заявку на ремонт?') : toast.error('Войдите для отправки')}
-              >
-                <Icon name="Wrench" size={14} className="mr-2" />
-                Ремонт и обслуживание
-              </Button>
+              {/* Другие пользователи онлайн */}
+              {onlineUsers.length === 0 && isLoggedIn && (
+                <div className="p-6 text-center text-muted-foreground">
+                  <Icon name="Users" size={32} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Пока никого нет</p>
+                </div>
+              )}
+
+              {onlineUsers.map((user) => {
+                const unreadCount = unreadCounts[user.email] || 0;
+                return (
+                  <div
+                    key={user.email}
+                    className="p-3 border-b hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => handleOpenPrivateChat(user.email)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 text-xl relative">
+                        {user.avatar}
+                        <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{user.name}</p>
+                        <p className="text-xs text-muted-foreground">Участок №{user.plotNumber}</p>
+                      </div>
+                      {unreadCount > 0 && (
+                        <Badge variant="default" className="bg-red-500 text-white">
+                          {unreadCount}
+                        </Badge>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenPrivateChat(user.email);
+                        }}
+                      >
+                        <Icon name="MessageCircle" size={16} className="text-blue-500" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Приватный чат */}
+      {privateChatOpen && (
+        <PrivateChat
+          currentUserEmail={currentUserEmail}
+          recipientEmail={privateChatOpen}
+          recipientName={
+            onlineUsers.find((u) => u.email === privateChatOpen)?.name || 'Пользователь'
+          }
+          onClose={() => {
+            setPrivateChatOpen(null);
+            loadUnreadCounts();
+          }}
+        />
+      )}
     </section>
   );
 };
