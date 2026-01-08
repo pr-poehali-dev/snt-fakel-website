@@ -6,13 +6,13 @@ interface ChristmasTreeProps {
 }
 
 const ChristmasTree = ({ side }: ChristmasTreeProps) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const checkDecor = () => {
       const saved = localStorage.getItem('snt_holiday_decors');
       if (!saved) {
-        setIsVisible(false);
+        setIsVisible(true);
         return;
       }
 
@@ -28,9 +28,10 @@ const ChristmasTree = ({ side }: ChristmasTreeProps) => {
           return now >= start && now <= end && decor.emoji === '🎄';
         });
         
-        setIsVisible(!!active);
+        setIsVisible(!!active || true);
       } catch (e) {
         console.error('Error loading decor:', e);
+        setIsVisible(true);
       }
     };
 
@@ -39,8 +40,6 @@ const ChristmasTree = ({ side }: ChristmasTreeProps) => {
     
     return () => window.removeEventListener('decor-updated', checkDecor);
   }, []);
-
-  if (!isVisible) return null;
 
   const lights = [
     { top: '15%', color: 'red' },
