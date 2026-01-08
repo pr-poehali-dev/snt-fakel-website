@@ -22,6 +22,7 @@ const VotingCard = ({ voting, isLoggedIn, userRole, setActiveSection }: VotingCa
   const isOwner = sessionJSON ? JSON.parse(sessionJSON).isOwner === true : false;
   
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleToggleOption = (idx: number) => {
     if (voting.isMultipleChoice) {
@@ -68,6 +69,27 @@ const VotingCard = ({ voting, isLoggedIn, userRole, setActiveSection }: VotingCa
         toast.success('Ваш голос учтён!');
       }
     }
+  };
+
+  const handleDeleteVoting = () => {
+    const votingsJSON = localStorage.getItem('snt_votings');
+    if (!votingsJSON) return;
+    
+    const votings = JSON.parse(votingsJSON);
+    const updatedVotings = votings.filter((v: any) => v.id !== voting.id);
+    localStorage.setItem('snt_votings', JSON.stringify(updatedVotings));
+    
+    const allKeys = Object.keys(localStorage);
+    const voteKeys = allKeys.filter(key => 
+      key.startsWith(`voting_${voting.id}_`) || 
+      key.startsWith(`voting_detail_${voting.id}_`)
+    );
+    
+    voteKeys.forEach(key => localStorage.removeItem(key));
+    
+    window.dispatchEvent(new Event('votings-updated'));
+    toast.success('Голосование удалено');
+    setShowDeleteConfirm(false);
   };
 
   const handleMultipleVote = () => {
@@ -221,15 +243,56 @@ const VotingCard = ({ voting, isLoggedIn, userRole, setActiveSection }: VotingCa
             </span>
           </p>
           {(userRole === 'admin' || userRole === 'chairman') && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setActiveSection(`voting-results-${voting.id}`)}
-              className="w-full border-indigo-500 text-indigo-600 hover:bg-indigo-50"
-            >
-              <Icon name="BarChart3" size={16} className="mr-2" />
-              Просмотреть результаты
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveSection(`voting-results-${voting.id}`)}
+                className="w-full border-indigo-500 text-indigo-600 hover:bg-indigo-50"
+              >
+                <Icon name="BarChart3" size={16} className="mr-2" />
+                Просмотреть результаты
+              </Button>
+              
+              {userRole === 'admin' && (
+                showDeleteConfirm ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-center text-red-600 font-medium">
+                      Удалить голосование?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="flex-1"
+                      >
+                        Отмена
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleDeleteVoting}
+                        className="flex-1"
+                      >
+                        <Icon name="Trash2" size={16} className="mr-1" />
+                        Удалить
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="w-full border-red-500 text-red-600 hover:bg-red-50"
+                  >
+                    <Icon name="Trash2" size={16} className="mr-2" />
+                    Удалить голосование
+                  </Button>
+                )
+              )}
+            </>
           )}
         </div>
       </CardContent>
