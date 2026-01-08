@@ -32,6 +32,17 @@ const OnlineUsersPanel = ({
   onOpenPrivateChat,
   getRoleAvatar
 }: OnlineUsersPanelProps) => {
+  const getLastSeenText = (lastSeen: number) => {
+    const now = Date.now();
+    const diffMs = now - lastSeen;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'только что';
+    if (diffMins === 1) return '1 мин. назад';
+    if (diffMins < 5) return `${diffMins} мин. назад`;
+    return 'недавно';
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -71,6 +82,7 @@ const OnlineUsersPanel = ({
 
           {onlineUsers.map((user) => {
             const unreadCount = unreadCounts[user.email] || 0;
+            const lastSeenText = getLastSeenText(user.lastSeen);
             return (
               <div
                 key={user.email}
@@ -84,7 +96,10 @@ const OnlineUsersPanel = ({
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">Участок №{user.plotNumber}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">Участок №{user.plotNumber}</p>
+                      <span className="text-xs text-green-600">• {lastSeenText}</span>
+                    </div>
                   </div>
                   {unreadCount > 0 && (
                     <Badge variant="default" className="bg-red-500 text-white">
