@@ -126,8 +126,19 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  const isModerator = userRole === 'chairman' || userRole === 'admin';
+  const isModerator = userRole === 'chairman' || userRole === 'admin' || userRole === 'board_member';
   const isCurrentUserBlocked = blockedUsers.some(u => u.email === currentUserEmail);
+  
+  // Debug: log moderation status
+  useEffect(() => {
+    console.log('Chat Debug:', {
+      userRole,
+      isModerator,
+      currentUserEmail,
+      isCurrentUserBlocked,
+      blockedUsersCount: blockedUsers.length
+    });
+  }, [userRole, isModerator, currentUserEmail, isCurrentUserBlocked, blockedUsers]);
   
   const profanityList = [
     'хуй', 'хуя', 'хуи', 'хуё', 'хер', 'пизд', 'ебал', 'ебан', 'ебат', 'ебл', 'ебу', 'еби',
@@ -284,7 +295,12 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   };
 
   const handleDeleteMessage = (messageId: number) => {
-    if (!isModerator) return;
+    console.log('Delete message attempt:', { messageId, isModerator, userRole });
+    
+    if (!isModerator) {
+      toast.error('Только модераторы могут удалять сообщения');
+      return;
+    }
     
     const updatedMessages = messages.map(msg => 
       msg.id === messageId 
@@ -296,7 +312,12 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
   };
   
   const handleBlockUser = (userEmail: string, userName: string) => {
-    if (!isModerator) return;
+    console.log('Block user attempt:', { userEmail, userName, isModerator, userRole });
+    
+    if (!isModerator) {
+      toast.error('Только модераторы могут блокировать пользователей');
+      return;
+    }
     
     if (blockedUsers.some(u => u.email === userEmail)) {
       toast.error('Пользователь уже заблокирован');
@@ -310,14 +331,23 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       reason: 'Нарушение правил чата'
     };
     
-    setBlockedUsers([...blockedUsers, newBlock]);
+    const updatedBlockedUsers = [...blockedUsers, newBlock];
+    setBlockedUsers(updatedBlockedUsers);
+    console.log('User blocked successfully:', newBlock);
     toast.success(`Пользователь ${userName} заблокирован`);
   };
   
   const handleUnblockUser = (userEmail: string) => {
-    if (!isModerator) return;
+    console.log('Unblock user attempt:', { userEmail, isModerator, userRole });
     
-    setBlockedUsers(blockedUsers.filter(u => u.email !== userEmail));
+    if (!isModerator) {
+      toast.error('Только модераторы могут разблокировать пользователей');
+      return;
+    }
+    
+    const updatedBlockedUsers = blockedUsers.filter(u => u.email !== userEmail);
+    setBlockedUsers(updatedBlockedUsers);
+    console.log('User unblocked successfully');
     toast.success('Пользователь разблокирован');
   };
 

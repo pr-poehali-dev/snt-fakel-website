@@ -37,6 +37,19 @@ const ChatMessage = ({
   onBlockUser,
   onUnblockUser
 }: ChatMessageProps) => {
+  const showModerationButtons = isModerator && message.userEmail && message.userEmail !== currentUserEmail;
+  
+  // Debug log
+  console.log('ChatMessage render:', {
+    messageId: message.id,
+    userName: message.userName,
+    userEmail: message.userEmail,
+    currentUserEmail,
+    isOwnMessage,
+    isModerator,
+    showModerationButtons
+  });
+  
   if (message.deleted) {
     return (
       <div className="flex gap-3 opacity-50">
@@ -82,7 +95,7 @@ const ChatMessage = ({
           >
             <p className="text-sm">{message.text}</p>
           </div>
-          {isModerator && message.userEmail && message.userEmail !== currentUserEmail && (
+          {showModerationButtons && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
               <Button
                 size="sm"
