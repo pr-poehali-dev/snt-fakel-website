@@ -6,13 +6,13 @@ interface ChristmasTreeProps {
 }
 
 const ChristmasTree = ({ side }: ChristmasTreeProps) => {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const checkDecor = () => {
       const saved = localStorage.getItem('snt_holiday_decors');
       if (!saved) {
-        setIsVisible(true);
+        setIsVisible(false);
         return;
       }
 
@@ -28,10 +28,9 @@ const ChristmasTree = ({ side }: ChristmasTreeProps) => {
           return now >= start && now <= end && decor.emoji === '🎄';
         });
         
-        setIsVisible(!!active || true);
+        setIsVisible(!!active);
       } catch (e) {
         console.error('Error loading decor:', e);
-        setIsVisible(true);
       }
     };
 
@@ -41,23 +40,23 @@ const ChristmasTree = ({ side }: ChristmasTreeProps) => {
     return () => window.removeEventListener('decor-updated', checkDecor);
   }, []);
 
-  const lights = [
-    { top: '15%', color: 'red' },
-    { top: '25%', color: 'blue' },
-    { top: '20%', color: 'yellow' },
-    { top: '35%', color: 'green' },
-    { top: '30%', color: 'pink' },
-    { top: '45%', color: 'purple' },
-    { top: '40%', color: 'orange' },
-    { top: '55%', color: 'cyan' },
-    { top: '50%', color: 'red' },
-    { top: '65%', color: 'blue' },
-    { top: '60%', color: 'yellow' },
-    { top: '75%', color: 'green' },
-    { top: '70%', color: 'pink' },
-    { top: '85%', color: 'purple' },
-    { top: '80%', color: 'orange' },
-  ];
+  if (!isVisible) return null;
+
+  const lights = Array.from({ length: 20 }, (_, i) => {
+    const progress = i / 20;
+    const spiralTurns = 4;
+    const angle = progress * spiralTurns * 360;
+    const radius = 35 + progress * 5;
+    const topPos = 12 + progress * 68;
+    
+    const colors = ['red', 'blue', 'yellow', 'green', 'pink', 'purple', 'orange', 'cyan'];
+    
+    return {
+      top: `${topPos}%`,
+      left: `${50 + Math.cos(angle * Math.PI / 180) * radius}%`,
+      color: colors[i % colors.length]
+    };
+  });
 
   const snowflakes = Array.from({ length: 8 }, (_, i) => ({
     left: `${10 + i * 10}%`,
@@ -85,7 +84,7 @@ const ChristmasTree = ({ side }: ChristmasTreeProps) => {
             className={`tree-light light-${light.color}`}
             style={{
               top: light.top,
-              left: side === 'left' ? `${40 + Math.random() * 20}%` : `${40 + Math.random() * 20}%`,
+              left: light.left,
               animationDelay: `${Math.random() * 2}s`
             }}
           />
