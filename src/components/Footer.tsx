@@ -24,7 +24,7 @@ const Footer = ({ setActiveSection }: FooterProps) => {
             <h4 className="font-semibold mb-4">Мы в мессенджерах</h4>
             <div className="flex gap-4">
               <a 
-                href="https://t.me/your_chat" 
+                href="https://t.me/+jU8WF2optiVmNGRi" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-12 h-12 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center transition-colors"
