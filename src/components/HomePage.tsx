@@ -205,8 +205,12 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
         <Icon name="Sparkles" size={18} className="text-orange-600" />
         <span className="text-sm font-medium text-orange-800">{content.hero.subtitle}</span>
       </div>
-      <div className="relative inline-block">
+      <div className="relative inline-block mt-8">
         <div className="christmas-lights-garland">
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
+          <div className="garland-light"></div>
           <div className="garland-light"></div>
           <div className="garland-light"></div>
           <div className="garland-light"></div>
