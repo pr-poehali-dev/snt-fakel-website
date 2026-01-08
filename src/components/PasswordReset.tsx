@@ -15,7 +15,7 @@ const PasswordReset = ({ onCancel }: PasswordResetProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email.trim()) {
@@ -31,81 +31,34 @@ const PasswordReset = ({ onCancel }: PasswordResetProps) => {
 
     setIsLoading(true);
 
-    const usersJSON = localStorage.getItem('snt_users');
-    const users = usersJSON ? JSON.parse(usersJSON) : [];
-    const user = users.find((u: any) => u.email === email);
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'request_password_reset',
+          email: email
+        })
+      });
 
-    setTimeout(() => {
+      const data = await response.json();
+
       setIsLoading(false);
 
-      if (user) {
-        const resetToken = Math.random().toString(36).substring(2, 15);
-        const resetLink = `${window.location.origin}/reset-password?token=${resetToken}`;
-        
-        const resetRequests = JSON.parse(localStorage.getItem('password_reset_requests') || '[]');
-        resetRequests.push({
-          email: email,
-          token: resetToken,
-          timestamp: new Date().toISOString(),
-          expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
-        });
-        localStorage.setItem('password_reset_requests', JSON.stringify(resetRequests));
-
-        const emailHTML = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #2563eb;">Восстановление пароля</h2>
-            <p>Здравствуйте!</p>
-            <p>Вы запросили восстановление пароля для входа в личный кабинет СНТ "Факел".</p>
-            <p>Для сброса пароля перейдите по ссылке:</p>
-            <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Восстановить пароль</a>
-            <p style="color: #666; font-size: 14px;">Ссылка действительна в течение 1 часа.</p>
-            <p style="color: #666; font-size: 14px;">Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.</p>
-            <p style="margin-top: 30px; color: #666;">С уважением,<br>Администрация СНТ "Факел"</p>
-          </div>
-        `;
-
-        fetch('https://functions.poehali.dev/2672fb97-4151-4228-bb1c-4d0b3a502216', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to_email: email,
-            subject: 'Восстановление пароля - СНТ "Факел"',
-            html_content: emailHTML,
-            text_content: `Восстановление пароля. Перейдите по ссылке: ${resetLink}. Ссылка действительна в течение 1 часа.`
-          })
-        }).catch(error => {
-          console.warn('Ошибка отправки email:', error);
-        });
-
-        console.log(`
-===========================================
-ПИСЬМО ДЛЯ ВОССТАНОВЛЕНИЯ ПАРОЛЯ
-===========================================
-Кому: ${email}
-Тема: Восстановление пароля СНТ Факел
-
-Здравствуйте!
-
-Вы запросили восстановление пароля для входа в личный кабинет СНТ Факел.
-
-Для сброса пароля перейдите по ссылке:
-${resetLink}
-
-Ссылка действительна в течение 1 часа.
-
-Если вы не запрашивали восстановление пароля, проигнорируйте это письмо.
-
-С уважением,
-Администрация СНТ Факел
-===========================================
-        `);
-
+      if (response.ok && data.success) {
         setEmailSent(true);
         toast.success('Ссылка для восстановления пароля отправлена на вашу почту');
       } else {
-        toast.error('Пользователь с таким email не найден');
+        toast.error(data.error || 'Ошибка при отправке запроса');
       }
-    }, 800);
+    } catch (error) {
+      console.error('Ошибка восстановления пароля:', error);
+      setIsLoading(false);
+      toast.error('Не удалось отправить запрос. Попробуйте позже.');
+    }
   };
 
   if (emailSent) {

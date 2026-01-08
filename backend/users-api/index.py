@@ -3,6 +3,8 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import requests
+import secrets
+from datetime import datetime, timedelta
 
 # Force redeploy to fix network issues
 
@@ -270,6 +272,171 @@ def handler(event: dict, context) -> dict:
                         'body': json.dumps({'error': 'Invalid email or password'}),
                         'isBase64Encoded': False
                     }
+            
+            if action == 'request_password_reset':
+                email = body.get('email')
+                
+                if not email:
+                    cur.close()
+                    conn.close()
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                        'body': json.dumps({'error': 'Email required'}),
+                        'isBase64Encoded': False
+                    }
+                
+                # Проверяем, существует ли пользователь
+                cur.execute("SELECT id, first_name, last_name FROM users WHERE email = %s AND status = 'active'", (email,))
+                user = cur.fetchone()
+                
+                if not user:
+                    cur.close()
+                    conn.close()
+                    # Не раскрываем существование пользователя
+                    return {
+                        'statusCode': 200,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'success': True, 'message': 'If user exists, reset link will be sent'}),
+                        'isBase64Encoded': False
+                    }
+                
+                # Генерируем безопасный токен
+                token = secrets.token_urlsafe(32)
+                expires_at = datetime.now() + timedelta(hours=1)
+                
+                # Сохраняем токен в БД
+                cur.execute('''
+                    INSERT INTO password_reset_tokens (email, token, expires_at)
+                    VALUES (%s, %s, %s)
+                ''', (email, token, expires_at))
+                conn.commit()
+                
+                # Формируем ссылку для восстановления
+                reset_link = f"https://preview--snt-fakel-website.poehali.dev/reset-password?token={token}"
+                
+                # Отправляем email
+                html_content = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                </head>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
+                        <h2 style="color: #f97316;">🔑 Восстановление пароля - СНТ Факел</h2>
+                        <p>Здравствуйте, {user['first_name']} {user['last_name']}!</p>
+                        <p>Вы запросили восстановление пароля для входа в личный кабинет СНТ Факел.</p>
+                        <p>Для сброса пароля перейдите по ссылке:</p>
+                        <a href="{reset_link}" style="display: inline-block; padding: 12px 24px; background-color: #f97316; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Восстановить пароль</a>
+                        <p style="color: #666; font-size: 14px;">Ссылка действительна в течение 1 часа.</p>
+                        <p style="color: #666; font-size: 14px;">Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.</p>
+                        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                        <p style="font-size: 12px; color: #888;">СНТ Факел - Система управления садовым товариществом</p>
+                    </div>
+                </body>
+                </html>
+                """
+                
+                try:
+                    requests.post(
+                        'https://functions.poehali.dev/2672fb97-4151-4228-bb1c-4d0b3a502216',
+                        json={
+                            'to_email': email,
+                            'subject': 'Восстановление пароля - СНТ Факел',
+                            'html_content': html_content,
+                            'text_content': f'Восстановление пароля. Перейдите по ссылке: {reset_link}. Ссылка действительна в течение 1 часа.'
+                        },
+                        timeout=10
+                    )
+                except Exception as e:
+                    print(f'Error sending password reset email: {e}')
+                
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'success': True, 'message': 'Password reset link sent'}),
+                    'isBase64Encoded': False
+                }
+            
+            if action == 'reset_password':
+                token = body.get('token')
+                new_password = body.get('password')
+                
+                if not token or not new_password:
+                    cur.close()
+                    conn.close()
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                        'body': json.dumps({'error': 'Token and password required'}),
+                        'isBase64Encoded': False
+                    }
+                
+                # Проверяем токен
+                cur.execute('''
+                    SELECT email, expires_at, used FROM password_reset_tokens
+                    WHERE token = %s
+                ''', (token,))
+                token_data = cur.fetchone()
+                
+                if not token_data:
+                    cur.close()
+                    conn.close()
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                        'body': json.dumps({'error': 'Invalid or expired token'}),
+                        'isBase64Encoded': False
+                    }
+                
+                if token_data['used']:
+                    cur.close()
+                    conn.close()
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                        'body': json.dumps({'error': 'Token already used'}),
+                        'isBase64Encoded': False
+                    }
+                
+                if datetime.now() > token_data['expires_at']:
+                    cur.close()
+                    conn.close()
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                        'body': json.dumps({'error': 'Token expired'}),
+                        'isBase64Encoded': False
+                    }
+                
+                # Обновляем пароль
+                cur.execute('''
+                    UPDATE users
+                    SET password = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE email = %s AND status = 'active'
+                ''', (new_password, token_data['email']))
+                
+                # Помечаем токен как использованный
+                cur.execute('''
+                    UPDATE password_reset_tokens
+                    SET used = TRUE, used_at = CURRENT_TIMESTAMP
+                    WHERE token = %s
+                ''', (token,))
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                    'body': json.dumps({'success': True, 'message': 'Password updated successfully'}),
+                    'isBase64Encoded': False
+                }
             
             if action == 'send_message':
                 # Отправить новое сообщение в чат
