@@ -80,6 +80,14 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
             <Icon name="Gauge" size={18} className="mr-2" />
             Показания ПУ
           </Button>
+          <Button 
+            variant="outline" 
+            className="w-full justify-start border-blue-500 text-blue-600 hover:bg-blue-50"
+            onClick={() => onNavigate?.('board-appeal')}
+          >
+            <Icon name="MessageSquare" size={18} className="mr-2" />
+            Обращения участников
+          </Button>
           {(userRole === 'admin' || userRole === 'chairman') && (
             <Button 
               variant="outline" 

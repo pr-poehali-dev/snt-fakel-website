@@ -5,9 +5,10 @@ import Icon from '@/components/ui/icon';
 
 interface MemberDashboardCardProps {
   plotNumber: string;
+  onNavigate?: (section: string) => void;
 }
 
-const MemberDashboardCard = ({ plotNumber }: MemberDashboardCardProps) => {
+const MemberDashboardCard = ({ plotNumber, onNavigate }: MemberDashboardCardProps) => {
   return (
     <>
       <Card className="md:col-span-2">
@@ -48,7 +49,11 @@ const MemberDashboardCard = ({ plotNumber }: MemberDashboardCardProps) => {
             <Icon name="History" size={18} className="mr-2" />
             История платежей
           </Button>
-          <Button variant="outline" className="w-full justify-start">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={() => onNavigate?.('board-appeal')}
+          >
             <Icon name="MessageSquare" size={18} className="mr-2" />
             Обращение в правление
           </Button>

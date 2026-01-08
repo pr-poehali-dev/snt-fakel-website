@@ -270,7 +270,7 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
             onNavigate={onNavigate}
           />
         ) : (
-          <MemberDashboardCard plotNumber={userData.plotNumber} />
+          <MemberDashboardCard plotNumber={userData.plotNumber} onNavigate={onNavigate} />
         )}
       </div>
 
