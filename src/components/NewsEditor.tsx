@@ -15,6 +15,8 @@ interface NewsItem {
   date: string;
   category: string;
   text: string;
+  showOnMainPage?: boolean;
+  mainPageExpiresAt?: string;
 }
 
 interface NewsEditorProps {
@@ -28,7 +30,9 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
   const [formData, setFormData] = useState({
     title: '',
     category: 'Важное',
-    text: ''
+    text: '',
+    showOnMainPage: false,
+    mainPageDuration: '7'
   });
 
   useEffect(() => {
@@ -78,13 +82,17 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       title: formData.title,
       category: formData.category,
       text: formData.text,
-      date: new Date().toLocaleDateString('ru-RU')
+      date: new Date().toLocaleDateString('ru-RU'),
+      showOnMainPage: formData.showOnMainPage,
+      mainPageExpiresAt: formData.showOnMainPage 
+        ? new Date(Date.now() + parseInt(formData.mainPageDuration) * 24 * 60 * 60 * 1000).toISOString()
+        : undefined
     };
 
     const updatedNews = [newItem, ...news];
     saveNews(updatedNews);
     resetForm();
-    toast.success('Новость добавлена');
+    toast.success(formData.showOnMainPage ? 'Новость добавлена и размещена на главной' : 'Новость добавлена');
   };
 
   const handleEdit = (item: NewsItem) => {
@@ -93,7 +101,9 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     setFormData({
       title: item.title,
       category: item.category,
-      text: item.text
+      text: item.text,
+      showOnMainPage: item.showOnMainPage || false,
+      mainPageDuration: '7'
     });
   };
 
@@ -105,7 +115,16 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
 
     const updatedNews = news.map(item =>
       item.id === editingId
-        ? { ...item, title: formData.title, category: formData.category, text: formData.text }
+        ? { 
+            ...item, 
+            title: formData.title, 
+            category: formData.category, 
+            text: formData.text,
+            showOnMainPage: formData.showOnMainPage,
+            mainPageExpiresAt: formData.showOnMainPage 
+              ? new Date(Date.now() + parseInt(formData.mainPageDuration) * 24 * 60 * 60 * 1000).toISOString()
+              : undefined
+          }
         : item
     );
 
@@ -132,7 +151,9 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     setFormData({
       title: '',
       category: 'Важное',
-      text: ''
+      text: '',
+      showOnMainPage: false,
+      mainPageDuration: '7'
     });
   };
 
@@ -182,6 +203,45 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
               rows={6}
               placeholder="Введите текст новости..."
             />
+          </div>
+
+          <div className="space-y-4 p-4 bg-orange-50 rounded-lg border-2 border-orange-200">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showOnMainPage"
+                checked={formData.showOnMainPage}
+                onChange={(e) => setFormData({ ...formData, showOnMainPage: e.target.checked })}
+                className="w-5 h-5 rounded border-orange-300 text-orange-500 focus:ring-orange-500"
+              />
+              <Label htmlFor="showOnMainPage" className="text-base font-semibold cursor-pointer">
+                <Icon name="Star" size={18} className="inline mr-1 text-orange-500" />
+                Разместить на главной странице
+              </Label>
+            </div>
+            
+            {formData.showOnMainPage && (
+              <div className="space-y-2 ml-7">
+                <Label>Длительность размещения</Label>
+                <Select 
+                  value={formData.mainPageDuration} 
+                  onValueChange={(value) => setFormData({ ...formData, mainPageDuration: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 день</SelectItem>
+                    <SelectItem value="3">3 дня</SelectItem>
+                    <SelectItem value="7">7 дней (неделя)</SelectItem>
+                    <SelectItem value="14">14 дней (2 недели)</SelectItem>
+                    <SelectItem value="30">30 дней (месяц)</SelectItem>
+                    <SelectItem value="60">60 дней (2 месяца)</SelectItem>
+                    <SelectItem value="90">90 дней (3 месяца)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3">
@@ -236,8 +296,14 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <Badge>{item.category}</Badge>
+                        {item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date() && (
+                          <Badge className="bg-orange-100 text-orange-700 border-orange-300">
+                            <Icon name="Star" size={12} className="mr-1" />
+                            На главной
+                          </Badge>
+                        )}
                         <span className="text-sm text-muted-foreground">{item.date}</span>
                       </div>
                       <h3 className="font-semibold text-lg mb-2">{item.title}</h3>

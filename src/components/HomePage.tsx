@@ -27,6 +27,8 @@ interface NewsItem {
   date: string;
   category: string;
   text: string;
+  showOnMainPage?: boolean;
+  mainPageExpiresAt?: string;
 }
 
 interface HomePageProps {
@@ -75,6 +77,7 @@ const defaultContent: HomePageContent = {
 const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setActiveSection }: HomePageProps) => {
   const [content, setContent] = useState<HomePageContent>(defaultContent);
   const [activeVotings, setActiveVotings] = useState<any[]>([]);
+  const [newsCarouselIndex, setNewsCarouselIndex] = useState(0);
 
   useEffect(() => {
     const loadContent = () => {
@@ -330,21 +333,111 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
           </div>
           <h3 className="text-3xl font-bold">Последние новости</h3>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          {news.map((item) => (
-            <Card key={item.id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="flex items-center justify-between mb-2">
-                  <Badge variant="outline">{item.category}</Badge>
-                  <span className="text-xs text-muted-foreground">{item.date}</span>
+        {(() => {
+          const mainPageNews = news.filter((item: any) => {
+            const isOnMainPage = item.showOnMainPage && 
+                                 item.mainPageExpiresAt && 
+                                 new Date(item.mainPageExpiresAt) > new Date();
+            const isImportantCategory = ['Важное', 'Мероприятия', 'Объявления'].includes(item.category);
+            return isOnMainPage && isImportantCategory;
+          }).slice(0, 12);
+
+          const itemsPerPage = 3;
+          const totalPages = Math.ceil(mainPageNews.length / itemsPerPage);
+          const showArrows = mainPageNews.length > itemsPerPage;
+
+          const visibleNews = mainPageNews.slice(
+            newsCarouselIndex * itemsPerPage,
+            (newsCarouselIndex + 1) * itemsPerPage
+          );
+
+          const handlePrev = () => {
+            setNewsCarouselIndex((prev) => (prev === 0 ? totalPages - 1 : prev - 1));
+          };
+
+          const handleNext = () => {
+            setNewsCarouselIndex((prev) => (prev === totalPages - 1 ? 0 : prev + 1));
+          };
+
+          if (mainPageNews.length === 0) {
+            return (
+              <Card className="border-2 border-dashed">
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  <Icon name="Newspaper" size={48} className="mx-auto mb-4 opacity-20" />
+                  <p>Нет новостей на главной странице</p>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          return (
+            <div className="relative">
+              {showArrows && (
+                <Button
+                  onClick={handlePrev}
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 z-10 rounded-full w-10 h-10 bg-white shadow-lg hover:bg-orange-50"
+                >
+                  <Icon name="ChevronLeft" size={20} />
+                </Button>
+              )}
+              
+              <div className="grid md:grid-cols-3 gap-6">
+                {visibleNews.map((item: any) => (
+                  <Card key={item.id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2">
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline">{item.category}</Badge>
+                        <span className="text-xs text-muted-foreground">{item.date}</span>
+                      </div>
+                      <CardTitle className="text-lg">{item.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-3">{item.text}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {showArrows && (
+                <Button
+                  onClick={handleNext}
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 z-10 rounded-full w-10 h-10 bg-white shadow-lg hover:bg-orange-50"
+                >
+                  <Icon name="ChevronRight" size={20} />
+                </Button>
+              )}
+
+              {totalPages > 1 && (
+                <div className="flex justify-center gap-2 mt-6">
+                  {Array.from({ length: totalPages }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setNewsCarouselIndex(idx)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        idx === newsCarouselIndex 
+                          ? 'bg-orange-500 w-6' 
+                          : 'bg-gray-300 hover:bg-gray-400'
+                      }`}
+                    />
+                  ))}
                 </div>
-                <CardTitle className="text-lg">{item.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{item.text}</p>
-              </CardContent>
-            </Card>
-          ))}
+              )}
+            </div>
+          );
+        })()}
+        <div className="mt-8 text-center">
+          <Button 
+            onClick={() => setActiveSection('news')}
+            variant="outline"
+            className="border-2 border-blue-300 hover:bg-blue-50"
+          >
+            <Icon name="Newspaper" size={18} className="mr-2" />
+            Все новости
+          </Button>
         </div>
       </section>
       
