@@ -73,6 +73,18 @@ const MembersList = ({ onBack }: MembersListProps) => {
     };
     
     loadUsers();
+    
+    // Слушаем событие удаления пользователя из другого компонента
+    const handleUserDeleted = (event: CustomEvent) => {
+      const deletedEmail = event.detail.email;
+      setUsers(prevUsers => prevUsers.filter(u => u.email !== deletedEmail));
+    };
+    
+    window.addEventListener('user-deleted', handleUserDeleted as EventListener);
+    
+    return () => {
+      window.removeEventListener('user-deleted', handleUserDeleted as EventListener);
+    };
   }, []);
 
   const filteredUsers = users.filter(user => {

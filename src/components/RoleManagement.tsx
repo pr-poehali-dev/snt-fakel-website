@@ -143,21 +143,39 @@ const RoleManagement = ({ onBack }: RoleManagementProps) => {
     toast.success('Регистрация отклонена');
   };
 
-  const handleDeleteUser = (userEmail: string) => {
+  const handleDeleteUser = async (userEmail: string) => {
     const user = users.find(u => u.email === userEmail);
     if (!user) return;
 
     const fullName = `${user.lastName} ${user.firstName} ${user.middleName}`;
     const confirmed = window.confirm(
-      `Вы уверены, что хотите удалить пользователя "${fullName}"?\n\nЭто действие нельзя отменить.`
+      `Вы уверены, что хотите удалить пользователя "${fullName}"?\n\nПользователь будет удалён из базы данных, списка участников и таблицы управления ролями.\n\nЭто действие нельзя отменить.`
     );
 
     if (!confirmed) return;
 
-    const updatedUsers = users.filter(u => u.email !== userEmail);
-    setUsers(updatedUsers);
-    localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
-    toast.success('Пользователь удалён');
+    try {
+      const response = await fetch(`https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?id=${(user as any).id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const updatedUsers = users.filter(u => u.email !== userEmail);
+        setUsers(updatedUsers);
+        localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
+        
+        // Уведомляем другие компоненты об изменении данных
+        window.dispatchEvent(new CustomEvent('user-deleted', { detail: { email: userEmail } }));
+        
+        toast.success('Пользователь удалён из системы');
+      } else {
+        toast.error('Не удалось удалить пользователя');
+      }
+    } catch (error) {
+      console.error('Ошибка удаления пользователя:', error);
+      toast.error('Ошибка при удалении пользователя');
+    }
   };
 
   const getCurrentAdminEmail = () => {
