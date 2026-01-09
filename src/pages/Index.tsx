@@ -250,7 +250,7 @@ const Index = () => {
     },
   ];
 
-  const news = [
+  const [news, setNews] = useState([
     {
       id: 1,
       title: 'Начало отопительного сезона',
@@ -272,7 +272,32 @@ const Index = () => {
       category: 'Мероприятия',
       text: 'Приглашаем всех участников на годовое собрание 25 января в 15:00.',
     },
-  ];
+  ]);
+
+  useEffect(() => {
+    const loadNews = () => {
+      const savedNews = localStorage.getItem('snt_news');
+      if (savedNews) {
+        try {
+          const parsedNews = JSON.parse(savedNews);
+          if (parsedNews.length > 0) {
+            setNews(parsedNews);
+          }
+        } catch (e) {
+          console.error('Error loading news:', e);
+        }
+      }
+    };
+
+    loadNews();
+
+    const handleNewsUpdate = () => {
+      loadNews();
+    };
+
+    window.addEventListener('news-updated', handleNewsUpdate);
+    return () => window.removeEventListener('news-updated', handleNewsUpdate);
+  }, []);
 
   const gallery = [
     { id: 1, title: 'Центральная аллея', season: 'Лето 2025' },
