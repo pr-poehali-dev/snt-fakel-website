@@ -145,6 +145,37 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     toast.success('Новость удалена');
   };
 
+  const handleToggleMainPage = (id: number) => {
+    const item = news.find(n => n.id === id);
+    if (!item) return;
+
+    const isCurrentlyOnMain = item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date();
+
+    if (isCurrentlyOnMain) {
+      // Убрать с главной
+      const updatedNews = news.map(n =>
+        n.id === id
+          ? { ...n, showOnMainPage: false, mainPageExpiresAt: undefined }
+          : n
+      );
+      saveNews(updatedNews);
+      toast.success('Новость убрана с главной страницы');
+    } else {
+      // Разместить на главной на 7 дней
+      const updatedNews = news.map(n =>
+        n.id === id
+          ? { 
+              ...n, 
+              showOnMainPage: true, 
+              mainPageExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          : n
+      );
+      saveNews(updatedNews);
+      toast.success('Новость размещена на главной на 7 дней');
+    }
+  };
+
   const resetForm = () => {
     setIsEditing(false);
     setEditingId(null);
@@ -310,6 +341,27 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
                       <p className="text-muted-foreground">{item.text}</p>
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
+                      {item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date() ? (
+                        <Button
+                          onClick={() => handleToggleMainPage(item.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          title="Убрать с главной"
+                        >
+                          <Icon name="StarOff" size={16} />
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => handleToggleMainPage(item.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          title="Разместить на главной (7 дней)"
+                        >
+                          <Icon name="Star" size={16} />
+                        </Button>
+                      )}
                       <Button
                         onClick={() => handleEdit(item)}
                         variant="ghost"
