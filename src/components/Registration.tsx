@@ -43,6 +43,11 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
 
+  // Нормализация телефона для сравнения (оставляем только цифры)
+  const normalizePhone = (phone: string): string => {
+    return phone.replace(/\D/g, '');
+  };
+
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
@@ -190,9 +195,21 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newUser)
     })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          throw new Error(errorData.error || 'Ошибка регистрации');
+        });
+      }
+      return response.json();
+    })
     .then(data => {
       console.log('Пользователь сохранен в БД:', data);
+      
+      if (data.error) {
+        toast.error(`Ошибка регистрации: ${data.error}`);
+        return;
+      }
       
       fetch('https://functions.poehali.dev/92ff7699-756a-4d4c-b3ab-dceb5c33e4f8', {
         method: 'POST',
@@ -207,7 +224,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     })
     .catch(error => {
       console.error('Ошибка сохранения пользователя в БД:', error);
-      toast.error('Ошибка регистрации. Попробуйте позже.');
+      toast.error(error.message || 'Ошибка регистрации. Попробуйте позже.');
     });
   };
 
@@ -232,7 +249,8 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
         return;
       }
       
-      const phoneExists = existingUsers.find((u: any) => u.phone === formData.phone);
+      const normalizedFormPhone = normalizePhone(formData.phone);
+      const phoneExists = existingUsers.find((u: any) => normalizePhone(u.phone) === normalizedFormPhone);
       if (phoneExists) {
         toast.error('Пользователь с таким номером телефона уже зарегистрирован');
         setErrors({ ...errors, phone: 'Номер телефона уже используется' });

@@ -572,52 +572,74 @@ def handler(event: dict, context) -> dict:
                     'isBase64Encoded': False
                 }
             
-            cur.execute("""
-                INSERT INTO users (
-                    email, password, first_name, last_name, middle_name, phone,
-                    plot_number, birth_date, role, status, owner_is_same, is_plot_owner,
-                    owner_first_name, owner_last_name, owner_middle_name,
-                    land_doc_number, house_doc_number, email_verified, phone_verified,
-                    payment_status, registered_at
-                ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                )
-                RETURNING id
-            """, (
-                body.get('email'),
-                body.get('password'),
-                body.get('firstName'),
-                body.get('lastName'),
-                body.get('middleName', ''),
-                body.get('phone'),
-                body.get('plotNumber'),
-                body.get('birthDate'),
-                body.get('role', 'member'),
-                body.get('status', 'active'),
-                body.get('ownerIsSame', True),
-                body.get('isPlotOwner', False),
-                body.get('ownerFirstName'),
-                body.get('ownerLastName'),
-                body.get('ownerMiddleName'),
-                body.get('landDocNumber'),
-                body.get('houseDocNumber'),
-                body.get('emailVerified', False),
-                body.get('phoneVerified', False),
-                body.get('paymentStatus', 'unpaid'),
-                body.get('registeredAt')
-            ))
-            
-            new_id = cur.fetchone()['id']
-            conn.commit()
-            cur.close()
-            conn.close()
-            
-            return {
-                'statusCode': 201,
-                'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
-                'body': json.dumps({'success': True, 'id': new_id}),
-                'isBase64Encoded': False
-            }
+            try:
+                cur.execute("""
+                    INSERT INTO users (
+                        email, password, first_name, last_name, middle_name, phone,
+                        plot_number, birth_date, role, status, owner_is_same, is_plot_owner,
+                        owner_first_name, owner_last_name, owner_middle_name,
+                        land_doc_number, house_doc_number, email_verified, phone_verified,
+                        payment_status, registered_at
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    )
+                    RETURNING id
+                """, (
+                    body.get('email'),
+                    body.get('password'),
+                    body.get('firstName'),
+                    body.get('lastName'),
+                    body.get('middleName', ''),
+                    body.get('phone'),
+                    body.get('plotNumber'),
+                    body.get('birthDate'),
+                    body.get('role', 'member'),
+                    body.get('status', 'active'),
+                    body.get('ownerIsSame', True),
+                    body.get('isPlotOwner', False),
+                    body.get('ownerFirstName'),
+                    body.get('ownerLastName'),
+                    body.get('ownerMiddleName'),
+                    body.get('landDocNumber'),
+                    body.get('houseDocNumber'),
+                    body.get('emailVerified', False),
+                    body.get('phoneVerified', False),
+                    body.get('paymentStatus', 'unpaid'),
+                    body.get('registeredAt')
+                ))
+                
+                new_id = cur.fetchone()['id']
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 201,
+                    'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                    'body': json.dumps({'success': True, 'id': new_id}),
+                    'isBase64Encoded': False
+                }
+            except psycopg2.errors.UniqueViolation as e:
+                conn.rollback()
+                cur.close()
+                conn.close()
+                
+                error_msg = str(e)
+                if 'idx_users_email' in error_msg:
+                    error_detail = 'Пользователь с таким email уже зарегистрирован'
+                elif 'idx_users_phone' in error_msg:
+                    error_detail = 'Пользователь с таким номером телефона уже зарегистрирован'
+                elif 'idx_users_plot_owner' in error_msg:
+                    error_detail = f'Участок №{body.get("plotNumber")} уже имеет собственника'
+                else:
+                    error_detail = 'Данные уже существуют в системе'
+                
+                return {
+                    'statusCode': 409,
+                    'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+                    'body': json.dumps({'error': error_detail}),
+                    'isBase64Encoded': False
+                }
         
         elif method == 'PUT':
             body = json.loads(event.get('body', '{}'))
