@@ -288,11 +288,11 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     return (
       <EmailVerification
         email={formData.email}
-        onVerified={() => {
+        onVerified={async () => {
           setEmailVerified(true);
           setShowEmailVerification(false);
           toast.success('Email подтверждён');
-          saveUserToDatabase();
+          await saveUserToDatabase();
         }}
         onCancel={() => setShowEmailVerification(false)}
       />
