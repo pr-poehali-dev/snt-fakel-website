@@ -130,6 +130,13 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       newErrors.phone = 'Некорректный номер (должен быть 11 цифр)';
     }
 
+    if (formData.plotNumber.trim()) {
+      const plotNum = parseInt(formData.plotNumber.trim());
+      if (isNaN(plotNum) || plotNum < 1 || plotNum > 250) {
+        newErrors.plotNumber = 'Номер участка должен быть от 1 до 250';
+      }
+    }
+
     if (formData.password) {
       const passwordValidation = validatePassword(formData.password);
       if (!passwordValidation.valid) {

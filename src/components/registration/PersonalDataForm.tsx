@@ -82,7 +82,10 @@ const PersonalDataForm = ({ formData, errors, onChange }: PersonalDataFormProps)
           <Label htmlFor="plotNumber">Номер участка <span className="text-red-500">*</span></Label>
           <Input
             id="plotNumber"
-            placeholder="42"
+            type="number"
+            min="1"
+            max="250"
+            placeholder="1-250"
             value={formData.plotNumber}
             onChange={(e) => onChange('plotNumber', e.target.value)}
             className={errors.plotNumber ? 'border-red-500' : ''}
