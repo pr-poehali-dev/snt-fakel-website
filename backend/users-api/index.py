@@ -2,6 +2,7 @@ import json
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from psycopg2 import errors as psycopg2_errors
 import requests
 import secrets
 from datetime import datetime, timedelta
@@ -619,7 +620,7 @@ def handler(event: dict, context) -> dict:
                     'body': json.dumps({'success': True, 'id': new_id}),
                     'isBase64Encoded': False
                 }
-            except psycopg2.errors.UniqueViolation as e:
+            except psycopg2_errors.UniqueViolation as e:
                 conn.rollback()
                 cur.close()
                 conn.close()

@@ -190,27 +190,28 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       registeredAt: new Date().toISOString()
     };
 
-    fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newUser)
-    })
-    .then(response => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser)
+      });
+      
+      const data = await response.json();
+      
       if (!response.ok) {
-        return response.json().then(errorData => {
-          throw new Error(errorData.error || 'Ошибка регистрации');
-        });
+        toast.error(data.error || 'Ошибка регистрации');
+        return;
       }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Пользователь сохранен в БД:', data);
       
       if (data.error) {
         toast.error(`Ошибка регистрации: ${data.error}`);
         return;
       }
       
+      console.log('Пользователь сохранен в БД:', data);
+      
+      // Отправляем уведомление администратору
       fetch('https://functions.poehali.dev/92ff7699-756a-4d4c-b3ab-dceb5c33e4f8', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -221,11 +222,10 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       
       toast.success('Регистрация завершена! Добро пожаловать!');
       onSuccess(formData.email, 'member');
-    })
-    .catch(error => {
+    } catch (error) {
       console.error('Ошибка сохранения пользователя в БД:', error);
-      toast.error(error.message || 'Ошибка регистрации. Попробуйте позже.');
-    });
+      toast.error('Ошибка регистрации. Попробуйте позже.');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
