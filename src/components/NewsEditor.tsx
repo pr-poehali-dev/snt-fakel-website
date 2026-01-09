@@ -145,14 +145,13 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     toast.success('Новость удалена');
   };
 
-  const handleToggleMainPage = (id: number) => {
+  const handleToggleMainPage = (id: number, customDuration?: number) => {
     const item = news.find(n => n.id === id);
     if (!item) return;
 
     const isCurrentlyOnMain = item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date();
 
-    if (isCurrentlyOnMain) {
-      // Убрать с главной
+    if (isCurrentlyOnMain && customDuration === undefined) {
       const updatedNews = news.map(n =>
         n.id === id
           ? { ...n, showOnMainPage: false, mainPageExpiresAt: undefined }
@@ -161,18 +160,18 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       saveNews(updatedNews);
       toast.success('Новость убрана с главной страницы');
     } else {
-      // Разместить на главной на 7 дней
+      const duration = customDuration || 7;
       const updatedNews = news.map(n =>
         n.id === id
           ? { 
               ...n, 
               showOnMainPage: true, 
-              mainPageExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+              mainPageExpiresAt: new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString()
             }
           : n
       );
       saveNews(updatedNews);
-      toast.success('Новость размещена на главной на 7 дней');
+      toast.success(`Новость размещена на главной на ${duration} ${duration === 1 ? 'день' : duration < 5 ? 'дня' : 'дней'}`);
     }
   };
 
@@ -342,25 +341,42 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
                       {item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date() ? (
-                        <Button
-                          onClick={() => handleToggleMainPage(item.id)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                          title="Убрать с главной"
-                        >
-                          <Icon name="StarOff" size={16} />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            onClick={() => handleToggleMainPage(item.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                            title="Убрать с главной"
+                          >
+                            <Icon name="StarOff" size={16} />
+                          </Button>
+                          <Select onValueChange={(value) => handleToggleMainPage(item.id, parseInt(value))}>
+                            <SelectTrigger className="h-8 w-[90px] text-xs">
+                              <SelectValue placeholder="Срок" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">1 день</SelectItem>
+                              <SelectItem value="3">3 дня</SelectItem>
+                              <SelectItem value="7">7 дней</SelectItem>
+                              <SelectItem value="14">14 дней</SelectItem>
+                              <SelectItem value="30">30 дней</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       ) : (
-                        <Button
-                          onClick={() => handleToggleMainPage(item.id)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                          title="Разместить на главной (7 дней)"
-                        >
-                          <Icon name="Star" size={16} />
-                        </Button>
+                        <Select onValueChange={(value) => handleToggleMainPage(item.id, parseInt(value))}>
+                          <SelectTrigger className="h-8 w-[140px] text-xs">
+                            <SelectValue placeholder="📌 На главную" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 день</SelectItem>
+                            <SelectItem value="3">3 дня</SelectItem>
+                            <SelectItem value="7">7 дней</SelectItem>
+                            <SelectItem value="14">14 дней</SelectItem>
+                            <SelectItem value="30">30 дней</SelectItem>
+                          </SelectContent>
+                        </Select>
                       )}
                       <Button
                         onClick={() => handleEdit(item)}
