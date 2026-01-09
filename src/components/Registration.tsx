@@ -161,39 +161,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
   };
 
   const saveUserToDatabase = async () => {
-    try {
-      const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
-      const usersData = await usersResponse.json();
-      const existingUsers = usersData.users || [];
-      
-      const emailExists = existingUsers.find((u: any) => u.email.toLowerCase() === formData.email.toLowerCase());
-      if (emailExists) {
-        toast.error('Пользователь с таким email уже зарегистрирован');
-        setErrors({ ...errors, email: 'Email уже используется' });
-        return;
-      }
-      
-      const phoneExists = existingUsers.find((u: any) => u.phone === formData.phone);
-      if (phoneExists) {
-        toast.error('Пользователь с таким номером телефона уже зарегистрирован');
-        setErrors({ ...errors, phone: 'Номер телефона уже используется' });
-        return;
-      }
-      
-      const plotOwner = existingUsers.find((u: any) => u.plot_number === formData.plotNumber && u.is_plot_owner === true);
-      
-      if (plotOwner) {
-        const ownerName = `${plotOwner.last_name} ${plotOwner.first_name} ${plotOwner.middle_name || ''}`.trim();
-        toast.error(`Участок №${formData.plotNumber} уже имеет собственника: ${ownerName}`);
-        setErrors({ ...errors, plotNumber: 'У этого участка уже есть собственник' });
-        return;
-      }
-    } catch (error) {
-      console.error('Ошибка проверки данных:', error);
-      toast.error('Ошибка проверки данных. Попробуйте позже.');
-      return;
-    }
-
+    // Проверка уже выполнена в handleSubmit, сразу сохраняем
     const newUser = {
       email: formData.email,
       password: formData.password,
@@ -243,11 +211,48 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       toast.error('Пожалуйста, исправьте ошибки в форме');
+      return;
+    }
+
+    // КРИТИЧНО: Проверяем базу ПЕРЕД показом окна подтверждения email
+    try {
+      const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const usersData = await usersResponse.json();
+      const existingUsers = usersData.users || [];
+      
+      const emailExists = existingUsers.find((u: any) => u.email.toLowerCase() === formData.email.toLowerCase());
+      if (emailExists) {
+        toast.error('Пользователь с таким email уже зарегистрирован');
+        setErrors({ ...errors, email: 'Email уже используется' });
+        return;
+      }
+      
+      const phoneExists = existingUsers.find((u: any) => u.phone === formData.phone);
+      if (phoneExists) {
+        toast.error('Пользователь с таким номером телефона уже зарегистрирован');
+        setErrors({ ...errors, phone: 'Номер телефона уже используется' });
+        return;
+      }
+      
+      // КРИТИЧЕСКАЯ ПРОВЕРКА: если пользователь указывает себя собственником
+      if (formData.ownerIsSame) {
+        const plotOwner = existingUsers.find((u: any) => u.plot_number === formData.plotNumber && u.is_plot_owner === true);
+        
+        if (plotOwner) {
+          const ownerName = `${plotOwner.last_name} ${plotOwner.first_name} ${plotOwner.middle_name || ''}`.trim();
+          toast.error(`Участок №${formData.plotNumber} уже имеет собственника: ${ownerName}`);
+          setErrors({ ...errors, plotNumber: 'У этого участка уже есть собственник' });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка проверки данных:', error);
+      toast.error('Ошибка проверки данных. Попробуйте позже.');
       return;
     }
 

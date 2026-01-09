@@ -575,12 +575,12 @@ def handler(event: dict, context) -> dict:
             cur.execute("""
                 INSERT INTO users (
                     email, password, first_name, last_name, middle_name, phone,
-                    plot_number, birth_date, role, status, owner_is_same,
+                    plot_number, birth_date, role, status, owner_is_same, is_plot_owner,
                     owner_first_name, owner_last_name, owner_middle_name,
                     land_doc_number, house_doc_number, email_verified, phone_verified,
                     payment_status, registered_at
                 ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
                 RETURNING id
             """, (
@@ -595,6 +595,7 @@ def handler(event: dict, context) -> dict:
                 body.get('role', 'member'),
                 body.get('status', 'active'),
                 body.get('ownerIsSame', True),
+                body.get('isPlotOwner', False),
                 body.get('ownerFirstName'),
                 body.get('ownerLastName'),
                 body.get('ownerMiddleName'),
