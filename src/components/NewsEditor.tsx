@@ -25,6 +25,26 @@ interface NewsEditorProps {
 
 const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
   const [news, setNews] = useState<NewsItem[]>([]);
+
+  const getTimeRemaining = (expiresAt: string): string => {
+    const now = new Date();
+    const expires = new Date(expiresAt);
+    const diffMs = expires.getTime() - now.getTime();
+    
+    if (diffMs <= 0) return 'истёк';
+    
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (days > 0) {
+      return `${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'}`;
+    } else if (hours > 0) {
+      return `${hours} ${hours === 1 ? 'час' : hours < 5 ? 'часа' : 'часов'}`;
+    } else {
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      return `${minutes} ${minutes === 1 ? 'минута' : minutes < 5 ? 'минуты' : 'минут'}`;
+    }
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -331,7 +351,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
                         {item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date() && (
                           <Badge className="bg-orange-100 text-orange-700 border-orange-300">
                             <Icon name="Star" size={12} className="mr-1" />
-                            На главной
+                            На главной · {getTimeRemaining(item.mainPageExpiresAt)}
                           </Badge>
                         )}
                         <span className="text-sm text-muted-foreground">{item.date}</span>
