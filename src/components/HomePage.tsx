@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
 import MeterReadingsNotification from './MeterReadingsNotification';
 import CompletedVotings from './CompletedVotings';
@@ -79,6 +80,7 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
   const [activeVotings, setActiveVotings] = useState<any[]>([]);
   const [newsCarouselIndex, setNewsCarouselIndex] = useState(0);
   const [news, setNews] = useState<NewsItem[]>(initialNews);
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 
   useEffect(() => {
     const loadContent = () => {
@@ -407,7 +409,11 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
               
               <div className="grid md:grid-cols-3 gap-6">
                 {visibleNews.map((item: any) => (
-                  <Card key={item.id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2">
+                  <Card 
+                    key={item.id} 
+                    className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 cursor-pointer"
+                    onClick={() => setSelectedNews(item)}
+                  >
                     <CardHeader>
                       <div className="flex items-center justify-between mb-2">
                         <Badge variant="outline">{item.category}</Badge>
@@ -417,6 +423,10 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground line-clamp-3">{item.text}</p>
+                      <div className="flex items-center gap-1 text-xs text-orange-500 mt-3 font-medium">
+                        <span>Читать полностью</span>
+                        <Icon name="ChevronRight" size={14} />
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -462,6 +472,25 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
           </Button>
         </div>
       </section>
+
+      <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          {selectedNews && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge variant="outline" className="text-sm">{selectedNews.category}</Badge>
+                  <span className="text-sm text-muted-foreground">{selectedNews.date}</span>
+                </div>
+                <DialogTitle className="text-2xl">{selectedNews.title}</DialogTitle>
+              </DialogHeader>
+              <DialogDescription className="text-base text-foreground whitespace-pre-wrap leading-relaxed">
+                {selectedNews.text}
+              </DialogDescription>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
       
       <HolidayDecor />
       <ChristmasTree side="left" />
