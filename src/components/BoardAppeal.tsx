@@ -51,6 +51,9 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
   const [responseMessage, setResponseMessage] = useState('');
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserPlot, setCurrentUserPlot] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'resolved'>('all');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'status'>('date-desc');
 
   const isBoardMember = userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member';
 
@@ -287,6 +290,31 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
     );
   }
 
+  // Фильтрация и сортировка обращений
+  const filteredAppeals = appeals
+    .filter((appeal) => {
+      const matchesSearch = 
+        appeal.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appeal.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appeal.fromName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appeal.plotNumber.includes(searchTerm);
+      
+      const matchesStatus = statusFilter === 'all' || appeal.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'date-desc') {
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      } else if (sortBy === 'date-asc') {
+        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      } else if (sortBy === 'status') {
+        const statusOrder = { pending: 0, in_progress: 1, resolved: 2 };
+        return statusOrder[a.status] - statusOrder[b.status];
+      }
+      return 0;
+    });
+
   return (
     <section>
       <div className="flex items-center justify-between mb-8">
@@ -315,7 +343,94 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
         )}
       </div>
 
-      {appeals.length === 0 ? (
+      {/* Фильтры */}
+      {appeals.length > 0 && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Поиск</label>
+                <div className="relative">
+                  <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Тема, участок, ФИО..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-2 block">Статус</label>
+                <select
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                >
+                  <option value="all">Все статусы</option>
+                  <option value="pending">Ожидает рассмотрения</option>
+                  <option value="in_progress">В работе</option>
+                  <option value="resolved">Решено</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Сортировка</label>
+                <select
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                >
+                  <option value="date-desc">Сначала новые</option>
+                  <option value="date-asc">Сначала старые</option>
+                  <option value="status">По статусу</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center justify-between text-sm">
+              <p className="text-muted-foreground">
+                Найдено обращений: <span className="font-semibold text-foreground">{filteredAppeals.length}</span> из {appeals.length}
+              </p>
+              {(searchTerm || statusFilter !== 'all') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                  }}
+                >
+                  <Icon name="X" size={16} className="mr-1" />
+                  Сбросить фильтры
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {filteredAppeals.length === 0 && appeals.length > 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Icon name="Search" size={64} className="mx-auto mb-4 text-gray-400" />
+            <p className="text-lg font-semibold mb-2">Ничего не найдено</p>
+            <p className="text-muted-foreground mb-4">
+              Попробуйте изменить параметры поиска или фильтры
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+              }}
+            >
+              Сбросить фильтры
+            </Button>
+          </CardContent>
+        </Card>
+      ) : appeals.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Icon name="MessageSquare" size={64} className="mx-auto mb-4 text-gray-400" />
@@ -340,7 +455,7 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
         </Card>
       ) : (
         <div className="space-y-4">
-          {appeals.map((appeal) => (
+          {filteredAppeals.map((appeal) => (
             <Card key={appeal.id}>
               <CardHeader>
                 <div className="flex items-start justify-between">
