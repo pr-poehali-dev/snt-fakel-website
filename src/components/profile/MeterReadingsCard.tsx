@@ -35,6 +35,8 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
   const [submittedDate, setSubmittedDate] = useState('');
   const [readingsHistory, setReadingsHistory] = useState<MeterReading[]>([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showMeterConfirmDialog, setShowMeterConfirmDialog] = useState(false);
+  const [tempMeterNumber, setTempMeterNumber] = useState('');
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -78,6 +80,12 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
     setCanSubmit(today >= 22 && today <= 25);
   }, [currentUserEmail]);
 
+  const handleMeterNumberChange = (newValue: string) => {
+    if (isMeterLocked) return;
+    
+    setMeterNumber(newValue);
+  };
+
   const handleSubmitClick = () => {
     if (!meterNumber.trim()) {
       toast.error('Введите номер прибора учёта');
@@ -104,7 +112,19 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
       return;
     }
 
-    // Показываем диалог подтверждения
+    // Если номер ПУ не был заблокирован (первый ввод или после разблокировки),
+    // сначала показываем подтверждение номера ПУ
+    if (!isMeterLocked) {
+      setTempMeterNumber(meterNumber);
+      setShowMeterConfirmDialog(true);
+    } else {
+      // Если номер ПУ уже заблокирован, сразу показываем диалог с показаниями
+      setShowConfirmDialog(true);
+    }
+  };
+
+  const handleConfirmMeterNumber = () => {
+    setShowMeterConfirmDialog(false);
     setShowConfirmDialog(true);
   };
 
@@ -206,7 +226,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
                 <div className="flex gap-2">
                   <Input
                     value={meterNumber}
-                    onChange={(e) => setMeterNumber(e.target.value)}
+                    onChange={(e) => handleMeterNumberChange(e.target.value)}
                     disabled={isMeterLocked}
                     placeholder="Введите номер ПУ"
                   />
@@ -263,6 +283,56 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
               <Icon name="Send" size={18} className="mr-2" />
               Передать показания
             </Button>
+
+            <Dialog open={showMeterConfirmDialog} onOpenChange={setShowMeterConfirmDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Icon name="Gauge" className="text-blue-500" />
+                    Подтверждение номера прибора учёта
+                  </DialogTitle>
+                  <DialogDescription>
+                    Проверьте правильность введённого номера ПУ
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-600">Участок:</span>
+                      <span className="font-semibold">№{plotNumber}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-600">Номер прибора учёта:</span>
+                      <span className="font-semibold text-lg">{tempMeterNumber}</span>
+                    </div>
+                  </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <Icon name="AlertCircle" size={18} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-yellow-800">
+                        <p className="font-medium mb-1">Внимание!</p>
+                        <p>После подтверждения номер ПУ будет сохранён и заблокирован. Изменить его можно будет только через администратора или председателя.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowMeterConfirmDialog(false)}
+                  >
+                    Изменить номер
+                  </Button>
+                  <Button
+                    onClick={handleConfirmMeterNumber}
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                  >
+                    <Icon name="Check" size={18} className="mr-2" />
+                    Подтвердить номер ПУ
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
               <DialogContent>

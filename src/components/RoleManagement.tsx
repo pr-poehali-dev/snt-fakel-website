@@ -37,9 +37,10 @@ interface User {
 
 interface RoleManagementProps {
   onBack?: () => void;
+  currentUserRole?: UserRole;
 }
 
-const RoleManagement = ({ onBack }: RoleManagementProps) => {
+const RoleManagement = ({ onBack, currentUserRole = 'admin' }: RoleManagementProps) => {
   const [users, setUsers] = useState<User[]>([]);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [showImportDialog, setShowImportDialog] = useState(false);
@@ -98,6 +99,12 @@ const RoleManagement = ({ onBack }: RoleManagementProps) => {
   const handleChangeRole = async (userEmail: string, newRole: UserRole) => {
     const user = users.find(u => u.email === userEmail);
     if (!user) return;
+
+    // Председатель не может назначать или снимать админов
+    if (currentUserRole === 'chairman' && (newRole === 'admin' || user.role === 'admin')) {
+      toast.error('Только администратор может управлять ролью администратора');
+      return;
+    }
 
     try {
       const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
@@ -334,6 +341,7 @@ const RoleManagement = ({ onBack }: RoleManagementProps) => {
                     onRejectUser={handleRejectUser}
                     onDeleteUser={handleDeleteUser}
                     getCurrentAdminEmail={getCurrentAdminEmail}
+                    currentUserRole={currentUserRole}
                     roleNames={roleNames}
                     roleColors={roleColors}
                   />

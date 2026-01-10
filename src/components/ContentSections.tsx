@@ -96,8 +96,8 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
     return <ProfileSection userRole={userRole} currentUserEmail={currentUserEmail} onNavigate={setActiveSection} />;
   }
 
-  if (activeSection === 'role-management' && userRole === 'admin') {
-    return <RoleManagement onBack={() => setActiveSection('profile')} />;
+  if (activeSection === 'role-management' && (userRole === 'admin' || userRole === 'chairman')) {
+    return <RoleManagement onBack={() => setActiveSection('profile')} currentUserRole={userRole} />;
   }
 
   if (activeSection === 'members-list' && (userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member')) {

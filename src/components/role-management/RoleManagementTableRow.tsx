@@ -44,6 +44,7 @@ interface RoleManagementTableRowProps {
   onRejectUser: (email: string) => void;
   onDeleteUser: (email: string) => void;
   getCurrentAdminEmail: () => string;
+  currentUserRole?: UserRole;
   roleNames: Record<UserRole, string>;
   roleColors: Record<UserRole, string>;
 }
@@ -57,10 +58,13 @@ const RoleManagementTableRow = ({
   onRejectUser,
   onDeleteUser,
   getCurrentAdminEmail,
+  currentUserRole = 'admin',
   roleNames,
   roleColors
 }: RoleManagementTableRowProps) => {
   const fullName = `${user.lastName} ${user.firstName} ${user.middleName}`;
+  const isChairman = currentUserRole === 'chairman';
+  const canManageAdmins = !isChairman;
 
   return (
     <React.Fragment>
@@ -79,7 +83,11 @@ const RoleManagementTableRow = ({
           <Badge variant="outline">№ {user.plotNumber}</Badge>
         </td>
         <td className="p-3">
-          <Select value={user.role} onValueChange={(value: UserRole) => onChangeRole(user.email, value)}>
+          <Select 
+            value={user.role} 
+            onValueChange={(value: UserRole) => onChangeRole(user.email, value)}
+            disabled={isChairman && user.role === 'admin'}
+          >
             <SelectTrigger className="w-40" onClick={(e) => e.stopPropagation()}>
               <SelectValue />
             </SelectTrigger>
@@ -87,9 +95,14 @@ const RoleManagementTableRow = ({
               <SelectItem value="member">Член СНТ</SelectItem>
               <SelectItem value="board_member">Член правления</SelectItem>
               <SelectItem value="chairman">Председатель</SelectItem>
-              <SelectItem value="admin">Администратор</SelectItem>
+              {canManageAdmins && <SelectItem value="admin">Администратор</SelectItem>}
             </SelectContent>
           </Select>
+          {isChairman && user.role === 'admin' && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Только администратор может управлять админами
+            </p>
+          )}
         </td>
         <td className="p-3">
           {user.status === 'active' && <Badge className="bg-green-100 text-green-700">Активен</Badge>}
