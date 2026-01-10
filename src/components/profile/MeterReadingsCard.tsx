@@ -131,25 +131,22 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
   };
 
   const handleConfirmMeterNumber = () => {
+    const usersJSON = localStorage.getItem('snt_users');
+    if (usersJSON) {
+      const users = JSON.parse(usersJSON);
+      const updatedUsers = users.map((u: any) =>
+        u.email === currentUserEmail ? { ...u, meterNumber: meterNumber.trim() } : u
+      );
+      localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
+      setIsMeterLocked(true);
+      setMeterNumberConfirmed(true);
+    }
+    
     setShowMeterConfirmDialog(false);
     setShowConfirmDialog(true);
   };
 
   const handleConfirmSubmit = () => {
-
-    if (!isMeterLocked) {
-      const usersJSON = localStorage.getItem('snt_users');
-      if (usersJSON) {
-        const users = JSON.parse(usersJSON);
-        const updatedUsers = users.map((u: any) =>
-          u.email === currentUserEmail ? { ...u, meterNumber: meterNumber.trim() } : u
-        );
-        localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
-        setIsMeterLocked(true);
-        setMeterNumberConfirmed(true);
-      }
-    }
-
     const readingsJSON = localStorage.getItem('snt_meter_readings');
     const readings: MeterReading[] = readingsJSON ? JSON.parse(readingsJSON) : [];
 
