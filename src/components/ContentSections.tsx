@@ -13,6 +13,7 @@ import DocumentsManager from './DocumentsManager';
 import MeterReadingsManager from './MeterReadingsManager';
 import ChatModerationPanel from './ChatModerationPanel';
 import BoardAppeal from './BoardAppeal';
+import AppealArchive from './boardAppeal/AppealArchive';
 import CreateVoting from './CreateVoting';
 import VotingResults from './VotingResults';
 import HolidayDecorManager from './HolidayDecorManager';
@@ -135,6 +136,16 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
         currentUserEmail={currentUserEmail}
         userRole={userRole}
         onBack={() => setActiveSection('profile')}
+      />
+    );
+  }
+
+  if (activeSection === 'appeal-archive' && isLoggedIn) {
+    return (
+      <AppealArchive
+        currentUserEmail={currentUserEmail}
+        userRole={userRole}
+        onBack={() => setActiveSection('board-appeal')}
       />
     );
   }

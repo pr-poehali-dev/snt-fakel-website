@@ -133,6 +133,16 @@ const Index = () => {
     
     initAdmin();
     
+    // Обработчик навигации из кастомных событий
+    const handleSetActiveSection = (event: Event) => {
+      const customEvent = event as CustomEvent<string>;
+      if (customEvent.detail) {
+        setActiveSection(customEvent.detail);
+      }
+    };
+
+    window.addEventListener('set-active-section', handleSetActiveSection);
+    
     // Обновляем активность текущего пользователя
     if (isLoggedIn && currentUserEmail) {
       updateUserActivity(currentUserEmail);
@@ -142,8 +152,15 @@ const Index = () => {
         updateUserActivity(currentUserEmail);
       }, 2 * 60 * 1000);
       
-      return () => clearInterval(activityInterval);
+      return () => {
+        clearInterval(activityInterval);
+        window.removeEventListener('set-active-section', handleSetActiveSection);
+      };
     }
+
+    return () => {
+      window.removeEventListener('set-active-section', handleSetActiveSection);
+    };
   }, [isLoggedIn, currentUserEmail]);
 
   const handleVote = (pollId: number, option: number) => {

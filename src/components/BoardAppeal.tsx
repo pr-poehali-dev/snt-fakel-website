@@ -65,8 +65,16 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
       loadAppeals();
     };
 
+    const handleNavigateToArchive = () => {
+      window.dispatchEvent(new CustomEvent('set-active-section', { detail: 'appeal-archive' }));
+    };
+
     window.addEventListener('board-appeals-updated', handleUpdate);
-    return () => window.removeEventListener('board-appeals-updated', handleUpdate);
+    window.addEventListener('navigate-to-appeal-archive', handleNavigateToArchive);
+    return () => {
+      window.removeEventListener('board-appeals-updated', handleUpdate);
+      window.removeEventListener('navigate-to-appeal-archive', handleNavigateToArchive);
+    };
   }, []);
 
   const loadCurrentUserInfo = () => {
@@ -225,7 +233,9 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
     }
   };
 
-  const filteredAppeals = appeals
+  const activeAppeals = appeals.filter((appeal) => appeal.status !== 'resolved');
+
+  const filteredAppeals = activeAppeals
     .filter((appeal) => {
       const matchesSearch = 
         appeal.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -285,15 +295,37 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
             {isBoardMember ? 'Обращения участников' : 'Мои обращения в правление'}
           </h2>
         </div>
-        {!isBoardMember && (
-          <Button
-            onClick={() => setShowNewAppeal(true)}
-            className="gap-2"
-          >
-            <Icon name="Plus" size={18} />
-            Новое обращение
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {!isBoardMember && (
+            <Button
+              onClick={() => setShowNewAppeal(true)}
+              className="gap-2"
+            >
+              <Icon name="Plus" size={18} />
+              Новое обращение
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded flex items-center justify-between">
+        <div className="flex items-start gap-3 flex-1">
+          <Icon name="Info" className="text-blue-600 mt-1" size={20} />
+          <div>
+            <p className="font-medium text-blue-900">Активные обращения</p>
+            <p className="text-sm text-blue-700 mt-1">
+              Здесь отображаются обращения в работе и ожидающие рассмотрения. Решённые обращения автоматически перемещаются в архив.
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-appeal-archive'))}
+          className="gap-2 ml-4"
+        >
+          <Icon name="Archive" size={18} />
+          Архив
+        </Button>
       </div>
 
       <AppealFilters
@@ -303,12 +335,12 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
         setStatusFilter={setStatusFilter}
         sortBy={sortBy}
         setSortBy={setSortBy}
-        totalCount={appeals.length}
+        totalCount={activeAppeals.length}
         filteredCount={filteredAppeals.length}
         onReset={handleResetFilters}
       />
 
-      {filteredAppeals.length === 0 && appeals.length > 0 && (
+      {filteredAppeals.length === 0 && activeAppeals.length > 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Icon name="Search" className="text-gray-400" size={32} />
@@ -323,7 +355,7 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
         </div>
       )}
 
-      {appeals.length === 0 ? (
+      {activeAppeals.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Icon name="MessageSquare" className="text-orange-600" size={32} />
