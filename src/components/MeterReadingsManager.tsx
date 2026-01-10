@@ -6,17 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import MeterManagementTab from './meter-readings/MeterManagementTab';
+import MeterFiltersTab from './meter-readings/MeterFiltersTab';
+import MeterReadingsTable from './meter-readings/MeterReadingsTable';
 
 interface MeterReading {
   id: string;
@@ -84,7 +79,6 @@ const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
       const usersArr = JSON.parse(usersJSON);
       setUsers(usersArr);
       
-      // Загружаем данные для управления ПУ
       const plotsMap = new Map<string, any>();
       usersArr.forEach((user: any) => {
         const plotNumber = user.plotNumber;
@@ -107,7 +101,6 @@ const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
         }
       });
 
-      // Добавляем последние показания
       if (readingsJSON) {
         const allReadings = JSON.parse(readingsJSON);
         plotsMap.forEach((plotData) => {
@@ -194,7 +187,6 @@ const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
       localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
       setUsers(updatedUsers);
 
-      // Обновляем все показания с старым номером ПУ
       const readingsJSON = localStorage.getItem('snt_meter_readings');
       if (readingsJSON) {
         const allReadings = JSON.parse(readingsJSON);
@@ -312,205 +304,31 @@ const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
             </TabsList>
 
             <TabsContent value="meters" className="mt-4">
-              <div className="rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[100px]">Участок</TableHead>
-                      <TableHead>Номер ПУ</TableHead>
-                      <TableHead>Пользователи</TableHead>
-                      <TableHead className="w-[120px] text-right">Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {plotsData.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                          <Icon name="Search" className="mx-auto mb-2" size={32} />
-                          <p>Нет данных о приборах учёта</p>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      plotsData.map((plot) => (
-                        <TableRow key={plot.plotNumber}>
-                          <TableCell className="font-medium">№{plot.plotNumber}</TableCell>
-                          <TableCell>
-                            {plot.meterNumber ? (
-                              <div className="flex items-center gap-2">
-                                <Icon name="Lock" size={16} className="text-muted-foreground" />
-                                <span className="font-mono">{plot.meterNumber}</span>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">Не указан</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col gap-1">
-                              {plot.users.map((user, idx) => (
-                                <div key={idx} className="text-sm">
-                                  {user.fullName}
-                                </div>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {plot.meterNumber ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUnlockPlot(plot.plotNumber)}
-                                className="border-orange-300 text-orange-700 hover:bg-orange-50"
-                              >
-                                <Icon name="Unlock" size={16} className="mr-1" />
-                                Разблокировать
-                              </Button>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Icon name="Info" size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-1">Важная информация:</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li>Номер ПУ автоматически синхронизируется между всеми пользователями участка</li>
-                      <li>После разблокировки пользователь сможет изменить номер ПУ</li>
-                      <li>Новый номер ПУ будет доступен всем пользователям участка</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+              <MeterManagementTab 
+                plotsData={plotsData} 
+                onUnlockPlot={handleUnlockPlot} 
+              />
             </TabsContent>
 
             <TabsContent value="filters" className="mt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Поиск</label>
-                  <Input
-                    placeholder="Участок, ФИО, номер ПУ..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Месяц</label>
-                  <select
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                  >
-                    <option value="all">Все месяцы</option>
-                    {uniqueMonths.map(month => (
-                      <option key={month} value={month}>{month}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Icon name="TrendingUp" size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-green-800">
-                    <p className="font-medium mb-1">Фильтруются показания:</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li>По участку, ФИО пользователя или номеру ПУ</li>
-                      <li>По выбранному месяцу передачи показаний</li>
-                      <li>Результаты отображаются в таблице ниже и доступны для экспорта</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+              <MeterFiltersTab 
+                searchTerm={searchTerm}
+                selectedMonth={selectedMonth}
+                uniqueMonths={uniqueMonths}
+                onSearchChange={setSearchTerm}
+                onMonthChange={setSelectedMonth}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Участок</TableHead>
-                  <TableHead>ФИО</TableHead>
-                  <TableHead>Номер ПУ</TableHead>
-                  <TableHead>Показания (кВт⋅ч)</TableHead>
-                  <TableHead>Дата передачи</TableHead>
-                  <TableHead>Месяц</TableHead>
-                  <TableHead>Действия</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredReadings.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      Нет данных для отображения
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredReadings.map((reading) => (
-                    <TableRow key={reading.id}>
-                      <TableCell className="font-medium">{reading.plotNumber}</TableCell>
-                      <TableCell>{getUserName(reading.email)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{reading.meterNumber}</Badge>
-                      </TableCell>
-                      <TableCell className="font-semibold">{reading.reading}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{reading.date}</TableCell>
-                      <TableCell className="text-sm">{reading.month}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEditMeterClick(reading)}
-                            title="Редактировать номер ПУ"
-                          >
-                            <Icon name="Pencil" size={16} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleUnlockPlot(reading.plotNumber)}
-                            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                            title="Разблокировать номер ПУ"
-                          >
-                            <Icon name="Unlock" size={16} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Icon name="Info" className="text-blue-600 mt-0.5" size={20} />
-          <div className="text-sm text-blue-800">
-            <p className="font-semibold mb-1">Информация:</p>
-            <ul className="space-y-1 list-disc list-inside">
-              <li>Показания принимаются с 22 по 25 число каждого месяца</li>
-              <li>После первого ввода номер прибора учёта блокируется автоматически</li>
-              <li>Для изменения номера ПУ используйте кнопку редактирования или разблокировки</li>
-              <li><Icon name="Pencil" size={14} className="inline" /> — изменить номер ПУ немедленно</li>
-              <li><Icon name="Unlock" size={14} className="inline" /> — разблокировать для самостоятельного ввода участником</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      <MeterReadingsTable 
+        readings={filteredReadings}
+        getUserName={getUserName}
+        onEditMeterClick={handleEditMeterClick}
+        onUnlockPlot={handleUnlockPlot}
+      />
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
