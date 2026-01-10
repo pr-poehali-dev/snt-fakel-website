@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import MeterReadingsForm from './meter/MeterReadingsForm';
+import MeterReadingsDialogs from './meter/MeterReadingsDialogs';
+import MeterReadingsHistory from './meter/MeterReadingsHistory';
 
 interface MeterReadingsCardProps {
   currentUserEmail: string;
@@ -121,13 +119,10 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
       return;
     }
 
-    // Если номер ПУ не был заблокирован (первый ввод или после разблокировки),
-    // сначала показываем подтверждение номера ПУ
     if (!isMeterLocked) {
       setTempMeterNumber(meterNumber);
       setShowMeterConfirmDialog(true);
     } else {
-      // Если номер ПУ уже заблокирован, сразу показываем диалог с показаниями
       setShowConfirmDialog(true);
     }
   };
@@ -234,300 +229,40 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
         )}
 
         {!alreadySubmitted && (
-          <>
-            <div className={`${canSubmit ? 'bg-green-50 border-green-200 text-green-800' : 'bg-blue-50 border-blue-200 text-blue-800'} border rounded-lg p-3 text-sm`}>
-              <Icon name="Info" size={16} className="inline mr-2" />
-              {canSubmit 
-                ? `Сегодня ${new Date().getDate()} число — период приёма показаний открыт!` 
-                : 'Показания принимаются с 22 по 25 число каждого месяца'
-              }
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label>Номер прибора учёта</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={meterNumber}
-                    onChange={(e) => handleMeterNumberChange(e.target.value)}
-                    disabled={isMeterLocked}
-                    placeholder="Введите номер ПУ"
-                  />
-                  {isMeterLocked && (
-                    <div className="flex items-center">
-                      <Icon name="Lock" className="text-muted-foreground" size={20} />
-                    </div>
-                  )}
-                  {isMeterLocked && (userRole === 'admin' || userRole === 'chairman') && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowUnlockDialog(true)}
-                      className="border-orange-300 text-orange-700 hover:bg-orange-50"
-                    >
-                      <Icon name="Unlock" size={16} className="mr-1" />
-                      Разблокировать
-                    </Button>
-                  )}
-                </div>
-                {isMeterLocked && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Для изменения номера обратитесь к администратору
-                  </p>
-                )}
-                {!isMeterLocked && (
-                  <Button
-                    type="button"
-                    variant={meterNumberConfirmed ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setMeterNumberConfirmed(!meterNumberConfirmed)}
-                    disabled={!meterNumber.trim()}
-                    className={`mt-2 w-full ${meterNumberConfirmed ? 'bg-green-500 hover:bg-green-600' : 'border-blue-300 text-blue-700 hover:bg-blue-50'}`}
-                  >
-                    <Icon name={meterNumberConfirmed ? "CheckCircle2" : "Circle"} size={16} className="mr-2" />
-                    {meterNumberConfirmed ? 'Номер ПУ подтверждён' : 'Подтвердить правильность номера ПУ'}
-                  </Button>
-                )}
-              </div>
-
-              <div>
-                <Label>Текущие показания (кВт⋅ч)</Label>
-                <Input
-                  type="number"
-                  value={reading}
-                  onChange={(e) => setReading(e.target.value)}
-                  placeholder="Введите показания"
-                  disabled={!canSubmit}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <Checkbox
-                id="confirm-readings"
-                checked={confirmed}
-                onCheckedChange={(checked) => setConfirmed(checked as boolean)}
-                disabled={!canSubmit}
-              />
-              <div className="flex-1">
-                <label
-                  htmlFor="confirm-readings"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  Подтверждаю правильность переданных показаний
-                </label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Убедитесь, что показания введены корректно. После отправки изменить их будет невозможно.
-                </p>
-              </div>
-            </div>
-
-            <Button
-              onClick={handleSubmitClick}
-              disabled={!canSubmit || !meterNumber.trim() || !reading.trim() || !confirmed || (!isMeterLocked && !meterNumberConfirmed)}
-              className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
-            >
-              <Icon name="Send" size={18} className="mr-2" />
-              Передать показания
-            </Button>
-
-            <Dialog open={showMeterConfirmDialog} onOpenChange={setShowMeterConfirmDialog}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Icon name="Gauge" className="text-blue-500" />
-                    Подтверждение номера прибора учёта
-                  </DialogTitle>
-                  <DialogDescription>
-                    Проверьте правильность введённого номера ПУ
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="bg-blue-50 rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-600">Участок:</span>
-                      <span className="font-semibold">№{plotNumber}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-600">Номер прибора учёта:</span>
-                      <span className="font-semibold text-lg">{tempMeterNumber}</span>
-                    </div>
-                  </div>
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <Icon name="AlertCircle" size={18} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-yellow-800">
-                        <p className="font-medium mb-1">Внимание!</p>
-                        <p>После подтверждения номер ПУ будет сохранён и заблокирован. Изменить его можно будет только через администратора или председателя.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter className="gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowMeterConfirmDialog(false)}
-                  >
-                    Изменить номер
-                  </Button>
-                  <Button
-                    onClick={handleConfirmMeterNumber}
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-                  >
-                    <Icon name="Check" size={18} className="mr-2" />
-                    Подтвердить номер ПУ
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Icon name="AlertCircle" className="text-orange-500" />
-                    Подтверждение данных
-                  </DialogTitle>
-                  <DialogDescription>
-                    Пожалуйста, проверьте правильность введённых данных перед отправкой
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Участок:</span>
-                      <span className="font-semibold">№{plotNumber}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Номер ПУ:</span>
-                      <span className="font-semibold">{meterNumber}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Показания:</span>
-                      <span className="font-semibold text-lg">{reading} кВт⋅ч</span>
-                    </div>
-                  </div>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-                    <Icon name="Info" size={16} className="inline mr-2" />
-                    После отправки данные нельзя будет изменить в текущем месяце
-                  </div>
-                </div>
-                <DialogFooter className="gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowConfirmDialog(false)}
-                  >
-                    Отменить
-                  </Button>
-                  <Button
-                    onClick={handleConfirmSubmit}
-                    className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
-                  >
-                    <Icon name="Check" size={18} className="mr-2" />
-                    Подтвердить отправку
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={showUnlockDialog} onOpenChange={setShowUnlockDialog}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Icon name="Unlock" className="text-orange-500" />
-                    Разблокировка номера прибора учёта
-                  </DialogTitle>
-                  <DialogDescription>
-                    Вы уверены, что хотите разблокировать номер ПУ для этого участка?
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                    <div className="flex gap-2">
-                      <Icon name="AlertTriangle" size={18} className="text-orange-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-orange-800">
-                        <p className="font-medium mb-1">Внимание!</p>
-                        <p>После разблокировки пользователь сможет изменить номер прибора учёта. Текущий номер будет удалён.</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Участок:</span>
-                      <span className="font-semibold">№{plotNumber}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Текущий номер ПУ:</span>
-                      <span className="font-semibold">{meterNumber}</span>
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter className="gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowUnlockDialog(false)}
-                  >
-                    Отменить
-                  </Button>
-                  <Button
-                    onClick={handleUnlockMeterNumber}
-                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                  >
-                    <Icon name="Unlock" size={18} className="mr-2" />
-                    Разблокировать
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {!canSubmit && (
-              <p className="text-sm text-center text-muted-foreground">
-                Передача показаний будет доступна с 22 по 25 число месяца
-              </p>
-            )}
-          </>
+          <MeterReadingsForm
+            canSubmit={canSubmit}
+            meterNumber={meterNumber}
+            handleMeterNumberChange={handleMeterNumberChange}
+            isMeterLocked={isMeterLocked}
+            userRole={userRole}
+            setShowUnlockDialog={setShowUnlockDialog}
+            meterNumberConfirmed={meterNumberConfirmed}
+            setMeterNumberConfirmed={setMeterNumberConfirmed}
+            reading={reading}
+            setReading={setReading}
+            confirmed={confirmed}
+            setConfirmed={setConfirmed}
+            handleSubmitClick={handleSubmitClick}
+          />
         )}
 
-        {readingsHistory.length > 0 && (
-          <div className="mt-6 border-t pt-4">
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <Icon name="History" size={18} />
-              История показаний
-            </h4>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {readingsHistory.map((record, index) => (
-                <div
-                  key={record.id}
-                  className={`flex items-center justify-between p-3 rounded-lg ${
-                    index === 0
-                      ? 'bg-blue-50 border border-blue-200'
-                      : 'bg-gray-50 border border-gray-200'
-                  }`}
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {record.month}
-                      {index === 0 && (
-                        <span className="ml-2 text-xs bg-blue-500 text-white px-2 py-0.5 rounded">
-                          Текущий
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {record.date}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-gray-700">
-                      {record.reading} <span className="text-sm font-normal">кВт⋅ч</span>
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <MeterReadingsDialogs
+          showMeterConfirmDialog={showMeterConfirmDialog}
+          setShowMeterConfirmDialog={setShowMeterConfirmDialog}
+          showConfirmDialog={showConfirmDialog}
+          setShowConfirmDialog={setShowConfirmDialog}
+          showUnlockDialog={showUnlockDialog}
+          setShowUnlockDialog={setShowUnlockDialog}
+          plotNumber={plotNumber}
+          tempMeterNumber={tempMeterNumber}
+          meterNumber={meterNumber}
+          reading={reading}
+          handleConfirmMeterNumber={handleConfirmMeterNumber}
+          handleConfirmSubmit={handleConfirmSubmit}
+          handleUnlockMeterNumber={handleUnlockMeterNumber}
+        />
+
+        <MeterReadingsHistory readingsHistory={readingsHistory} />
       </CardContent>
     </Card>
   );
