@@ -319,7 +319,7 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
         />
 
         <div className="grid">
-          <MeterReadingsCard currentUserEmail={currentUserEmail} />
+          <MeterReadingsCard currentUserEmail={currentUserEmail} userRole={userRole} />
         </div>
       </div>
     </section>

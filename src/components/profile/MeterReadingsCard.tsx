@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 
 interface MeterReadingsCardProps {
   currentUserEmail: string;
+  userRole?: string;
 }
 
 interface MeterReading {
@@ -22,7 +23,7 @@ interface MeterReading {
   month: string;
 }
 
-const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
+const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProps) => {
   const [meterNumber, setMeterNumber] = useState('');
   const [reading, setReading] = useState('');
   const [isMeterLocked, setIsMeterLocked] = useState(false);
@@ -38,6 +39,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
   const [showMeterConfirmDialog, setShowMeterConfirmDialog] = useState(false);
   const [tempMeterNumber, setTempMeterNumber] = useState('');
   const [meterNumberConfirmed, setMeterNumberConfirmed] = useState(false);
+  const [showUnlockDialog, setShowUnlockDialog] = useState(false);
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -146,6 +148,22 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
     setShowConfirmDialog(true);
   };
 
+  const handleUnlockMeterNumber = () => {
+    const usersJSON = localStorage.getItem('snt_users');
+    if (usersJSON) {
+      const users = JSON.parse(usersJSON);
+      const updatedUsers = users.map((u: any) =>
+        u.email === currentUserEmail ? { ...u, meterNumber: '' } : u
+      );
+      localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
+      setIsMeterLocked(false);
+      setMeterNumber('');
+      setMeterNumberConfirmed(false);
+    }
+    setShowUnlockDialog(false);
+    toast.success('Номер прибора учёта разблокирован');
+  };
+
   const handleConfirmSubmit = () => {
     const readingsJSON = localStorage.getItem('snt_meter_readings');
     const readings: MeterReading[] = readingsJSON ? JSON.parse(readingsJSON) : [];
@@ -239,6 +257,18 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
                     <div className="flex items-center">
                       <Icon name="Lock" className="text-muted-foreground" size={20} />
                     </div>
+                  )}
+                  {isMeterLocked && (userRole === 'admin' || userRole === 'chairman') && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowUnlockDialog(true)}
+                      className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                    >
+                      <Icon name="Unlock" size={16} className="mr-1" />
+                      Разблокировать
+                    </Button>
                   )}
                 </div>
                 {isMeterLocked && (
@@ -396,6 +426,56 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
                   >
                     <Icon name="Check" size={18} className="mr-2" />
                     Подтвердить отправку
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={showUnlockDialog} onOpenChange={setShowUnlockDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Icon name="Unlock" className="text-orange-500" />
+                    Разблокировка номера прибора учёта
+                  </DialogTitle>
+                  <DialogDescription>
+                    Вы уверены, что хотите разблокировать номер ПУ для этого участка?
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <Icon name="AlertTriangle" size={18} className="text-orange-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-orange-800">
+                        <p className="font-medium mb-1">Внимание!</p>
+                        <p>После разблокировки пользователь сможет изменить номер прибора учёта. Текущий номер будет удалён.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Участок:</span>
+                      <span className="font-semibold">№{plotNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Текущий номер ПУ:</span>
+                      <span className="font-semibold">{meterNumber}</span>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowUnlockDialog(false)}
+                  >
+                    Отменить
+                  </Button>
+                  <Button
+                    onClick={handleUnlockMeterNumber}
+                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                  >
+                    <Icon name="Unlock" size={18} className="mr-2" />
+                    Разблокировать
                   </Button>
                 </DialogFooter>
               </DialogContent>
