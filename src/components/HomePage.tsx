@@ -26,6 +26,7 @@ interface NewsItem {
   date: string;
   category: string;
   text: string;
+  images?: string[];
   showOnMainPage?: boolean;
   mainPageExpiresAt?: string;
 }

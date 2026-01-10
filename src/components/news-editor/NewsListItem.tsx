@@ -16,6 +16,7 @@ interface NewsItem {
   date: string;
   category: string;
   text: string;
+  images?: string[];
   showOnMainPage?: boolean;
   mainPageExpiresAt?: string;
   createdBy?: string;
@@ -58,7 +59,19 @@ const NewsListItem = ({
               <span className="text-sm text-muted-foreground">{item.date}</span>
             </div>
             <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
-            <p className="text-muted-foreground">{item.text}</p>
+            {item.images && item.images.length > 0 && (
+              <div className="flex gap-2 mb-3 overflow-x-auto">
+                {item.images.map((image, index) => (
+                  <img 
+                    key={index}
+                    src={image} 
+                    alt={`Preview ${index + 1}`}
+                    className="h-20 w-20 object-cover rounded border-2 border-gray-200 flex-shrink-0"
+                  />
+                ))}
+              </div>
+            )}
+            <p className="text-muted-foreground line-clamp-2">{item.text}</p>
             {item.createdBy && (
               <p className="text-xs text-muted-foreground mt-2">
                 Создал: {item.createdBy}

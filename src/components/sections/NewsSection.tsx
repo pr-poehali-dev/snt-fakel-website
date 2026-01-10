@@ -14,6 +14,7 @@ interface NewsItem {
   date: string;
   category: string;
   text: string;
+  images?: string[];
 }
 
 interface NewsSectionProps {
@@ -88,6 +89,15 @@ const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionPro
         <TabsContent value="all" className="space-y-6">
           {news.map((item) => (
             <Card key={item.id}>
+              {item.images && item.images.length > 0 && (
+                <div className="w-full h-64 overflow-hidden">
+                  <img 
+                    src={item.images[0]} 
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
                   <Badge>{item.category}</Badge>
@@ -119,7 +129,19 @@ const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionPro
                 <CardTitle>{item.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{item.text}</p>
+                {item.images && item.images.length > 1 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                    {item.images.slice(1).map((image, index) => (
+                      <img 
+                        key={index}
+                        src={image} 
+                        alt={`${item.title} - изображение ${index + 2}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                    ))}
+                  </div>
+                )}
+                <p className="text-muted-foreground whitespace-pre-wrap">{item.text}</p>
               </CardContent>
             </Card>
           ))}

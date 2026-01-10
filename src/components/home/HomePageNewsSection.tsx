@@ -11,6 +11,7 @@ interface NewsItem {
   date: string;
   category: string;
   text: string;
+  images?: string[];
   showOnMainPage?: boolean;
   mainPageExpiresAt?: string;
 }
@@ -96,6 +97,15 @@ const HomePageNewsSection = ({ news, setActiveSection }: HomePageNewsSectionProp
               className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 cursor-pointer"
               onClick={() => setSelectedNews(item)}
             >
+              {item.images && item.images.length > 0 && (
+                <div className="w-full h-48 overflow-hidden">
+                  <img 
+                    src={item.images[0]} 
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
                   <Badge variant="outline">{item.category}</Badge>
@@ -164,6 +174,20 @@ const HomePageNewsSection = ({ news, setActiveSection }: HomePageNewsSectionProp
                 </div>
                 <DialogTitle className="text-2xl">{selectedNews.title}</DialogTitle>
               </DialogHeader>
+              
+              {selectedNews.images && selectedNews.images.length > 0 && (
+                <div className="space-y-3 mb-4">
+                  {selectedNews.images.map((image, index) => (
+                    <img 
+                      key={index}
+                      src={image} 
+                      alt={`${selectedNews.title} - изображение ${index + 1}`}
+                      className="w-full rounded-lg"
+                    />
+                  ))}
+                </div>
+              )}
+              
               <DialogDescription className="text-base text-foreground whitespace-pre-wrap leading-relaxed">
                 {selectedNews.text}
               </DialogDescription>

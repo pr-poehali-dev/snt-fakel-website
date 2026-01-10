@@ -18,6 +18,7 @@ interface NewsItem {
   date: string;
   category: string;
   text: string;
+  images?: string[];
   showOnMainPage?: boolean;
   mainPageExpiresAt?: string;
   createdBy?: string;
@@ -41,6 +42,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     title: '',
     category: 'Важное',
     text: '',
+    images: [] as string[],
     showOnMainPage: false,
     mainPageDuration: '7'
   });
@@ -134,6 +136,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       title: formData.title,
       category: formData.category,
       text: formData.text,
+      images: formData.images,
       date: new Date().toLocaleDateString('ru-RU'),
       showOnMainPage: formData.showOnMainPage,
       mainPageExpiresAt: formData.showOnMainPage 
@@ -161,6 +164,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       title: item.title,
       category: item.category,
       text: item.text,
+      images: item.images || [],
       showOnMainPage: item.showOnMainPage || false,
       mainPageDuration: '7'
     });
@@ -188,6 +192,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
           title: formData.title, 
           category: formData.category, 
           text: formData.text,
+          images: formData.images,
           showOnMainPage: formData.showOnMainPage,
           mainPageExpiresAt: formData.showOnMainPage 
             ? new Date(Date.now() + parseInt(formData.mainPageDuration) * 24 * 60 * 60 * 1000).toISOString()
@@ -274,6 +279,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       title: '',
       category: 'Важное',
       text: '',
+      images: [],
       showOnMainPage: false,
       mainPageDuration: '7'
     });
