@@ -88,9 +88,9 @@ const MeterReadingsForm = ({
               type="button"
               variant={meterNumberConfirmed ? "default" : "outline"}
               size="sm"
-              onClick={() => setMeterNumberConfirmed(!meterNumberConfirmed)}
-              disabled={!meterNumber.trim()}
-              className={`mt-2 w-full ${meterNumberConfirmed ? 'bg-green-500 hover:bg-green-600' : 'border-blue-300 text-blue-700 hover:bg-blue-50'}`}
+              onClick={() => setMeterNumberConfirmed(true)}
+              disabled={!meterNumber.trim() || meterNumberConfirmed}
+              className={`mt-2 w-full ${meterNumberConfirmed ? 'bg-green-500 hover:bg-green-600 cursor-not-allowed' : 'border-blue-300 text-blue-700 hover:bg-blue-50'}`}
             >
               <Icon name={meterNumberConfirmed ? "CheckCircle2" : "Circle"} size={16} className="mr-2" />
               {meterNumberConfirmed ? 'Номер ПУ подтверждён' : 'Подтвердить правильность номера ПУ'}
