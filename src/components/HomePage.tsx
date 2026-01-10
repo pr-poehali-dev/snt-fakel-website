@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import Icon from '@/components/ui/icon';
 import MeterReadingsNotification from './MeterReadingsNotification';
 import CompletedVotings from './CompletedVotings';
 import VotingCard from './VotingCard';
 import HolidayDecor from './HolidayDecor';
 import ChristmasTree from './ChristmasTree';
-import { toast } from 'sonner';
+import HomePageHero from './home/HomePageHero';
+import HomePageBenefits from './home/HomePageBenefits';
+import HomePageAbout from './home/HomePageAbout';
+import HomePageNewsSection from './home/HomePageNewsSection';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -78,9 +76,7 @@ const defaultContent: HomePageContent = {
 const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handleVote, setActiveSection }: HomePageProps) => {
   const [content, setContent] = useState<HomePageContent>(defaultContent);
   const [activeVotings, setActiveVotings] = useState<any[]>([]);
-  const [newsCarouselIndex, setNewsCarouselIndex] = useState(0);
   const [news, setNews] = useState<NewsItem[]>(initialNews);
-  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 
   useEffect(() => {
     const loadContent = () => {
@@ -116,7 +112,6 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
           const now = new Date();
           const completedVotingIds: string[] = [];
           
-          // Автоматически закрываем истекшие голосования
           const updatedVotings = votings.map((v: any) => {
             const endDate = new Date(v.endDate);
             if (v.status === 'active' && endDate < now) {
@@ -126,12 +121,10 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
             return v;
           });
           
-          // Сохраняем обновленные голосования и отправляем уведомления
           if (completedVotingIds.length > 0) {
             localStorage.setItem('snt_votings', JSON.stringify(updatedVotings));
             window.dispatchEvent(new Event('votings-updated'));
             
-            // Отправляем уведомления для каждого завершённого голосования
             for (const votingId of completedVotingIds) {
               const voting = updatedVotings.find((v: any) => v.id === votingId);
               if (voting) {
@@ -153,18 +146,15 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
 
     const sendVotingCompletionNotification = async (voting: any) => {
       try {
-        // Проверяем, не отправляли ли мы уже уведомление для этого голосования
         const notificationSentKey = `voting_notification_sent_${voting.id}`;
         if (localStorage.getItem(notificationSentKey)) {
           return;
         }
 
-        // Получаем список всех пользователей
         const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
         const usersData = await usersResponse.json();
         const users = usersData.users || [];
 
-        // Подсчитываем результаты
         const totalVotes = Object.values(voting.votes || {}).reduce((sum: number, count: any) => sum + count, 0);
         const results = voting.options.map((option: string, idx: number) => {
           const votes = voting.votes?.[idx] || 0;
@@ -172,7 +162,6 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
           return { option, votes, percentage };
         });
 
-        // Отправляем уведомления
         const response = await fetch('https://functions.poehali.dev/ba6cda1e-5207-4b2e-b0b9-30cce2155cd1', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -185,7 +174,6 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
         });
 
         if (response.ok) {
-          // Отмечаем, что уведомление отправлено
           localStorage.setItem(notificationSentKey, 'true');
           console.log(`Уведомления о завершении голосования "${voting.title}" отправлены`);
         }
@@ -210,7 +198,6 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
       loadNews();
     };
 
-    // Периодическая проверка истекших голосований (каждые 60 секунд)
     const interval = setInterval(() => {
       loadVotings();
     }, 60000);
@@ -226,271 +213,45 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
     };
   }, [initialNews]);
 
-  const renderHero = () => (
-    <section key="hero" className="mb-16 text-center">
-      <div className="relative inline-block">
-        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-pink-100 px-4 py-2 rounded-full mb-3 relative z-10">
-          <Icon name="Sparkles" size={18} className="text-orange-600" />
-          <span className="text-sm font-medium text-orange-800">{content.hero.subtitle}</span>
-        </div>
-        <div className="christmas-lights-garland">
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-          <div className="garland-light"></div>
-        </div>
-        <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight relative z-10 mt-8">
-          {content.hero.title}
-        </h2>
-      </div>
-      <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-        {content.hero.description}
-      </p>
-    </section>
-  );
-
-  const renderBenefits = () => {
-    if (!content.benefits || content.benefits.length === 0) return null;
-    
-    return (
-      <section key="benefits" className="mb-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {content.benefits.map((benefit) => (
-            <Card key={benefit.id} className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardContent className="pt-6 text-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center mb-4 mx-auto shadow-lg">
-                  <Icon name={benefit.icon as any} className="text-white" size={24} />
-                </div>
-                <h4 className="text-lg font-bold mb-2">{benefit.title}</h4>
-                <p className="text-sm text-muted-foreground">{benefit.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-    );
-  };
-
-  const renderAbout = () => (
-    <section key="about" className="mb-16">
-      <Card className="border-2 bg-gradient-to-br from-orange-50 to-pink-50">
-        <CardContent className="pt-8 pb-8">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center mb-4 mx-auto">
-              <Icon name="Info" className="text-white" size={24} />
-            </div>
-            <h3 className="text-2xl font-bold mb-4">{content.about.title}</h3>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {content.about.description}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </section>
-  );
-
-  const blockComponents: Record<string, () => JSX.Element> = {
-    hero: renderHero,
-    benefits: renderBenefits,
-    about: renderAbout
+  const renderBlock = (blockType: string) => {
+    switch (blockType) {
+      case 'hero':
+        return <HomePageHero key="hero" content={content.hero} />;
+      case 'benefits':
+        return <HomePageBenefits key="benefits" benefits={content.benefits} />;
+      case 'about':
+        return <HomePageAbout key="about" content={content.about} />;
+      default:
+        return null;
+    }
   };
 
   return (
     <>
-      {isLoggedIn && userRole !== 'guest' && (
-        <MeterReadingsNotification onNavigateToProfile={() => setActiveSection('profile')} />
-      )}
+      <div className="space-y-16">
+        {content.blockOrder.map((blockType) => renderBlock(blockType))}
 
-      {content.blockOrder.map((blockId) => {
-        const renderBlock = blockComponents[blockId];
-        return renderBlock ? renderBlock() : null;
-      })}
+        {isLoggedIn && userRole !== 'guest' && <MeterReadingsNotification />}
 
-      <section className="mb-16">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-            <Icon name="Vote" className="text-white" size={20} />
-          </div>
-          <h3 className="text-3xl font-bold">Активные голосования</h3>
-        </div>
-        {activeVotings.length === 0 ? (
-          <Card className="border-2">
-            <CardContent className="pt-12 pb-12 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Icon name="Vote" size={32} className="text-gray-400" />
-              </div>
-              <p className="text-lg text-muted-foreground">Нет активных голосований</p>
-              <p className="text-sm text-muted-foreground mt-2">Новые голосования появятся здесь</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {activeVotings.map((voting) => (
-              <VotingCard
-                key={voting.id}
-                voting={voting}
-                isLoggedIn={isLoggedIn}
-                userRole={userRole}
-                setActiveSection={setActiveSection}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <CompletedVotings userRole={userRole} setActiveSection={setActiveSection} />
-
-      <section>
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-            <Icon name="Newspaper" className="text-white" size={20} />
-          </div>
-          <h3 className="text-3xl font-bold">Последние новости</h3>
-        </div>
-        {(() => {
-          const mainPageNews = news.filter((item: any) => {
-            const isOnMainPage = item.showOnMainPage && 
-                                 item.mainPageExpiresAt && 
-                                 new Date(item.mainPageExpiresAt) > new Date();
-            const isImportantCategory = ['Важное', 'Мероприятия', 'Объявления'].includes(item.category);
-            return isOnMainPage && isImportantCategory;
-          }).slice(0, 12);
-
-          const itemsPerPage = 3;
-          const totalPages = Math.ceil(mainPageNews.length / itemsPerPage);
-          const showArrows = mainPageNews.length > itemsPerPage;
-
-          const visibleNews = mainPageNews.slice(
-            newsCarouselIndex * itemsPerPage,
-            (newsCarouselIndex + 1) * itemsPerPage
-          );
-
-          const handlePrev = () => {
-            setNewsCarouselIndex((prev) => (prev === 0 ? totalPages - 1 : prev - 1));
-          };
-
-          const handleNext = () => {
-            setNewsCarouselIndex((prev) => (prev === totalPages - 1 ? 0 : prev + 1));
-          };
-
-          if (mainPageNews.length === 0) {
-            return (
-              <Card className="border-2 border-dashed">
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  <Icon name="Newspaper" size={48} className="mx-auto mb-4 opacity-20" />
-                  <p>Нет новостей на главной странице</p>
-                </CardContent>
-              </Card>
-            );
-          }
-
-          return (
-            <div className="relative">
-              {showArrows && (
-                <Button
-                  onClick={handlePrev}
-                  variant="outline"
-                  size="icon"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 z-10 rounded-full w-10 h-10 bg-white shadow-lg hover:bg-orange-50"
-                >
-                  <Icon name="ChevronLeft" size={20} />
-                </Button>
-              )}
-              
-              <div className="grid md:grid-cols-3 gap-6">
-                {visibleNews.map((item: any) => (
-                  <Card 
-                    key={item.id} 
-                    className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 cursor-pointer"
-                    onClick={() => setSelectedNews(item)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline">{item.category}</Badge>
-                        <span className="text-xs text-muted-foreground">{item.date}</span>
-                      </div>
-                      <CardTitle className="text-lg">{item.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3">{item.text}</p>
-                      <div className="flex items-center gap-1 text-xs text-orange-500 mt-3 font-medium">
-                        <span>Читать полностью</span>
-                        <Icon name="ChevronRight" size={14} />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {showArrows && (
-                <Button
-                  onClick={handleNext}
-                  variant="outline"
-                  size="icon"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 z-10 rounded-full w-10 h-10 bg-white shadow-lg hover:bg-orange-50"
-                >
-                  <Icon name="ChevronRight" size={20} />
-                </Button>
-              )}
-
-              {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-6">
-                  {Array.from({ length: totalPages }).map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setNewsCarouselIndex(idx)}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        idx === newsCarouselIndex 
-                          ? 'bg-orange-500 w-6' 
-                          : 'bg-gray-300 hover:bg-gray-400'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
+        {activeVotings.length > 0 && (
+          <section>
+            <h3 className="text-3xl font-bold mb-8">Активные голосования</h3>
+            <div className="space-y-6">
+              {activeVotings.map((voting) => (
+                <VotingCard
+                  key={voting.id}
+                  voting={voting}
+                  setActiveSection={setActiveSection}
+                />
+              ))}
             </div>
-          );
-        })()}
-        <div className="mt-8 text-center">
-          <Button 
-            onClick={() => setActiveSection('news')}
-            variant="outline"
-            className="border-2 border-blue-300 hover:bg-blue-50"
-          >
-            <Icon name="Newspaper" size={18} className="mr-2" />
-            Все новости
-          </Button>
-        </div>
-      </section>
+          </section>
+        )}
 
-      <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          {selectedNews && (
-            <>
-              <DialogHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <Badge variant="outline" className="text-sm">{selectedNews.category}</Badge>
-                  <span className="text-sm text-muted-foreground">{selectedNews.date}</span>
-                </div>
-                <DialogTitle className="text-2xl">{selectedNews.title}</DialogTitle>
-              </DialogHeader>
-              <DialogDescription className="text-base text-foreground whitespace-pre-wrap leading-relaxed">
-                {selectedNews.text}
-              </DialogDescription>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+        <CompletedVotings setActiveSection={setActiveSection} />
+
+        <HomePageNewsSection news={news} setActiveSection={setActiveSection} />
+      </div>
       
       <HolidayDecor />
       <ChristmasTree side="left" />
