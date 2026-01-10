@@ -247,25 +247,17 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
                   </p>
                 )}
                 {!isMeterLocked && (
-                  <div className="flex items-start space-x-2 mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <Checkbox
-                      id="confirm-meter-number"
-                      checked={meterNumberConfirmed}
-                      onCheckedChange={(checked) => setMeterNumberConfirmed(checked as boolean)}
-                      disabled={!meterNumber.trim()}
-                    />
-                    <div className="flex-1">
-                      <label
-                        htmlFor="confirm-meter-number"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
-                        Подтверждаю правильность номера ПУ
-                      </label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        После подтверждения номер будет заблокирован
-                      </p>
-                    </div>
-                  </div>
+                  <Button
+                    type="button"
+                    variant={meterNumberConfirmed ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setMeterNumberConfirmed(!meterNumberConfirmed)}
+                    disabled={!meterNumber.trim()}
+                    className={`mt-2 w-full ${meterNumberConfirmed ? 'bg-green-500 hover:bg-green-600' : 'border-blue-300 text-blue-700 hover:bg-blue-50'}`}
+                  >
+                    <Icon name={meterNumberConfirmed ? "CheckCircle2" : "Circle"} size={16} className="mr-2" />
+                    {meterNumberConfirmed ? 'Номер ПУ подтверждён' : 'Подтвердить правильность номера ПУ'}
+                  </Button>
                 )}
               </div>
 
