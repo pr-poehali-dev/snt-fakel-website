@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import NewsEditorForm from './news-editor/NewsEditorForm';
+import NewsListItem from './news-editor/NewsListItem';
+import NewsHistoryDialog from './news-editor/NewsHistoryDialog';
 
 interface NewsHistoryEntry {
   date: string;
@@ -40,6 +35,15 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [selectedNewsHistory, setSelectedNewsHistory] = useState<NewsItem | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    category: 'Важное',
+    text: '',
+    showOnMainPage: false,
+    mainPageDuration: '7'
+  });
 
   const getCurrentUser = () => {
     const session = localStorage.getItem('snt_session');
@@ -80,20 +84,10 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       return `${minutes} ${minutes === 1 ? 'минута' : minutes < 5 ? 'минуты' : 'минут'}`;
     }
   };
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    category: 'Важное',
-    text: '',
-    showOnMainPage: false,
-    mainPageDuration: '7'
-  });
 
   useEffect(() => {
     loadNews();
     
-    // Проверить, есть ли новость для редактирования
     const editingId = localStorage.getItem('editing_news_id');
     if (editingId) {
       const id = parseInt(editingId);
@@ -285,128 +279,22 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     });
   };
 
+  const handleShowHistory = (item: NewsItem) => {
+    setSelectedNewsHistory(item);
+    setShowHistoryDialog(true);
+  };
+
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Icon name="Newspaper" className="text-primary" />
-            {isEditing ? 'Редактировать новость' : 'Добавить новость'}
-          </CardTitle>
-          <CardDescription>
-            Управление новостями и объявлениями СНТ
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Заголовок</Label>
-            <Input
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Введите заголовок новости"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Категория</Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Важное">Важное</SelectItem>
-                <SelectItem value="Мероприятия">Мероприятия</SelectItem>
-                <SelectItem value="Объявления">Объявления</SelectItem>
-                <SelectItem value="Финансы">Финансы</SelectItem>
-                <SelectItem value="Новости">Новости</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Текст новости</Label>
-            <Textarea
-              value={formData.text}
-              onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-              rows={6}
-              placeholder="Введите текст новости..."
-            />
-          </div>
-
-          <div className="space-y-4 p-4 bg-orange-50 rounded-lg border-2 border-orange-200">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="showOnMainPage"
-                checked={formData.showOnMainPage}
-                onChange={(e) => setFormData({ ...formData, showOnMainPage: e.target.checked })}
-                className="w-5 h-5 rounded border-orange-300 text-orange-500 focus:ring-orange-500"
-              />
-              <Label htmlFor="showOnMainPage" className="text-base font-semibold cursor-pointer">
-                <Icon name="Star" size={18} className="inline mr-1 text-orange-500" />
-                Разместить на главной странице
-              </Label>
-            </div>
-            
-            {formData.showOnMainPage && (
-              <div className="space-y-2 ml-7">
-                <Label>Длительность размещения</Label>
-                <Select 
-                  value={formData.mainPageDuration} 
-                  onValueChange={(value) => setFormData({ ...formData, mainPageDuration: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 день</SelectItem>
-                    <SelectItem value="3">3 дня</SelectItem>
-                    <SelectItem value="7">7 дней (неделя)</SelectItem>
-                    <SelectItem value="14">14 дней (2 недели)</SelectItem>
-                    <SelectItem value="30">30 дней (месяц)</SelectItem>
-                    <SelectItem value="60">60 дней (2 месяца)</SelectItem>
-                    <SelectItem value="90">90 дней (3 месяца)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-3">
-            {isEditing ? (
-              <>
-                <Button onClick={handleUpdate} className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600">
-                  <Icon name="Save" size={18} className="mr-2" />
-                  Сохранить изменения
-                </Button>
-                <Button onClick={resetForm} variant="outline" className="border-gray-300">
-                  <Icon name="X" size={18} className="mr-2" />
-                  Сбросить
-                </Button>
-                <Button onClick={() => onNavigate?.('news')} variant="outline" className="border-orange-300">
-                  <Icon name="ArrowLeft" size={18} className="mr-2" />
-                  К новостям
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button onClick={handleAdd} className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600">
-                  <Icon name="Plus" size={18} className="mr-2" />
-                  Добавить новость
-                </Button>
-                <Button onClick={resetForm} variant="outline" className="border-gray-300">
-                  <Icon name="RotateCcw" size={18} className="mr-2" />
-                  Очистить форму
-                </Button>
-                <Button onClick={() => onNavigate?.('news')} variant="outline" className="border-orange-300">
-                  <Icon name="ArrowLeft" size={18} className="mr-2" />
-                  К новостям
-                </Button>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      <NewsEditorForm
+        formData={formData}
+        isEditing={isEditing}
+        onFormDataChange={setFormData}
+        onAdd={handleAdd}
+        onUpdate={handleUpdate}
+        onReset={resetForm}
+        onNavigate={onNavigate}
+      />
 
       <Card>
         <CardHeader>
@@ -420,174 +308,25 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
             </div>
           ) : (
             news.map((item) => (
-              <Card key={item.id} className="border-2">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <Badge>{item.category}</Badge>
-                        {item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date() && (
-                          <Badge className="bg-orange-100 text-orange-700 border-orange-300">
-                            <Icon name="Star" size={12} className="mr-1" />
-                            На главной · {getTimeRemaining(item.mainPageExpiresAt)}
-                          </Badge>
-                        )}
-                        <span className="text-sm text-muted-foreground">{item.date}</span>
-                      </div>
-                      <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
-                      <p className="text-muted-foreground">{item.text}</p>
-                      {item.createdBy && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Создал: {item.createdBy}
-                          {item.lastEditedBy && item.lastEditedBy !== item.createdBy && (
-                            <> · Ред.: {item.lastEditedBy}</>
-                          )}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      {item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date() ? (
-                        <div className="flex gap-1">
-                          <Button
-                            onClick={() => handleToggleMainPage(item.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                            title="Убрать с главной"
-                          >
-                            <Icon name="StarOff" size={16} />
-                          </Button>
-                          <Select onValueChange={(value) => handleToggleMainPage(item.id, parseInt(value))}>
-                            <SelectTrigger className="h-8 w-[90px] text-xs">
-                              <SelectValue placeholder="Срок" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1">1 день</SelectItem>
-                              <SelectItem value="3">3 дня</SelectItem>
-                              <SelectItem value="7">7 дней</SelectItem>
-                              <SelectItem value="14">14 дней</SelectItem>
-                              <SelectItem value="30">30 дней</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ) : (
-                        <Select onValueChange={(value) => handleToggleMainPage(item.id, parseInt(value))}>
-                          <SelectTrigger className="h-8 w-[140px] text-xs">
-                            <SelectValue placeholder="📌 На главную" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1 день</SelectItem>
-                            <SelectItem value="3">3 дня</SelectItem>
-                            <SelectItem value="7">7 дней</SelectItem>
-                            <SelectItem value="14">14 дней</SelectItem>
-                            <SelectItem value="30">30 дней</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                      {item.history && item.history.length > 0 && (
-                        <Button
-                          onClick={() => {
-                            setSelectedNewsHistory(item);
-                            setShowHistoryDialog(true);
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          title="История изменений"
-                        >
-                          <Icon name="History" size={16} />
-                        </Button>
-                      )}
-                      <Button
-                        onClick={() => handleEdit(item)}
-                        variant="ghost"
-                        size="sm"
-                        title="Редактировать"
-                      >
-                        <Icon name="Pencil" size={16} />
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(item.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        title="Удалить"
-                      >
-                        <Icon name="Trash2" size={16} />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <NewsListItem
+                key={item.id}
+                item={item}
+                getTimeRemaining={getTimeRemaining}
+                onToggleMainPage={handleToggleMainPage}
+                onShowHistory={handleShowHistory}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))
           )}
         </CardContent>
       </Card>
 
-      <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Icon name="History" className="text-primary" />
-              История изменений
-            </DialogTitle>
-            <DialogDescription>
-              {selectedNewsHistory?.title}
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="max-h-[400px] pr-4">
-            {selectedNewsHistory?.history && selectedNewsHistory.history.length > 0 ? (
-              <div className="space-y-3">
-                {[...selectedNewsHistory.history].reverse().map((entry, index) => {
-                  const date = new Date(entry.date);
-                  const actionText = {
-                    created: 'Создана',
-                    edited: 'Отредактирована',
-                    published: 'Размещена на главной',
-                    unpublished: 'Убрана с главной'
-                  }[entry.action];
-                  
-                  const actionColor = {
-                    created: 'text-green-600',
-                    edited: 'text-blue-600',
-                    published: 'text-orange-600',
-                    unpublished: 'text-gray-600'
-                  }[entry.action];
-
-                  return (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-shrink-0 mt-1">
-                        <Icon 
-                          name={
-                            entry.action === 'created' ? 'Plus' :
-                            entry.action === 'edited' ? 'Pencil' :
-                            entry.action === 'published' ? 'Star' : 'StarOff'
-                          } 
-                          size={16} 
-                          className={actionColor}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{actionText}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {entry.author} · {date.toLocaleString('ru-RU', { 
-                            day: 'numeric', 
-                            month: 'long', 
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-4">История пуста</p>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+      <NewsHistoryDialog
+        open={showHistoryDialog}
+        onOpenChange={setShowHistoryDialog}
+        selectedNews={selectedNewsHistory}
+      />
     </div>
   );
 };
