@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -14,11 +15,13 @@ interface HeaderProps {
   handleLogout: () => void;
   onRegisterClick: () => void;
   onLoginClick: () => void;
+  currentUserEmail: string;
 }
 
-const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleLogout, onRegisterClick, onLoginClick }: HeaderProps) => {
+const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleLogout, onRegisterClick, onLoginClick, currentUserEmail }: HeaderProps) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const unreadCount = useUnreadMessages(currentUserEmail);
 
   const roleNames = {
     guest: 'Гость',
@@ -141,8 +144,15 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
                   className="w-full justify-start"
                   onClick={() => { setActiveSection('chat'); setShowMobileMenu(false); }}
                 >
-                  <Icon name="MessageCircle" size={18} className="mr-2" />
-                  Чат
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center">
+                      <Icon name="MessageCircle" size={18} className="mr-2" />
+                      Чат
+                    </div>
+                    {unreadCount > 0 && (
+                      <Badge className="bg-red-500 text-white">{unreadCount}</Badge>
+                    )}
+                  </div>
                 </Button>
                 <Button
                   variant="ghost"
@@ -210,8 +220,13 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
 
           <Card className="border hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveSection('chat')}>
             <CardContent className="pt-4 pb-4 text-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mb-2 mx-auto shadow">
+              <div className="relative w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mb-2 mx-auto shadow">
                 <Icon name="MessageCircle" className="text-white" size={20} />
+                {unreadCount > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </div>
+                )}
               </div>
               <h4 className="text-xs font-bold">Чат</h4>
             </CardContent>

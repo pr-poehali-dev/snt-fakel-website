@@ -316,6 +316,7 @@ const Index = () => {
         handleLogout={handleLogout}
         onRegisterClick={handleRegisterClick}
         onLoginClick={handleShowLogin}
+        currentUserEmail={currentUserEmail}
       />
 
       <main className="container mx-auto px-4 py-12">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
+import VisitorCounter from './VisitorCounter';
 
 interface FooterProps {
   setActiveSection: (section: string) => void;
@@ -108,8 +109,13 @@ const Footer = ({ setActiveSection }: FooterProps) => {
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-400">
-          © 2026 СНТ Факел. Все права защищены.
+        <div className="border-t border-gray-700 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-400">
+              © 2026 СНТ Факел. Все права защищены.
+            </div>
+            <VisitorCounter />
+          </div>
         </div>
       </div>
     </footer>
