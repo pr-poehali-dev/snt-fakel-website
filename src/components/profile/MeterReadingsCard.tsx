@@ -50,7 +50,6 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
         if (user.meterNumber) {
           setMeterNumber(user.meterNumber);
           setIsMeterLocked(true);
-          setMeterNumberConfirmed(true);
         }
 
         const readingsJSON = localStorage.getItem('snt_meter_readings');
