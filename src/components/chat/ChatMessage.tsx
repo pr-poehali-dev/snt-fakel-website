@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
 
@@ -16,6 +17,8 @@ interface Message {
   deleted?: boolean;
   deletedBy?: string;
   deletedAt?: string;
+  edited?: boolean;
+  editedAt?: string;
 }
 
 interface ChatMessageProps {
@@ -26,6 +29,7 @@ interface ChatMessageProps {
   currentUserEmail: string;
   isUserOnline?: boolean;
   onDeleteMessage: (messageId: number) => void;
+  onEditMessage: (messageId: number, newText: string) => void;
   onBlockUser: (userEmail: string, userName: string) => void;
   onUnblockUser: (userEmail: string) => void;
 }
@@ -38,10 +42,13 @@ const ChatMessage = ({
   currentUserEmail,
   isUserOnline = false,
   onDeleteMessage,
+  onEditMessage,
   onBlockUser,
   onUnblockUser
 }: ChatMessageProps) => {
   const [hideDeleted, setHideDeleted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(message.text);
 
   useEffect(() => {
     if (message.deleted && message.deletedAt) {
@@ -148,17 +155,85 @@ const ChatMessage = ({
           <span className="text-xs text-muted-foreground">{formatTimestamp(message.timestamp)}</span>
         </div>
         <div className="flex items-start gap-2">
-          <div
-            className={`rounded-2xl px-4 py-2 max-w-lg ${
-              isOwnMessage
-                ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white ml-auto'
-                : 'bg-secondary'
-            }`}
-          >
-            <p className="text-sm">{message.text}</p>
-          </div>
-          {isOwnMessage && (
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          {isEditing ? (
+            <div className="flex-1 flex gap-2 items-center">
+              <Input
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                className="flex-1"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (editText.trim() && editText.trim() !== message.text) {
+                      onEditMessage(message.id, editText.trim());
+                      setIsEditing(false);
+                    }
+                  }
+                  if (e.key === 'Escape') {
+                    setIsEditing(false);
+                    setEditText(message.text);
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 hover:bg-green-50"
+                onClick={() => {
+                  if (editText.trim() && editText.trim() !== message.text) {
+                    onEditMessage(message.id, editText.trim());
+                    setIsEditing(false);
+                  }
+                }}
+                title="Сохранить"
+              >
+                <Icon name="Check" size={16} className="text-green-500" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 hover:bg-red-50"
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditText(message.text);
+                }}
+                title="Отменить"
+              >
+                <Icon name="X" size={16} className="text-red-500" />
+              </Button>
+            </div>
+          ) : (
+            <div
+              className={`rounded-2xl px-4 py-2 max-w-lg ${
+                isOwnMessage
+                  ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white ml-auto'
+                  : 'bg-secondary'
+              }`}
+            >
+              <p className="text-sm">{message.text}</p>
+              {message.edited && (
+                <p className="text-xs mt-1 opacity-70">
+                  <Icon name="Edit" size={10} className="inline mr-1" />
+                  изменено
+                </p>
+              )}
+            </div>
+          )}
+          {isOwnMessage && !isEditing && (
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0 hover:bg-blue-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditing(true);
+                }}
+                title="Редактировать"
+              >
+                <Icon name="Edit" size={14} className="text-blue-500" />
+              </Button>
               <Button
                 size="sm"
                 variant="ghost"

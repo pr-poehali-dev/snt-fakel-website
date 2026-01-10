@@ -98,6 +98,53 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
       toast.error('Ошибка соединения');
     }
   };
+
+  const handleEditMessage = async (messageId: number, newText: string) => {
+    const message = messages.find(msg => msg.id === messageId);
+    
+    if (!message) {
+      toast.error('Сообщение не найдено');
+      return;
+    }
+    
+    const isOwnMessage = message.userEmail === currentUserEmail;
+    
+    if (!isOwnMessage) {
+      toast.error('Вы можете редактировать только свои сообщения');
+      return;
+    }
+
+    if (newText.trim() === message.text) {
+      return;
+    }
+
+    if (newText.trim() === '') {
+      toast.error('Сообщение не может быть пустым');
+      return;
+    }
+    
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'edit_message',
+          messageId,
+          newText: newText.trim(),
+          editedBy: currentUserEmail
+        })
+      });
+      
+      if (response.ok) {
+        toast.success('Сообщение изменено');
+        refreshMessages();
+      } else {
+        toast.error('Ошибка при редактировании сообщения');
+      }
+    } catch (error) {
+      toast.error('Ошибка соединения');
+    }
+  };
   
   const handleBlockUser = async (userEmail: string, userName: string) => {
     console.log('Block user attempt:', { userEmail, userName, isModerator, userRole });
@@ -351,6 +398,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                       currentUserEmail={currentUserEmail}
                       isUserOnline={isUserOnline}
                       onDeleteMessage={handleDeleteMessage}
+                      onEditMessage={handleEditMessage}
                       onBlockUser={handleBlockUser}
                       onUnblockUser={handleUnblockUser}
                     />

@@ -100,7 +100,8 @@ def handler(event: dict, context) -> dict:
             if action == 'chat_messages':
                 cur.execute('''
                     SELECT id, user_email, user_name, user_role, avatar, 
-                           message_text, created_at, is_removed, removed_by, removed_at
+                           message_text, created_at, is_removed, removed_by, removed_at,
+                           is_edited, edited_at, edited_by
                     FROM chat_messages
                     ORDER BY created_at ASC
                 ''')
@@ -126,6 +127,14 @@ def handler(event: dict, context) -> dict:
                         removed_at_moscow = removed_at_utc.astimezone(moscow_tz)
                         removed_at_str = removed_at_moscow.isoformat()
                     
+                    edited_at_str = ''
+                    if row.get('edited_at'):
+                        edited_at_utc = row['edited_at']
+                        if edited_at_utc.tzinfo is None:
+                            edited_at_utc = pytz.utc.localize(edited_at_utc)
+                        edited_at_moscow = edited_at_utc.astimezone(moscow_tz)
+                        edited_at_str = edited_at_moscow.isoformat()
+                    
                     messages.append({
                         'id': row['id'],
                         'userEmail': row['user_email'],
@@ -136,7 +145,10 @@ def handler(event: dict, context) -> dict:
                         'timestamp': timestamp_str,
                         'deleted': row['is_removed'],
                         'deletedBy': row['removed_by'],
-                        'deletedAt': removed_at_str
+                        'deletedAt': removed_at_str,
+                        'edited': row.get('is_edited', False),
+                        'editedAt': edited_at_str,
+                        'editedBy': row.get('edited_by')
                     })
                 
                 # Получить список заблокированных
@@ -645,6 +657,24 @@ def handler(event: dict, context) -> dict:
         elif method == 'PUT':
             body = json.loads(event.get('body', '{}'))
             action = body.get('action')
+            
+            if action == 'edit_message':
+                # Редактировать сообщение в чате
+                cur.execute('''
+                    UPDATE chat_messages 
+                    SET message_text = %s, is_edited = TRUE, edited_at = CURRENT_TIMESTAMP, edited_by = %s
+                    WHERE id = %s
+                ''', (body['newText'], body['editedBy'], body['messageId']))
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'success': True}),
+                    'isBase64Encoded': False
+                }
             
             if action == 'delete_message':
                 # Удалить сообщение в чате
