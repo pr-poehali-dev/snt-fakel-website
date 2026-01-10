@@ -56,6 +56,7 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'status'>('date-desc');
 
   const isBoardMember = userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member';
+  const canDelete = userRole === 'admin' || userRole === 'chairman';
 
   useEffect(() => {
     loadAppeals();
@@ -220,6 +221,19 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
     toast.success(`Статус изменён: ${statusNames[status]}`);
   };
 
+  const handleDeleteAppeal = (appealId: number) => {
+    const saved = localStorage.getItem('snt_board_appeals');
+    if (!saved) return;
+
+    const allAppeals: BoardAppeal[] = JSON.parse(saved);
+    const updatedAppeals = allAppeals.filter((appeal) => appeal.id !== appealId);
+
+    localStorage.setItem('snt_board_appeals', JSON.stringify(updatedAppeals));
+    window.dispatchEvent(new Event('board-appeals-updated'));
+
+    toast.success('Обращение удалено');
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -382,12 +396,14 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
               key={appeal.id}
               appeal={appeal}
               isBoardMember={isBoardMember}
+              canDelete={canDelete}
               selectedAppeal={selectedAppeal}
               setSelectedAppeal={setSelectedAppeal}
               responseMessage={responseMessage}
               setResponseMessage={setResponseMessage}
               onAddResponse={handleAddResponse}
               onChangeStatus={handleChangeStatus}
+              onDelete={handleDeleteAppeal}
               getStatusBadge={getStatusBadge}
             />
           ))}

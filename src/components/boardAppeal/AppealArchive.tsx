@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import { toast } from 'sonner';
 import AppealFilters from './AppealFilters';
 
 interface AppealResponse {
@@ -35,11 +36,13 @@ interface AppealArchiveProps {
 const AppealArchive = ({ currentUserEmail, userRole, onBack }: AppealArchiveProps) => {
   const [archivedAppeals, setArchivedAppeals] = useState<BoardAppeal[]>([]);
   const [expandedAppeal, setExpandedAppeal] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'resolved'>('resolved');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'status'>('date-desc');
 
   const isBoardMember = userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member';
+  const canDelete = userRole === 'admin' || userRole === 'chairman';
 
   useEffect(() => {
     loadArchivedAppeals();
@@ -94,6 +97,20 @@ const AppealArchive = ({ currentUserEmail, userRole, onBack }: AppealArchiveProp
     setSearchTerm('');
     setStatusFilter('resolved');
     setSortBy('date-desc');
+  };
+
+  const handleDeleteAppeal = (appealId: number) => {
+    const saved = localStorage.getItem('snt_board_appeals');
+    if (!saved) return;
+
+    const allAppeals: BoardAppeal[] = JSON.parse(saved);
+    const updatedAppeals = allAppeals.filter((appeal) => appeal.id !== appealId);
+
+    localStorage.setItem('snt_board_appeals', JSON.stringify(updatedAppeals));
+    window.dispatchEvent(new Event('board-appeals-updated'));
+
+    setDeleteConfirmId(null);
+    toast.success('Обращение удалено из архива');
   };
 
   return (
@@ -188,18 +205,64 @@ const AppealArchive = ({ currentUserEmail, userRole, onBack }: AppealArchiveProp
                       </span>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setExpandedAppeal(expandedAppeal === appeal.id ? null : appeal.id)}
-                    className="gap-2"
-                  >
-                    <Icon name={expandedAppeal === appeal.id ? "ChevronUp" : "ChevronDown"} size={16} />
-                    {expandedAppeal === appeal.id ? 'Скрыть' : 'Подробнее'}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandedAppeal(expandedAppeal === appeal.id ? null : appeal.id)}
+                      className="gap-2"
+                    >
+                      <Icon name={expandedAppeal === appeal.id ? "ChevronUp" : "ChevronDown"} size={16} />
+                      {expandedAppeal === appeal.id ? 'Скрыть' : 'Подробнее'}
+                    </Button>
+                    {canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteConfirmId(appeal.id)}
+                        className="gap-2 text-red-600 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Icon name="Trash2" size={16} />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               
+              {deleteConfirmId === appeal.id && (
+                <CardContent>
+                  <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                    <div className="flex items-start gap-3">
+                      <Icon name="AlertTriangle" className="text-red-600 mt-1" size={20} />
+                      <div className="flex-1">
+                        <p className="font-medium text-red-900 mb-2">Удалить обращение из архива?</p>
+                        <p className="text-sm text-red-700 mb-4">
+                          Это действие нельзя отменить. Обращение и все ответы будут удалены безвозвратно.
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteAppeal(appeal.id)}
+                            className="gap-2"
+                          >
+                            <Icon name="Trash2" size={16} />
+                            Да, удалить
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDeleteConfirmId(null)}
+                          >
+                            Отмена
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+
               {expandedAppeal === appeal.id && (
                 <CardContent>
                   <div className="bg-gray-50 p-4 rounded-lg mb-4">
