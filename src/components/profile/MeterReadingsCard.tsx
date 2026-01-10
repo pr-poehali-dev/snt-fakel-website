@@ -37,6 +37,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showMeterConfirmDialog, setShowMeterConfirmDialog] = useState(false);
   const [tempMeterNumber, setTempMeterNumber] = useState('');
+  const [meterNumberConfirmed, setMeterNumberConfirmed] = useState(false);
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -49,6 +50,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
         if (user.meterNumber) {
           setMeterNumber(user.meterNumber);
           setIsMeterLocked(true);
+          setMeterNumberConfirmed(true);
         }
 
         const readingsJSON = localStorage.getItem('snt_meter_readings');
@@ -84,11 +86,17 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
     if (isMeterLocked) return;
     
     setMeterNumber(newValue);
+    setMeterNumberConfirmed(false);
   };
 
   const handleSubmitClick = () => {
     if (!meterNumber.trim()) {
       toast.error('Введите номер прибора учёта');
+      return;
+    }
+
+    if (!isMeterLocked && !meterNumberConfirmed) {
+      toast.error('Подтвердите правильность номера прибора учёта');
       return;
     }
 
@@ -139,6 +147,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
         );
         localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
         setIsMeterLocked(true);
+        setMeterNumberConfirmed(true);
       }
     }
 
@@ -241,6 +250,27 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
                     Для изменения номера обратитесь к администратору
                   </p>
                 )}
+                {!isMeterLocked && (
+                  <div className="flex items-start space-x-2 mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Checkbox
+                      id="confirm-meter-number"
+                      checked={meterNumberConfirmed}
+                      onCheckedChange={(checked) => setMeterNumberConfirmed(checked as boolean)}
+                      disabled={!meterNumber.trim()}
+                    />
+                    <div className="flex-1">
+                      <label
+                        htmlFor="confirm-meter-number"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        Подтверждаю правильность номера ПУ
+                      </label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        После подтверждения номер будет заблокирован
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -277,7 +307,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
 
             <Button
               onClick={handleSubmitClick}
-              disabled={!canSubmit || !meterNumber.trim() || !reading.trim() || !confirmed}
+              disabled={!canSubmit || !meterNumber.trim() || !reading.trim() || !confirmed || (!isMeterLocked && !meterNumberConfirmed)}
               className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
             >
               <Icon name="Send" size={18} className="mr-2" />
