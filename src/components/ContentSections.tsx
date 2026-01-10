@@ -16,6 +16,7 @@ import BoardAppeal from './BoardAppeal';
 import CreateVoting from './CreateVoting';
 import VotingResults from './VotingResults';
 import HolidayDecorManager from './HolidayDecorManager';
+import SiteStatistics from './SiteStatistics';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -145,6 +146,10 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
   if (activeSection.startsWith('voting-results-') && (userRole === 'admin' || userRole === 'chairman')) {
     const votingId = parseInt(activeSection.replace('voting-results-', ''));
     return <VotingResults votingId={votingId} onBack={() => setActiveSection('home')} />;
+  }
+
+  if (activeSection === 'statistics' && (userRole === 'admin' || userRole === 'chairman')) {
+    return <SiteStatistics onBack={() => setActiveSection('profile')} />;
   }
 
   return null;

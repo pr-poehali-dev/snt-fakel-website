@@ -9,6 +9,7 @@ import Login from '@/components/Login';
 import PasswordReset from '@/components/PasswordReset';
 import VotingPage from '@/components/VotingPage';
 import ArchivedVotings from '@/components/ArchivedVotings';
+import { updateUserActivity } from '@/hooks/useOnlineUsers';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -131,7 +132,19 @@ const Index = () => {
     };
     
     initAdmin();
-  }, []);
+    
+    // Обновляем активность текущего пользователя
+    if (isLoggedIn && currentUserEmail) {
+      updateUserActivity(currentUserEmail);
+      
+      // Обновляем активность каждые 2 минуты
+      const activityInterval = setInterval(() => {
+        updateUserActivity(currentUserEmail);
+      }, 2 * 60 * 1000);
+      
+      return () => clearInterval(activityInterval);
+    }
+  }, [isLoggedIn, currentUserEmail]);
 
   const handleVote = (pollId: number, option: number) => {
     setVotes({ ...votes, [pollId]: option });
@@ -157,6 +170,9 @@ const Index = () => {
       expiresAt
     }));
     localStorage.setItem('current_user_email', email);
+    
+    // Обновляем активность пользователя
+    updateUserActivity(email);
   };
 
   const handleShowLogin = () => {

@@ -185,14 +185,24 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
             Управление документами
           </Button>
           {(userRole === 'admin' || userRole === 'chairman') && (
-            <Button 
-              variant="outline" 
-              className="w-full justify-start border-pink-500 text-pink-600 hover:bg-pink-50"
-              onClick={() => onNavigate?.('holiday-decor')}
-            >
-              <Icon name="Sparkles" size={18} className="mr-2" />
-              Праздничный декор
-            </Button>
+            <>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start border-pink-500 text-pink-600 hover:bg-pink-50"
+                onClick={() => onNavigate?.('holiday-decor')}
+              >
+                <Icon name="Sparkles" size={18} className="mr-2" />
+                Праздничный декор
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start border-cyan-500 text-cyan-600 hover:bg-cyan-50"
+                onClick={() => onNavigate?.('statistics')}
+              >
+                <Icon name="BarChart3" size={18} className="mr-2" />
+                Статистика сайта
+              </Button>
+            </>
           )}
           {userRole === 'admin' && (
             <>

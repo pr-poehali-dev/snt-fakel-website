@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -22,6 +23,7 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const unreadCount = useUnreadMessages(currentUserEmail);
+  const onlineCount = useOnlineUsers();
 
   const roleNames = {
     guest: 'Гость',
@@ -55,6 +57,12 @@ const Header = ({ isLoggedIn, userRole, activeSection, setActiveSection, handleL
             </div>
           </div>
           <div className="relative flex items-center gap-3">
+            {isLoggedIn && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 border border-green-200">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium text-green-700">{onlineCount} онлайн</span>
+              </div>
+            )}
             {!isLoggedIn ? (
               <>
                 <Button 
