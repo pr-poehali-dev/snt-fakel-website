@@ -40,6 +40,17 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
   const [showUnlockDialog, setShowUnlockDialog] = useState(false);
 
   useEffect(() => {
+    loadUserData();
+
+    const handleUpdate = () => {
+      loadUserData();
+    };
+
+    window.addEventListener('meter-readings-updated', handleUpdate);
+    return () => window.removeEventListener('meter-readings-updated', handleUpdate);
+  }, [currentUserEmail]);
+
+  const loadUserData = () => {
     const usersJSON = localStorage.getItem('snt_users');
     if (usersJSON) {
       const users = JSON.parse(usersJSON);
@@ -49,13 +60,17 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
         setPlotNumber(userPlot);
         
         // Синхронизация номера ПУ с другими пользователями участка
-        const plotUser = users.find((u: any) => u.plotNumber === userPlot && u.meterNumber);
-        if (plotUser && plotUser.meterNumber) {
-          setMeterNumber(plotUser.meterNumber);
-          setIsMeterLocked(true);
-        } else if (user.meterNumber) {
-          setMeterNumber(user.meterNumber);
-          setIsMeterLocked(true);
+        if (userPlot) {
+          const plotUser = users.find((u: any) => u.plotNumber === userPlot && u.meterNumber);
+          if (plotUser && plotUser.meterNumber) {
+            setMeterNumber(plotUser.meterNumber);
+            setIsMeterLocked(true);
+            setMeterNumberConfirmed(true);
+          } else if (user.meterNumber) {
+            setMeterNumber(user.meterNumber);
+            setIsMeterLocked(true);
+            setMeterNumberConfirmed(true);
+          }
         }
 
         const readingsJSON = localStorage.getItem('snt_meter_readings');
@@ -85,7 +100,7 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
 
     const today = new Date().getDate();
     setCanSubmit(today >= 22 && today <= 25);
-  }, [currentUserEmail]);
+  };
 
   const handleMeterNumberChange = (newValue: string) => {
     if (isMeterLocked) return;
@@ -140,6 +155,12 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
       const user = users.find((u: any) => u.email === currentUserEmail);
       const userPlot = user?.plotNumber;
       
+      if (!userPlot) {
+        toast.error('Не указан номер участка');
+        setShowMeterConfirmDialog(false);
+        return;
+      }
+      
       // Синхронизация номера ПУ для всех пользователей участка
       const updatedUsers = users.map((u: any) =>
         u.plotNumber === userPlot ? { ...u, meterNumber: meterNumber.trim() } : u
@@ -147,6 +168,10 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
       localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
       setIsMeterLocked(true);
       setMeterNumberConfirmed(true);
+      toast.success('Номер прибора учёта сохранён для всех пользователей участка');
+      
+      // Отправляем событие для обновления таблицы управления
+      window.dispatchEvent(new Event('meter-readings-updated'));
     }
     
     setShowMeterConfirmDialog(false);
