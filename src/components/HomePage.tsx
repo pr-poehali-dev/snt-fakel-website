@@ -74,10 +74,11 @@ const defaultContent: HomePageContent = {
   blockOrder: ['hero', 'benefits', 'about']
 };
 
-const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setActiveSection }: HomePageProps) => {
+const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handleVote, setActiveSection }: HomePageProps) => {
   const [content, setContent] = useState<HomePageContent>(defaultContent);
   const [activeVotings, setActiveVotings] = useState<any[]>([]);
   const [newsCarouselIndex, setNewsCarouselIndex] = useState(0);
+  const [news, setNews] = useState<NewsItem[]>(initialNews);
 
   useEffect(() => {
     const loadContent = () => {
@@ -88,6 +89,20 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
         } catch (e) {
           console.error('Error loading site content:', e);
         }
+      }
+    };
+
+    const loadNews = () => {
+      const savedNews = localStorage.getItem('snt_news');
+      if (savedNews) {
+        try {
+          const parsedNews = JSON.parse(savedNews);
+          setNews(parsedNews);
+        } catch (e) {
+          console.error('Error loading news:', e);
+        }
+      } else {
+        setNews(initialNews);
       }
     };
 
@@ -179,6 +194,7 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
 
     loadContent();
     loadVotings();
+    loadNews();
 
     const handleContentUpdate = () => {
       loadContent();
@@ -188,6 +204,10 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
       loadVotings();
     };
 
+    const handleNewsUpdate = () => {
+      loadNews();
+    };
+
     // Периодическая проверка истекших голосований (каждые 60 секунд)
     const interval = setInterval(() => {
       loadVotings();
@@ -195,12 +215,14 @@ const HomePage = ({ polls, news, isLoggedIn, userRole, votes, handleVote, setAct
 
     window.addEventListener('site-content-updated', handleContentUpdate);
     window.addEventListener('votings-updated', handleVotingsUpdate);
+    window.addEventListener('news-updated', handleNewsUpdate);
     return () => {
       clearInterval(interval);
       window.removeEventListener('site-content-updated', handleContentUpdate);
       window.removeEventListener('votings-updated', handleVotingsUpdate);
+      window.removeEventListener('news-updated', handleNewsUpdate);
     };
-  }, []);
+  }, [initialNews]);
 
   const renderHero = () => (
     <section key="hero" className="mb-16 text-center">

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
@@ -33,6 +34,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
   const [submittedReading, setSubmittedReading] = useState<number | null>(null);
   const [submittedDate, setSubmittedDate] = useState('');
   const [readingsHistory, setReadingsHistory] = useState<MeterReading[]>([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     const usersJSON = localStorage.getItem('snt_users');
@@ -76,7 +78,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
     setCanSubmit(today >= 22 && today <= 25);
   }, [currentUserEmail]);
 
-  const handleSubmit = () => {
+  const handleSubmitClick = () => {
     if (!meterNumber.trim()) {
       toast.error('Введите номер прибора учёта');
       return;
@@ -101,6 +103,12 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
       toast.error(`Показания по участку №${plotNumber} уже переданы в этом месяце`);
       return;
     }
+
+    // Показываем диалог подтверждения
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = () => {
 
     if (!isMeterLocked) {
       const usersJSON = localStorage.getItem('snt_users');
@@ -150,6 +158,7 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
     setConfirmed(false);
 
     window.dispatchEvent(new Event('meter-readings-updated'));
+    setShowConfirmDialog(false);
   };
 
   return (
@@ -247,13 +256,62 @@ const MeterReadingsCard = ({ currentUserEmail }: MeterReadingsCardProps) => {
             </div>
 
             <Button
-              onClick={handleSubmit}
+              onClick={handleSubmitClick}
               disabled={!canSubmit || !meterNumber.trim() || !reading.trim() || !confirmed}
               className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
             >
               <Icon name="Send" size={18} className="mr-2" />
               Передать показания
             </Button>
+
+            <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Icon name="AlertCircle" className="text-orange-500" />
+                    Подтверждение данных
+                  </DialogTitle>
+                  <DialogDescription>
+                    Пожалуйста, проверьте правильность введённых данных перед отправкой
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Участок:</span>
+                      <span className="font-semibold">№{plotNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Номер ПУ:</span>
+                      <span className="font-semibold">{meterNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Показания:</span>
+                      <span className="font-semibold text-lg">{reading} кВт⋅ч</span>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                    <Icon name="Info" size={16} className="inline mr-2" />
+                    После отправки данные нельзя будет изменить в текущем месяце
+                  </div>
+                </div>
+                <DialogFooter className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowConfirmDialog(false)}
+                  >
+                    Отменить
+                  </Button>
+                  <Button
+                    onClick={handleConfirmSubmit}
+                    className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+                  >
+                    <Icon name="Check" size={18} className="mr-2" />
+                    Подтвердить отправку
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             {!canSubmit && (
               <p className="text-sm text-center text-muted-foreground">
