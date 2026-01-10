@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
+import { toast } from 'sonner';
 
 interface CompletedVotingsProps {
   userRole: string;
@@ -12,6 +14,7 @@ interface CompletedVotingsProps {
 const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps) => {
   const [completedVotings, setCompletedVotings] = useState<any[]>([]);
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'title'>('date-desc');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; votingId: string | null }>({ show: false, votingId: null });
 
   useEffect(() => {
     loadCompletedVotings();
@@ -57,6 +60,27 @@ const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps)
       const percentage = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : '0';
       return { option, votes, percentage };
     });
+  };
+
+  const handleDeleteVoting = (votingId: string) => {
+    const votingsJSON = localStorage.getItem('snt_votings');
+    if (!votingsJSON) return;
+
+    const votings = JSON.parse(votingsJSON);
+    const updatedVotings = votings.filter((v: any) => v.id !== votingId);
+    localStorage.setItem('snt_votings', JSON.stringify(updatedVotings));
+
+    const allKeys = Object.keys(localStorage);
+    const voteKeys = allKeys.filter(key => 
+      key.startsWith(`voting_${votingId}_`) || 
+      key.startsWith(`voting_detail_${votingId}_`)
+    );
+
+    voteKeys.forEach(key => localStorage.removeItem(key));
+
+    window.dispatchEvent(new Event('votings-updated'));
+    toast.success('Голосование удалено');
+    setDeleteConfirm({ show: false, votingId: null });
   };
 
   if (completedVotings.length === 0) {
@@ -177,7 +201,7 @@ const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps)
                 </div>
 
                 {(userRole === 'admin' || userRole === 'chairman') && (
-                  <div className="pt-4 border-t">
+                  <div className="pt-4 border-t space-y-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -187,6 +211,17 @@ const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps)
                       <Icon name="BarChart3" size={16} className="mr-2" />
                       Детальные результаты
                     </Button>
+                    {userRole === 'admin' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDeleteConfirm({ show: true, votingId: voting.id })}
+                        className="w-full border-red-300 text-red-600 hover:bg-red-50"
+                      >
+                        <Icon name="Trash2" size={16} className="mr-2" />
+                        Удалить голосование
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -194,6 +229,35 @@ const CompletedVotings = ({ userRole, setActiveSection }: CompletedVotingsProps)
           );
         })}
       </div>
+
+      <Dialog open={deleteConfirm.show} onOpenChange={(open) => setDeleteConfirm({ show: open, votingId: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="AlertTriangle" className="text-red-500" />
+              Удаление голосования
+            </DialogTitle>
+            <DialogDescription>
+              Вы уверены, что хотите удалить это голосование? Все данные и результаты будут безвозвратно удалены.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirm({ show: false, votingId: null })}
+            >
+              Отменить
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteConfirm.votingId && handleDeleteVoting(deleteConfirm.votingId)}
+            >
+              <Icon name="Trash2" size={16} className="mr-2" />
+              Удалить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
