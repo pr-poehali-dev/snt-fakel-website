@@ -16,6 +16,7 @@ import {
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import MeterManagementCard from './profile/MeterManagementCard';
 
 interface MeterReading {
   id: string;
@@ -215,6 +216,10 @@ const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
             Всего записей: {readings.length}
           </Badge>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <MeterManagementCard />
       </div>
 
       <Card className="mb-6">

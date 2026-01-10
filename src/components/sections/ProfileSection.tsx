@@ -9,7 +9,6 @@ import MemberDashboardCard from '../profile/MemberDashboardCard';
 import PersonalDataCard from '../profile/PersonalDataCard';
 import OwnerDataCard from '../profile/OwnerDataCard';
 import MeterReadingsCard from '../profile/MeterReadingsCard';
-import MeterManagementCard from '../profile/MeterManagementCard';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -319,13 +318,9 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
           onChange={handleChange}
         />
 
-        {(userRole === 'admin' || userRole === 'chairman') ? (
-          <MeterManagementCard />
-        ) : (
-          <div className="grid">
-            <MeterReadingsCard currentUserEmail={currentUserEmail} userRole={userRole} />
-          </div>
-        )}
+        <div className="grid">
+          <MeterReadingsCard currentUserEmail={currentUserEmail} userRole={userRole} />
+        </div>
       </div>
     </section>
   );
