@@ -12,7 +12,7 @@ interface MeterReadingsFormProps {
   userRole?: string;
   setShowUnlockDialog: (show: boolean) => void;
   meterNumberConfirmed: boolean;
-  setMeterNumberConfirmed: (confirmed: boolean) => void;
+  handleConfirmMeterNumber: () => void;
   reading: string;
   setReading: (value: string) => void;
   confirmed: boolean;
@@ -28,7 +28,7 @@ const MeterReadingsForm = ({
   userRole,
   setShowUnlockDialog,
   meterNumberConfirmed,
-  setMeterNumberConfirmed,
+  handleConfirmMeterNumber,
   reading,
   setReading,
   confirmed,
@@ -88,7 +88,7 @@ const MeterReadingsForm = ({
               type="button"
               variant={meterNumberConfirmed ? "default" : "outline"}
               size="sm"
-              onClick={() => setMeterNumberConfirmed(true)}
+              onClick={handleConfirmMeterNumber}
               disabled={!meterNumber.trim() || meterNumberConfirmed}
               className={`mt-2 w-full ${meterNumberConfirmed ? 'bg-green-500 hover:bg-green-600 cursor-not-allowed' : 'border-blue-300 text-blue-700 hover:bg-blue-50'}`}
             >

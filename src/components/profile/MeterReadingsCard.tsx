@@ -109,6 +109,37 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
     setMeterNumberConfirmed(false);
   };
 
+  const handleConfirmMeterNumberClick = () => {
+    if (!meterNumber.trim()) {
+      toast.error('Введите номер прибора учёта');
+      return;
+    }
+
+    const usersJSON = localStorage.getItem('snt_users');
+    if (usersJSON) {
+      const users = JSON.parse(usersJSON);
+      const user = users.find((u: any) => u.email === currentUserEmail);
+      const userPlot = user?.plotNumber;
+      
+      if (!userPlot) {
+        toast.error('Не указан номер участка');
+        return;
+      }
+      
+      // Синхронизация номера ПУ для всех пользователей участка
+      const updatedUsers = users.map((u: any) =>
+        u.plotNumber === userPlot ? { ...u, meterNumber: meterNumber.trim() } : u
+      );
+      localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
+      setIsMeterLocked(true);
+      setMeterNumberConfirmed(true);
+      toast.success('Номер прибора учёта сохранён для всех пользователей участка');
+      
+      // Отправляем событие для обновления таблицы управления
+      window.dispatchEvent(new Event('meter-readings-updated'));
+    }
+  };
+
   const handleSubmitClick = () => {
     if (!meterNumber.trim()) {
       toast.error('Введите номер прибора учёта');
@@ -272,7 +303,7 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
             userRole={userRole}
             setShowUnlockDialog={setShowUnlockDialog}
             meterNumberConfirmed={meterNumberConfirmed}
-            setMeterNumberConfirmed={setMeterNumberConfirmed}
+            handleConfirmMeterNumber={handleConfirmMeterNumberClick}
             reading={reading}
             setReading={setReading}
             confirmed={confirmed}
