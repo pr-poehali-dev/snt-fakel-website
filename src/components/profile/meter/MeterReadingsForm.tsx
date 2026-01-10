@@ -52,10 +52,10 @@ const MeterReadingsForm = ({
             <Input
               value={meterNumber}
               onChange={(e) => handleMeterNumberChange(e.target.value)}
-              disabled={isMeterLocked}
+              disabled={isMeterLocked || meterNumberConfirmed}
               placeholder="Введите номер ПУ"
             />
-            {isMeterLocked && (
+            {(isMeterLocked || meterNumberConfirmed) && (
               <div className="flex items-center">
                 <Icon name="Lock" className="text-muted-foreground" size={20} />
               </div>
@@ -76,6 +76,11 @@ const MeterReadingsForm = ({
           {isMeterLocked && (
             <p className="text-xs text-muted-foreground mt-1">
               Для изменения номера обратитесь к администратору
+            </p>
+          )}
+          {!isMeterLocked && meterNumberConfirmed && (
+            <p className="text-xs text-green-600 mt-1">
+              Номер подтверждён. После отправки показаний будет заблокирован навсегда.
             </p>
           )}
           {!isMeterLocked && (
