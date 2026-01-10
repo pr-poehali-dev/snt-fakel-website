@@ -47,7 +47,13 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
       if (user) {
         const userPlot = user.plotNumber || '';
         setPlotNumber(userPlot);
-        if (user.meterNumber) {
+        
+        // Синхронизация номера ПУ с другими пользователями участка
+        const plotUser = users.find((u: any) => u.plotNumber === userPlot && u.meterNumber);
+        if (plotUser && plotUser.meterNumber) {
+          setMeterNumber(plotUser.meterNumber);
+          setIsMeterLocked(true);
+        } else if (user.meterNumber) {
           setMeterNumber(user.meterNumber);
           setIsMeterLocked(true);
         }
@@ -131,8 +137,12 @@ const MeterReadingsCard = ({ currentUserEmail, userRole }: MeterReadingsCardProp
     const usersJSON = localStorage.getItem('snt_users');
     if (usersJSON) {
       const users = JSON.parse(usersJSON);
+      const user = users.find((u: any) => u.email === currentUserEmail);
+      const userPlot = user?.plotNumber;
+      
+      // Синхронизация номера ПУ для всех пользователей участка
       const updatedUsers = users.map((u: any) =>
-        u.email === currentUserEmail ? { ...u, meterNumber: meterNumber.trim() } : u
+        u.plotNumber === userPlot ? { ...u, meterNumber: meterNumber.trim() } : u
       );
       localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
       setIsMeterLocked(true);
