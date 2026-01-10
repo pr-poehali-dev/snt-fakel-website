@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -42,6 +44,9 @@ const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('all');
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<{ email: string; name: string; plotNumber: string; meterNumber: string } | null>(null);
+  const [newMeterNumber, setNewMeterNumber] = useState('');
 
   useEffect(() => {
     loadData();
@@ -81,6 +86,55 @@ const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
       localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
       setUsers(updatedUsers);
       toast.success('Номер прибора учёта разблокирован');
+    }
+  };
+
+  const handleEditMeterClick = (reading: MeterReading) => {
+    const user = users.find(u => u.email === reading.email);
+    if (user) {
+      setEditingUser({
+        email: reading.email,
+        name: getUserName(reading.email),
+        plotNumber: reading.plotNumber,
+        meterNumber: reading.meterNumber
+      });
+      setNewMeterNumber(reading.meterNumber);
+      setShowEditDialog(true);
+    }
+  };
+
+  const handleSaveMeterNumber = () => {
+    if (!editingUser) return;
+
+    if (!newMeterNumber.trim()) {
+      toast.error('Введите номер прибора учёта');
+      return;
+    }
+
+    const usersJSON = localStorage.getItem('snt_users');
+    if (usersJSON) {
+      const users = JSON.parse(usersJSON);
+      const updatedUsers = users.map((u: any) =>
+        u.email === editingUser.email ? { ...u, meterNumber: newMeterNumber.trim() } : u
+      );
+      localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
+      setUsers(updatedUsers);
+
+      // Обновляем все показания с старым номером ПУ
+      const readingsJSON = localStorage.getItem('snt_meter_readings');
+      if (readingsJSON) {
+        const allReadings = JSON.parse(readingsJSON);
+        const updatedReadings = allReadings.map((r: MeterReading) =>
+          r.email === editingUser.email ? { ...r, meterNumber: newMeterNumber.trim() } : r
+        );
+        localStorage.setItem('snt_meter_readings', JSON.stringify(updatedReadings));
+        setReadings(updatedReadings);
+      }
+
+      toast.success('Номер прибора учёта изменён');
+      setShowEditDialog(false);
+      setEditingUser(null);
+      setNewMeterNumber('');
     }
   };
 
@@ -231,14 +285,29 @@ const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
                       <TableCell className="text-sm text-muted-foreground">{reading.date}</TableCell>
                       <TableCell className="text-sm">{reading.month}</TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleUnlockMeter(reading.email)}
-                          title="Разблокировать номер ПУ"
-                        >
-                          <Icon name="Unlock" size={16} />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditMeterClick(reading)}
+                            title="Редактировать номер ПУ"
+                          >
+                            <Icon name="Pencil" size={16} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              if (window.confirm(`Разблокировать номер ПУ для ${getUserName(reading.email)} (уч. №${reading.plotNumber})?\n\nУчастник сможет ввести новый номер при следующей передаче показаний.`)) {
+                                handleUnlockMeter(reading.email);
+                              }
+                            }}
+                            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                            title="Разблокировать номер ПУ"
+                          >
+                            <Icon name="Unlock" size={16} />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -257,11 +326,61 @@ const MeterReadingsManager = ({ onBack }: MeterReadingsManagerProps) => {
             <ul className="space-y-1 list-disc list-inside">
               <li>Показания принимаются с 22 по 25 число каждого месяца</li>
               <li>После первого ввода номер прибора учёта блокируется автоматически</li>
-              <li>Для изменения номера ПУ используйте кнопку разблокировки</li>
+              <li>Для изменения номера ПУ используйте кнопку редактирования или разблокировки</li>
+              <li><Icon name="Pencil" size={14} className="inline" /> — изменить номер ПУ немедленно</li>
+              <li><Icon name="Unlock" size={14} className="inline" /> — разблокировать для самостоятельного ввода участником</li>
             </ul>
           </div>
         </div>
       </div>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="Pencil" className="text-primary" />
+              Изменение номера прибора учёта
+            </DialogTitle>
+            <DialogDescription>
+              {editingUser && `${editingUser.name} · Участок №${editingUser.plotNumber}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="meter-number">Номер прибора учёта</Label>
+              <Input
+                id="meter-number"
+                value={newMeterNumber}
+                onChange={(e) => setNewMeterNumber(e.target.value)}
+                placeholder="Введите новый номер ПУ"
+              />
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+              <Icon name="AlertCircle" size={16} className="inline mr-2" />
+              Новый номер ПУ будет применён ко всем записям этого участника
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEditDialog(false);
+                setEditingUser(null);
+                setNewMeterNumber('');
+              }}
+            >
+              Отменить
+            </Button>
+            <Button
+              onClick={handleSaveMeterNumber}
+              className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+            >
+              <Icon name="Save" size={18} className="mr-2" />
+              Сохранить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

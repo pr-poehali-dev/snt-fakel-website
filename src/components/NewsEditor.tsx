@@ -6,8 +6,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+
+interface NewsHistoryEntry {
+  date: string;
+  author: string;
+  action: 'created' | 'edited' | 'published' | 'unpublished';
+}
 
 interface NewsItem {
   id: number;
@@ -17,6 +25,11 @@ interface NewsItem {
   text: string;
   showOnMainPage?: boolean;
   mainPageExpiresAt?: string;
+  createdBy?: string;
+  createdAt?: string;
+  lastEditedBy?: string;
+  lastEditedAt?: string;
+  history?: NewsHistoryEntry[];
 }
 
 interface NewsEditorProps {
@@ -25,6 +38,28 @@ interface NewsEditorProps {
 
 const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [selectedNewsHistory, setSelectedNewsHistory] = useState<NewsItem | null>(null);
+
+  const getCurrentUser = () => {
+    const session = localStorage.getItem('snt_session');
+    if (session) {
+      try {
+        const { currentUserEmail } = JSON.parse(session);
+        const usersJSON = localStorage.getItem('snt_users');
+        if (usersJSON) {
+          const users = JSON.parse(usersJSON);
+          const user = users.find((u: any) => u.email === currentUserEmail);
+          if (user) {
+            return `${user.firstName} ${user.lastName}`;
+          }
+        }
+      } catch (e) {
+        console.error('Error getting current user:', e);
+      }
+    }
+    return 'Неизвестный пользователь';
+  };
 
   const getTimeRemaining = (expiresAt: string): string => {
     const now = new Date();
@@ -97,6 +132,9 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       return;
     }
 
+    const currentUser = getCurrentUser();
+    const now = new Date().toISOString();
+
     const newItem: NewsItem = {
       id: Date.now(),
       title: formData.title,
@@ -106,7 +144,14 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       showOnMainPage: formData.showOnMainPage,
       mainPageExpiresAt: formData.showOnMainPage 
         ? new Date(Date.now() + parseInt(formData.mainPageDuration) * 24 * 60 * 60 * 1000).toISOString()
-        : undefined
+        : undefined,
+      createdBy: currentUser,
+      createdAt: now,
+      history: [{
+        date: now,
+        author: currentUser,
+        action: formData.showOnMainPage ? 'published' : 'created'
+      }]
     };
 
     const updatedNews = [newItem, ...news];
@@ -133,20 +178,33 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       return;
     }
 
-    const updatedNews = news.map(item =>
-      item.id === editingId
-        ? { 
-            ...item, 
-            title: formData.title, 
-            category: formData.category, 
-            text: formData.text,
-            showOnMainPage: formData.showOnMainPage,
-            mainPageExpiresAt: formData.showOnMainPage 
-              ? new Date(Date.now() + parseInt(formData.mainPageDuration) * 24 * 60 * 60 * 1000).toISOString()
-              : undefined
-          }
-        : item
-    );
+    const currentUser = getCurrentUser();
+    const now = new Date().toISOString();
+
+    const updatedNews = news.map(item => {
+      if (item.id === editingId) {
+        const historyEntry: NewsHistoryEntry = {
+          date: now,
+          author: currentUser,
+          action: 'edited'
+        };
+        
+        return { 
+          ...item, 
+          title: formData.title, 
+          category: formData.category, 
+          text: formData.text,
+          showOnMainPage: formData.showOnMainPage,
+          mainPageExpiresAt: formData.showOnMainPage 
+            ? new Date(Date.now() + parseInt(formData.mainPageDuration) * 24 * 60 * 60 * 1000).toISOString()
+            : undefined,
+          lastEditedBy: currentUser,
+          lastEditedAt: now,
+          history: [...(item.history || []), historyEntry]
+        };
+      }
+      return item;
+    });
 
     saveNews(updatedNews);
     resetForm();
@@ -169,24 +227,44 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     const item = news.find(n => n.id === id);
     if (!item) return;
 
+    const currentUser = getCurrentUser();
+    const now = new Date().toISOString();
     const isCurrentlyOnMain = item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date();
 
     if (isCurrentlyOnMain && customDuration === undefined) {
+      const historyEntry: NewsHistoryEntry = {
+        date: now,
+        author: currentUser,
+        action: 'unpublished'
+      };
+      
       const updatedNews = news.map(n =>
         n.id === id
-          ? { ...n, showOnMainPage: false, mainPageExpiresAt: undefined }
+          ? { 
+              ...n, 
+              showOnMainPage: false, 
+              mainPageExpiresAt: undefined,
+              history: [...(n.history || []), historyEntry]
+            }
           : n
       );
       saveNews(updatedNews);
       toast.success('Новость убрана с главной страницы');
     } else {
       const duration = customDuration || 7;
+      const historyEntry: NewsHistoryEntry = {
+        date: now,
+        author: currentUser,
+        action: 'published'
+      };
+      
       const updatedNews = news.map(n =>
         n.id === id
           ? { 
               ...n, 
               showOnMainPage: true, 
-              mainPageExpiresAt: new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString()
+              mainPageExpiresAt: new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString(),
+              history: [...(n.history || []), historyEntry]
             }
           : n
       );
@@ -358,6 +436,14 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
                       </div>
                       <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
                       <p className="text-muted-foreground">{item.text}</p>
+                      {item.createdBy && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Создал: {item.createdBy}
+                          {item.lastEditedBy && item.lastEditedBy !== item.createdBy && (
+                            <> · Ред.: {item.lastEditedBy}</>
+                          )}
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
                       {item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date() ? (
@@ -398,6 +484,19 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
                           </SelectContent>
                         </Select>
                       )}
+                      {item.history && item.history.length > 0 && (
+                        <Button
+                          onClick={() => {
+                            setSelectedNewsHistory(item);
+                            setShowHistoryDialog(true);
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          title="История изменений"
+                        >
+                          <Icon name="History" size={16} />
+                        </Button>
+                      )}
                       <Button
                         onClick={() => handleEdit(item)}
                         variant="ghost"
@@ -423,6 +522,72 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="History" className="text-primary" />
+              История изменений
+            </DialogTitle>
+            <DialogDescription>
+              {selectedNewsHistory?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px] pr-4">
+            {selectedNewsHistory?.history && selectedNewsHistory.history.length > 0 ? (
+              <div className="space-y-3">
+                {[...selectedNewsHistory.history].reverse().map((entry, index) => {
+                  const date = new Date(entry.date);
+                  const actionText = {
+                    created: 'Создана',
+                    edited: 'Отредактирована',
+                    published: 'Размещена на главной',
+                    unpublished: 'Убрана с главной'
+                  }[entry.action];
+                  
+                  const actionColor = {
+                    created: 'text-green-600',
+                    edited: 'text-blue-600',
+                    published: 'text-orange-600',
+                    unpublished: 'text-gray-600'
+                  }[entry.action];
+
+                  return (
+                    <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-shrink-0 mt-1">
+                        <Icon 
+                          name={
+                            entry.action === 'created' ? 'Plus' :
+                            entry.action === 'edited' ? 'Pencil' :
+                            entry.action === 'published' ? 'Star' : 'StarOff'
+                          } 
+                          size={16} 
+                          className={actionColor}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{actionText}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {entry.author} · {date.toLocaleString('ru-RU', { 
+                            day: 'numeric', 
+                            month: 'long', 
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">История пуста</p>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
