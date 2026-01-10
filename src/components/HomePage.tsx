@@ -242,6 +242,8 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
                 <VotingCard
                   key={voting.id}
                   voting={voting}
+                  isLoggedIn={isLoggedIn}
+                  userRole={userRole}
                   setActiveSection={setActiveSection}
                 />
               ))}
@@ -249,7 +251,7 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
           </section>
         )}
 
-        <CompletedVotings setActiveSection={setActiveSection} />
+        <CompletedVotings userRole={userRole} setActiveSection={setActiveSection} />
 
         <HomePageNewsSection news={news} setActiveSection={setActiveSection} />
       </div>
