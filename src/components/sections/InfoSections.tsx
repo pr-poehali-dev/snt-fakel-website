@@ -79,6 +79,8 @@ interface InfoSectionsProps {
 
 const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
   const [content, setContent] = useState<PageContent>(defaultContent);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(true);
 
   useEffect(() => {
     const loadContent = () => {
@@ -113,6 +115,23 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
       window.removeEventListener('storage', handleStorageChange as any);
     };
   }, []);
+
+  useEffect(() => {
+    if (activeSection === 'gallery') {
+      const loadPhotos = async () => {
+        try {
+          const response = await fetch('https://functions.poehali.dev/d4a2053d-18ef-4fe7-9550-1dac64919f00');
+          const data = await response.json();
+          setPhotos(data.photos || []);
+        } catch (error) {
+          console.error('Error loading gallery:', error);
+        } finally {
+          setLoadingPhotos(false);
+        }
+      };
+      loadPhotos();
+    }
+  }, [activeSection]);
   if (activeSection === 'rules') {
     return (
       <section>
@@ -159,19 +178,40 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
     return (
       <section>
         <h2 className="text-4xl font-bold mb-8">{content.gallery.title}</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {gallery.map((photo) => (
-            <Card key={photo.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="aspect-square bg-gradient-to-br from-orange-200 via-purple-200 to-pink-200 flex items-center justify-center">
-                <Icon name="Image" size={48} className="text-white" />
-              </div>
-              <CardContent className="pt-4">
-                <h4 className="font-semibold mb-1">{photo.title}</h4>
-                <p className="text-sm text-muted-foreground">{photo.season}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {loadingPhotos ? (
+          <div className="text-center py-12">
+            <Icon name="Loader2" className="animate-spin mx-auto mb-4" size={48} />
+            <p className="text-muted-foreground">Загрузка галереи...</p>
+          </div>
+        ) : photos.length === 0 ? (
+          <div className="text-center py-12">
+            <Icon name="ImageOff" className="mx-auto mb-4 text-muted-foreground" size={48} />
+            <p className="text-muted-foreground">В галерее пока нет фотографий</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {photos.map((photo) => (
+              <Card key={photo.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="aspect-square bg-gray-100">
+                  <img
+                    src={photo.imageUrl}
+                    alt={photo.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="pt-4">
+                  <h4 className="font-semibold mb-1">{photo.title}</h4>
+                  {photo.description && (
+                    <p className="text-sm text-muted-foreground mb-1">{photo.description}</p>
+                  )}
+                  {photo.season && (
+                    <p className="text-xs text-muted-foreground">{photo.season}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
     );
   }

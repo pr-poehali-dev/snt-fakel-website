@@ -42,7 +42,7 @@ const AppealArchive = ({ currentUserEmail, userRole, onBack }: AppealArchiveProp
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'status'>('date-desc');
 
   const isBoardMember = userRole === 'admin' || userRole === 'chairman' || userRole === 'board_member';
-  const canDelete = userRole === 'admin' || userRole === 'chairman';
+  const canDelete = userRole === 'admin';
 
   useEffect(() => {
     loadArchivedAppeals();

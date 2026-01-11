@@ -188,6 +188,14 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
             <>
               <Button 
                 variant="outline" 
+                className="w-full justify-start border-amber-500 text-amber-600 hover:bg-amber-50"
+                onClick={() => onNavigate?.('gallery-manager')}
+              >
+                <Icon name="Images" size={18} className="mr-2" />
+                Управление галереей
+              </Button>
+              <Button 
+                variant="outline" 
                 className="w-full justify-start border-pink-500 text-pink-600 hover:bg-pink-50"
                 onClick={() => onNavigate?.('holiday-decor')}
               >

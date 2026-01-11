@@ -1,52 +1,66 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 
+const VISITOR_API_URL = 'https://functions.poehali.dev/e63739da-5843-4585-a3b9-acb1eb20ad0c';
+
 const VisitorCounter = () => {
-  const [visitors, setVisitors] = useState({ today: 0, total: 0 });
+  const [visitors, setVisitors] = useState({ today: 0, total: 0, registered: 0 });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const counterData = localStorage.getItem('snt_visitor_counter');
-    const today = new Date().toDateString();
-    const sessionKey = 'snt_visitor_session';
-    const hasVisitedToday = sessionStorage.getItem(sessionKey) === today;
-    
-    if (counterData) {
-      const data = JSON.parse(counterData);
-      
-      if (data.lastVisit === today) {
-        if (!hasVisitedToday) {
-          const newData = {
-            today: data.today + 1,
-            total: data.total + 1,
-            lastVisit: today
-          };
-          localStorage.setItem('snt_visitor_counter', JSON.stringify(newData));
-          sessionStorage.setItem(sessionKey, today);
-          setVisitors({ today: newData.today, total: newData.total });
+    const sessionKey = 'snt_visitor_tracked';
+    const hasTrackedVisit = sessionStorage.getItem(sessionKey) === 'true';
+
+    const fetchAndTrackVisitors = async () => {
+      try {
+        if (!hasTrackedVisit) {
+          // Новый визит - увеличиваем счётчик
+          const response = await fetch(VISITOR_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          const data = await response.json();
+          setVisitors(data);
+          sessionStorage.setItem(sessionKey, 'true');
         } else {
-          setVisitors({ today: data.today, total: data.total });
+          // Уже был визит - просто получаем данные
+          const response = await fetch(VISITOR_API_URL);
+          const data = await response.json();
+          setVisitors(data);
         }
-      } else {
-        const newData = {
-          today: 1,
-          total: data.total + 1,
-          lastVisit: today
-        };
-        localStorage.setItem('snt_visitor_counter', JSON.stringify(newData));
-        sessionStorage.setItem(sessionKey, today);
-        setVisitors({ today: newData.today, total: newData.total });
+      } catch (error) {
+        console.error('Error tracking visitor:', error);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      const newData = {
-        today: 1,
-        total: 1,
-        lastVisit: today
-      };
-      localStorage.setItem('snt_visitor_counter', JSON.stringify(newData));
-      sessionStorage.setItem(sessionKey, today);
-      setVisitors({ today: 1, total: 1 });
-    }
+    };
+
+    fetchAndTrackVisitors();
+
+    // Обновляем данные каждую минуту
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(VISITOR_API_URL);
+        const data = await response.json();
+        setVisitors(data);
+      } catch (error) {
+        console.error('Error updating visitor stats:', error);
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-6 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Icon name="Users" size={16} />
+          <span>Загрузка...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-6 text-sm text-muted-foreground">
@@ -57,6 +71,10 @@ const VisitorCounter = () => {
       <div className="flex items-center gap-2">
         <Icon name="TrendingUp" size={16} />
         <span>Всего: <span className="font-semibold text-foreground">{visitors.total}</span></span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Icon name="UserCheck" size={16} />
+        <span>Участников: <span className="font-semibold text-foreground">{visitors.registered}</span></span>
       </div>
     </div>
   );

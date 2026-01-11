@@ -18,6 +18,7 @@ import CreateVoting from './CreateVoting';
 import VotingResults from './VotingResults';
 import HolidayDecorManager from './HolidayDecorManager';
 import SiteStatistics from './SiteStatistics';
+import GalleryManager from './GalleryManager';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -161,6 +162,16 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
 
   if (activeSection === 'statistics' && (userRole === 'admin' || userRole === 'chairman')) {
     return <SiteStatistics onBack={() => setActiveSection('profile')} />;
+  }
+
+  if (activeSection === 'gallery-manager' && (userRole === 'admin' || userRole === 'chairman')) {
+    return (
+      <GalleryManager
+        userEmail={currentUserEmail}
+        userRole={userRole}
+        onBack={() => setActiveSection('profile')}
+      />
+    );
   }
 
   return null;

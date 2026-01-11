@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "Get gallery photos",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}
