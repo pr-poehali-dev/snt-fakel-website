@@ -1,0 +1,28 @@
+{
+  "tests": [
+    {
+      "name": "Get news list",
+      "method": "GET",
+      "path": "/?type=news",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get documents list",
+      "method": "GET",
+      "path": "/?type=documents",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get all pages",
+      "method": "GET",
+      "path": "/?type=pages",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get single page",
+      "method": "GET",
+      "path": "/?type=pages&key=rules",
+      "expectedStatus": 200
+    }
+  ]
+}

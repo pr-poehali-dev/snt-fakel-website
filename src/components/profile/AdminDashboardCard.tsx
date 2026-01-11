@@ -224,6 +224,14 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
               </Button>
               <Button 
                 variant="outline" 
+                className="w-full justify-start border-purple-500 text-purple-600 hover:bg-purple-50"
+                onClick={() => onNavigate?.('migrate-to-db')}
+              >
+                <Icon name="Database" size={18} className="mr-2" />
+                Миграция в БД
+              </Button>
+              <Button 
+                variant="outline" 
                 className="w-full justify-start border-orange-500 text-orange-600 hover:bg-orange-50"
                 onClick={() => onNavigate?.('role-management')}
               >

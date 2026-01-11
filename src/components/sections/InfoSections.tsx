@@ -83,14 +83,30 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
   const [loadingPhotos, setLoadingPhotos] = useState(true);
 
   useEffect(() => {
-    const loadContent = () => {
-      const savedContent = localStorage.getItem('pages_content');
-      if (savedContent) {
-        try {
-          const parsed = JSON.parse(savedContent);
-          setContent(parsed);
-        } catch (e) {
-          console.error('Error loading pages content:', e);
+    const loadContent = async () => {
+      try {
+        // Загружаем из БД
+        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=pages');
+        const pagesData = await response.json();
+        
+        const loadedContent: PageContent = {
+          rules: pagesData.rules || defaultContent.rules,
+          contacts: pagesData.contacts || defaultContent.contacts,
+          gallery: pagesData.gallery || defaultContent.gallery
+        };
+        
+        setContent(loadedContent);
+      } catch (error) {
+        console.error('Error loading pages content:', error);
+        // Fallback to localStorage
+        const savedContent = localStorage.getItem('pages_content');
+        if (savedContent) {
+          try {
+            const parsed = JSON.parse(savedContent);
+            setContent(parsed);
+          } catch (e) {
+            console.error('Error parsing local content:', e);
+          }
         }
       }
     };
@@ -101,18 +117,10 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
       loadContent();
     };
 
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'pages_content') {
-        loadContent();
-      }
-    };
-
     window.addEventListener('pages-content-updated', handleContentUpdate);
-    window.addEventListener('storage', handleStorageChange as any);
     
     return () => {
       window.removeEventListener('pages-content-updated', handleContentUpdate);
-      window.removeEventListener('storage', handleStorageChange as any);
     };
   }, []);
 

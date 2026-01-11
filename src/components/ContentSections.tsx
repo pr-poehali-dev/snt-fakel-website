@@ -19,6 +19,7 @@ import VotingResults from './VotingResults';
 import HolidayDecorManager from './HolidayDecorManager';
 import SiteStatistics from './SiteStatistics';
 import GalleryManager from './GalleryManager';
+import MigrateToDatabase from './MigrateToDatabase';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -171,6 +172,22 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
         userRole={userRole}
         onBack={() => setActiveSection('profile')}
       />
+    );
+  }
+
+  if (activeSection === 'migrate-to-db' && userRole === 'admin') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setActiveSection('profile')}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            ← Назад
+          </button>
+        </div>
+        <MigrateToDatabase userEmail={currentUserEmail} userRole={userRole} />
+      </div>
     );
   }
 
