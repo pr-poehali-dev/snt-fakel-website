@@ -233,7 +233,7 @@ const AppealArchive = ({ currentUserEmail, userRole, onBack }: AppealArchiveProp
                 <CardContent>
                   <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded">
                     <div className="flex items-start gap-3">
-                      <Icon name="AlertTriangle" className="text-red-600 mt-1" size={20} />
+                      <Icon name="AlertTriangle" size={20} className="text-red-600 mt-1" />
                       <div className="flex-1">
                         <p className="font-medium text-red-900 mb-2">Удалить обращение из архива?</p>
                         <p className="text-sm text-red-700 mb-4">
