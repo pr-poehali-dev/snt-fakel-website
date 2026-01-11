@@ -38,6 +38,40 @@ const VotingPage = ({ isLoggedIn, userRole, setActiveSection }: VotingPageProps)
   }, [sortBy]);
 
   const loadVotings = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/36da760a-f60b-4b9a-ab53-5fa753cf41a4?type=votings');
+      if (response.ok) {
+        const data = await response.json();
+        const votings = data.votings || [];
+        const now = new Date();
+        
+        const active = votings.filter((v: any) => {
+          const endDate = new Date(v.endDate);
+          return v.status === 'active' && endDate >= now;
+        });
+        
+        const completed = votings.filter((v: any) => v.status === 'completed' && !v.archived);
+        
+        completed.sort((a: any, b: any) => {
+          if (sortBy === 'date-desc') {
+            return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();
+          } else if (sortBy === 'date-asc') {
+            return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+          } else if (sortBy === 'title') {
+            return a.title.localeCompare(b.title);
+          }
+          return 0;
+        });
+        
+        setActiveVotings(active);
+        setCompletedVotings(completed);
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading votings from API:', error);
+    }
+    
+    // Fallback на localStorage
     const votingsJSON = localStorage.getItem('snt_votings');
     if (votingsJSON) {
       try {
@@ -45,7 +79,6 @@ const VotingPage = ({ isLoggedIn, userRole, setActiveSection }: VotingPageProps)
         const now = new Date();
         const completedVotingIds: string[] = [];
         
-        // Автоматически закрываем истекшие голосования
         const updatedVotings = votings.map((v: any) => {
           const endDate = new Date(v.endDate);
           if (v.status === 'active' && endDate < now) {
@@ -55,12 +88,10 @@ const VotingPage = ({ isLoggedIn, userRole, setActiveSection }: VotingPageProps)
           return v;
         });
         
-        // Сохраняем обновленные голосования и отправляем уведомления
         if (completedVotingIds.length > 0) {
           localStorage.setItem('snt_votings', JSON.stringify(updatedVotings));
           window.dispatchEvent(new Event('votings-updated'));
           
-          // Отправляем уведомления для каждого завершённого голосования
           for (const votingId of completedVotingIds) {
             const voting = updatedVotings.find((v: any) => v.id === votingId);
             if (voting) {
@@ -76,7 +107,6 @@ const VotingPage = ({ isLoggedIn, userRole, setActiveSection }: VotingPageProps)
         
         const completed = updatedVotings.filter((v: any) => v.status === 'completed' && !v.archived);
         
-        // Сортировка
         completed.sort((a: any, b: any) => {
           if (sortBy === 'date-desc') {
             return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();

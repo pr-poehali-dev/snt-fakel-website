@@ -67,35 +67,85 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
   };
 
   useEffect(() => {
-    const usersJSON = localStorage.getItem('snt_users');
-    if (usersJSON) {
-      const users = JSON.parse(usersJSON);
-      const user = users.find((u: any) => u.email === currentUserEmail);
-      if (user) {
-        setUserData({
-          lastName: user.lastName || '',
-          firstName: user.firstName || '',
-          middleName: user.middleName || '',
-          birthDate: user.birthDate || '',
-          phone: user.phone || '',
-          email: user.email || '',
-          plotNumber: user.plotNumber || '',
-          ownerLastName: user.ownerLastName || '',
-          ownerFirstName: user.ownerFirstName || '',
-          ownerMiddleName: user.ownerMiddleName || '',
-          landDocNumber: user.landDocNumber || '',
-          houseDocNumber: user.houseDocNumber || ''
-        });
-        setOriginalEmail(user.email || '');
-        setOriginalPhone(user.phone || '');
+    const loadUserData = async () => {
+      try {
+        const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        if (response.ok) {
+          const data = await response.json();
+          const users = data.users || [];
+          const user = users.find((u: any) => u.email === currentUserEmail);
+          
+          if (user) {
+            setUserData({
+              lastName: user.last_name || user.lastName || '',
+              firstName: user.first_name || user.firstName || '',
+              middleName: user.middle_name || user.middleName || '',
+              birthDate: user.birth_date || user.birthDate || '',
+              phone: user.phone || '',
+              email: user.email || '',
+              plotNumber: user.plot_number || user.plotNumber || '',
+              ownerLastName: user.owner_last_name || user.ownerLastName || '',
+              ownerFirstName: user.owner_first_name || user.ownerFirstName || '',
+              ownerMiddleName: user.owner_middle_name || user.ownerMiddleName || '',
+              landDocNumber: user.land_doc_number || user.landDocNumber || '',
+              houseDocNumber: user.house_doc_number || user.houseDocNumber || ''
+            });
+            setOriginalEmail(user.email || '');
+            setOriginalPhone(user.phone || '');
+          }
+          
+          // Синхронизируем с localStorage для старых компонентов
+          localStorage.setItem('snt_users', JSON.stringify(users.map((u: any) => ({
+            email: u.email,
+            lastName: u.last_name || u.lastName,
+            firstName: u.first_name || u.firstName,
+            middleName: u.middle_name || u.middleName,
+            birthDate: u.birth_date || u.birthDate,
+            phone: u.phone,
+            plotNumber: u.plot_number || u.plotNumber,
+            role: u.role,
+            status: u.status
+          }))));
+          
+          return;
+        }
+      } catch (error) {
+        console.error('Error loading user data from API:', error);
       }
+      
+      // Fallback на localStorage
+      const usersJSON = localStorage.getItem('snt_users');
+      if (usersJSON) {
+        const users = JSON.parse(usersJSON);
+        const user = users.find((u: any) => u.email === currentUserEmail);
+        if (user) {
+          setUserData({
+            lastName: user.lastName || '',
+            firstName: user.firstName || '',
+            middleName: user.middleName || '',
+            birthDate: user.birthDate || '',
+            phone: user.phone || '',
+            email: user.email || '',
+            plotNumber: user.plotNumber || '',
+            ownerLastName: user.ownerLastName || '',
+            ownerFirstName: user.ownerFirstName || '',
+            ownerMiddleName: user.ownerMiddleName || '',
+            landDocNumber: user.landDocNumber || '',
+            houseDocNumber: user.houseDocNumber || ''
+          });
+          setOriginalEmail(user.email || '');
+          setOriginalPhone(user.phone || '');
+        }
 
-      const activeMembers = users.filter((u: any) => u.status === 'active').length;
-      const totalMembersElement = document.getElementById('total-members-count');
-      const membersBadgeElement = document.getElementById('members-badge');
-      if (totalMembersElement) totalMembersElement.textContent = activeMembers.toString();
-      if (membersBadgeElement) membersBadgeElement.textContent = activeMembers.toString();
-    }
+        const activeMembers = users.filter((u: any) => u.status === 'active').length;
+        const totalMembersElement = document.getElementById('total-members-count');
+        const membersBadgeElement = document.getElementById('members-badge');
+        if (totalMembersElement) totalMembersElement.textContent = activeMembers.toString();
+        if (membersBadgeElement) membersBadgeElement.textContent = activeMembers.toString();
+      }
+    };
+    
+    loadUserData();
   }, [currentUserEmail]);
 
   const handleSave = () => {
@@ -141,7 +191,41 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
     saveUserData();
   };
 
-  const saveUserData = () => {
+  const saveUserData = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: currentUserEmail,
+          updates: {
+            lastName: userData.lastName,
+            firstName: userData.firstName,
+            middleName: userData.middleName,
+            birthDate: userData.birthDate,
+            phone: userData.phone,
+            plotNumber: userData.plotNumber,
+            ownerLastName: userData.ownerLastName,
+            ownerFirstName: userData.ownerFirstName,
+            ownerMiddleName: userData.ownerMiddleName,
+            landDocNumber: userData.landDocNumber,
+            houseDocNumber: userData.houseDocNumber
+          }
+        })
+      });
+      
+      if (response.ok) {
+        setIsEditing(false);
+        setOriginalEmail(userData.email);
+        setOriginalPhone(userData.phone);
+        toast.success('Данные успешно обновлены');
+        return;
+      }
+    } catch (error) {
+      console.error('Error saving user data to API:', error);
+    }
+    
+    // Fallback на localStorage
     const usersJSON = localStorage.getItem('snt_users');
     if (usersJSON) {
       const users = JSON.parse(usersJSON);

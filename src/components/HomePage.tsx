@@ -91,7 +91,19 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
       }
     };
 
-    const loadNews = () => {
+    const loadNews = async () => {
+      try {
+        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news');
+        if (response.ok) {
+          const data = await response.json();
+          setNews(data.news || []);
+          return;
+        }
+      } catch (error) {
+        console.error('Error loading news from API:', error);
+      }
+      
+      // Fallback на localStorage
       const savedNews = localStorage.getItem('snt_news');
       if (savedNews) {
         try {
@@ -106,6 +118,25 @@ const HomePage = ({ polls, news: initialNews, isLoggedIn, userRole, votes, handl
     };
 
     const loadVotings = async () => {
+      try {
+        const response = await fetch('https://functions.poehali.dev/36da760a-f60b-4b9a-ab53-5fa753cf41a4?type=votings');
+        if (response.ok) {
+          const data = await response.json();
+          const votings = data.votings || [];
+          const now = new Date();
+          
+          const active = votings.filter((v: any) => {
+            const endDate = new Date(v.endDate);
+            return v.status === 'active' && endDate >= now;
+          });
+          setActiveVotings(active);
+          return;
+        }
+      } catch (error) {
+        console.error('Error loading votings from API:', error);
+      }
+      
+      // Fallback на localStorage
       const votingsJSON = localStorage.getItem('snt_votings');
       if (votingsJSON) {
         try {
