@@ -69,7 +69,7 @@ const MigrateToDatabase = ({ userEmail, userRole }: MigrateToDatabaseProps) => {
         try {
           const news = JSON.parse(newsData);
           for (const item of news) {
-            await fetch(API_URL + '?type=news', {
+            const response = await fetch(API_URL + '?type=news', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -77,6 +77,7 @@ const MigrateToDatabase = ({ userEmail, userRole }: MigrateToDatabaseProps) => {
                 'X-User-Role': userRole
               },
               body: JSON.stringify({
+                id: item.id,
                 title: item.title,
                 text: item.text,
                 category: item.category,
@@ -85,7 +86,14 @@ const MigrateToDatabase = ({ userEmail, userRole }: MigrateToDatabaseProps) => {
                 mainPageExpiresAt: item.mainPageExpiresAt,
               })
             });
-            migrated.push(`✅ Новость: ${item.title}`);
+            
+            if (response.status === 409) {
+              migrated.push(`⚠️ Новость уже существует: ${item.title}`);
+            } else if (response.ok) {
+              migrated.push(`✅ Новость: ${item.title}`);
+            } else {
+              migrated.push(`❌ Ошибка миграции новости ${item.title}`);
+            }
           }
         } catch (e) {
           migrated.push(`❌ Ошибка миграции новостей: ${e}`);

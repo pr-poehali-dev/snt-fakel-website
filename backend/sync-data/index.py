@@ -119,12 +119,22 @@ def handler(event: dict, context) -> dict:
             elif method == 'POST':
                 # Создать новое голосование
                 body = json.loads(event.get('body', '{}'))
+                voting_id = body['id']
+                
+                # Проверка на дубликаты при миграции
+                cur.execute("SELECT id FROM votings WHERE id = %s", (voting_id,))
+                if cur.fetchone():
+                    return {
+                        'statusCode': 409,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Voting already exists', 'id': voting_id})
+                    }
                 
                 cur.execute("""
                     INSERT INTO votings (id, title, description, options, start_date, end_date, status, created_by)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
-                    body['id'],
+                    voting_id,
                     body['title'],
                     body.get('description', ''),
                     json.dumps(body['options']),
@@ -146,13 +156,21 @@ def handler(event: dict, context) -> dict:
                 action = body.get('action')  # 'vote', 'update_status', 'archive'
                 
                 if action == 'vote':
-                    # Добавить голос пользователя
+                    # Добавить голос пользователя (проверка на дубликаты при миграции)
+                    cur.execute("SELECT user_email FROM voting_votes WHERE voting_id = %s AND user_email = %s", 
+                                (body['votingId'], body['userEmail']))
+                    if cur.fetchone():
+                        # Голос уже существует - пропускаем при миграции
+                        return {
+                            'statusCode': 200,
+                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                            'body': json.dumps({'success': True, 'message': 'Vote already exists'})
+                        }
+                    
                     cur.execute("""
                         INSERT INTO voting_votes (voting_id, user_email, option_index)
                         VALUES (%s, %s, %s)
-                        ON CONFLICT (voting_id, user_email) 
-                        DO UPDATE SET option_index = %s, voted_at = CURRENT_TIMESTAMP
-                    """, (body['votingId'], body['userEmail'], body['optionIndex'], body['optionIndex']))
+                    """, (body['votingId'], body['userEmail'], body['optionIndex']))
                     
                 elif action == 'update_status':
                     # Обновить статус голосования

@@ -132,12 +132,29 @@ def handler(event: dict, context) -> dict:
                 images = body.get('images', [])
                 show_on_main = body.get('showOnMainPage', False)
                 expires_at = body.get('mainPageExpiresAt')
+                news_id = body.get('id')  # ID из localStorage для проверки дубликатов
 
-                cur.execute("""
-                    INSERT INTO news (title, text, category, images, show_on_main_page, main_page_expires_at, created_by)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    RETURNING id, title, date, category, text, images, show_on_main_page, main_page_expires_at, created_by, created_at
-                """, (title, text, category, images, show_on_main, expires_at, user_email))
+                # Проверка на дубликаты при миграции
+                if news_id:
+                    cur.execute("SELECT id FROM news WHERE id = %s", (news_id,))
+                    if cur.fetchone():
+                        return {
+                            'statusCode': 409,
+                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                            'body': json.dumps({'error': 'News already exists', 'id': news_id})
+                        }
+                    
+                    cur.execute("""
+                        INSERT INTO news (id, title, text, category, images, show_on_main_page, main_page_expires_at, created_by)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        RETURNING id, title, date, category, text, images, show_on_main_page, main_page_expires_at, created_by, created_at
+                    """, (news_id, title, text, category, images, show_on_main, expires_at, user_email))
+                else:
+                    cur.execute("""
+                        INSERT INTO news (title, text, category, images, show_on_main_page, main_page_expires_at, created_by)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        RETURNING id, title, date, category, text, images, show_on_main_page, main_page_expires_at, created_by, created_at
+                    """, (title, text, category, images, show_on_main, expires_at, user_email))
                 row = cur.fetchone()
                 
                 return {

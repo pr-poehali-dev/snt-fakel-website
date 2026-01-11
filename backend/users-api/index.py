@@ -826,6 +826,60 @@ def handler(event: dict, context) -> dict:
                     'isBase64Encoded': False
                 }
             
+            # Обновление данных пользователя по email (из ProfileSection)
+            if body.get('email') and body.get('updates'):
+                user_email = body['email']
+                updates = body['updates']
+                
+                # Сначала получаем текущий plot_number пользователя
+                cur.execute("SELECT plot_number FROM users WHERE email = %s", (user_email,))
+                user_row = cur.fetchone()
+                old_plot_number = user_row['plot_number'] if user_row else None
+                new_plot_number = updates.get('plotNumber')
+                
+                # Обновляем данные пользователя
+                cur.execute("""
+                    UPDATE users 
+                    SET first_name = %s, last_name = %s, middle_name = %s,
+                        birth_date = %s, phone = %s, plot_number = %s,
+                        owner_first_name = %s, owner_last_name = %s, owner_middle_name = %s,
+                        land_doc_number = %s, house_doc_number = %s,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE email = %s
+                """, (
+                    updates.get('firstName'),
+                    updates.get('lastName'),
+                    updates.get('middleName'),
+                    updates.get('birthDate'),
+                    updates.get('phone'),
+                    new_plot_number,
+                    updates.get('ownerFirstName'),
+                    updates.get('ownerLastName'),
+                    updates.get('ownerMiddleName'),
+                    updates.get('landDocNumber'),
+                    updates.get('houseDocNumber'),
+                    user_email
+                ))
+                
+                # Если изменился номер участка - обновляем у всех пользователей этого участка
+                if new_plot_number and new_plot_number != old_plot_number and old_plot_number:
+                    cur.execute("""
+                        UPDATE users 
+                        SET plot_number = %s, updated_at = CURRENT_TIMESTAMP
+                        WHERE plot_number = %s AND email != %s
+                    """, (new_plot_number, old_plot_number, user_email))
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'success': True}),
+                    'isBase64Encoded': False
+                }
+            
             user_id = body.get('id')
             
             if not user_id:

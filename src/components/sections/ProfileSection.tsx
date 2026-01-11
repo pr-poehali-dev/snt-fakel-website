@@ -76,6 +76,9 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
           const user = users.find((u: any) => u.email === currentUserEmail);
           
           if (user) {
+            // Загружаем номер участка из БД (общий для всех пользователей участка)
+            const plotNumber = user.plot_number || user.plotNumber || '';
+            
             setUserData({
               lastName: user.last_name || user.lastName || '',
               firstName: user.first_name || user.firstName || '',
@@ -83,7 +86,7 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
               birthDate: user.birth_date || user.birthDate || '',
               phone: user.phone || '',
               email: user.email || '',
-              plotNumber: user.plot_number || user.plotNumber || '',
+              plotNumber: plotNumber,
               ownerLastName: user.owner_last_name || user.ownerLastName || '',
               ownerFirstName: user.owner_first_name || user.ownerFirstName || '',
               ownerMiddleName: user.owner_middle_name || user.ownerMiddleName || '',

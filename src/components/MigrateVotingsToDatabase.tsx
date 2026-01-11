@@ -68,7 +68,7 @@ const MigrateVotingsToDatabase = ({ userEmail, userRole, onBack }: MigrateVoting
               const votesEntries = Object.entries(voting.votes);
               for (const [voteUserEmail, optionIndex] of votesEntries) {
                 try {
-                  await fetch(API_URL + '?type=votings', {
+                  const voteResponse = await fetch(API_URL + '?type=votings', {
                     method: 'PUT',
                     headers: {
                       'Content-Type': 'application/json',
@@ -82,12 +82,23 @@ const MigrateVotingsToDatabase = ({ userEmail, userRole, onBack }: MigrateVoting
                       optionIndex: optionIndex as number
                     })
                   });
-                  results.push(`  ✅ Голос: ${voteUserEmail}`);
+                  
+                  if (voteResponse.ok) {
+                    const voteData = await voteResponse.json();
+                    if (voteData.message === 'Vote already exists') {
+                      results.push(`  ⚠️ Голос уже существует: ${voteUserEmail}`);
+                    } else {
+                      results.push(`  ✅ Голос: ${voteUserEmail}`);
+                    }
+                  }
                 } catch (error) {
                   results.push(`  ❌ Ошибка при миграции голоса: ${error}`);
                 }
               }
             }
+          } else if (response.status === 409) {
+            const errorData = await response.json();
+            results.push(`⚠️ Голосование уже существует: ${voting.title}`);
           } else {
             const errorData = await response.json();
             results.push(`❌ Ошибка при миграции голосования ${voting.title}: ${errorData.error || 'Unknown error'}`);
