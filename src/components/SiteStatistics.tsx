@@ -18,7 +18,7 @@ const SiteStatistics = ({ onBack }: SiteStatisticsProps) => {
     return () => clearInterval(interval);
   }, []);
 
-  const loadStatistics = () => {
+  const loadStatistics = async () => {
     try {
       const usersJSON = localStorage.getItem('snt_users');
       const messagesJSON = localStorage.getItem('snt_messages');
@@ -34,13 +34,25 @@ const SiteStatistics = ({ onBack }: SiteStatisticsProps) => {
       const appealsFC = appealsFCJSON ? JSON.parse(appealsFCJSON) : [];
       const appealsBoard = appealsBoardJSON ? JSON.parse(appealsBoardJSON) : [];
 
-      // Онлайн пользователи
-      const now = Date.now();
-      const onlineTimeout = 5 * 60 * 1000;
-      const onlineUsers = users.filter((u: any) => {
-        const lastActivity = u.lastActivity || 0;
-        return (now - lastActivity) < onlineTimeout;
-      });
+      // Онлайн пользователи из БД
+      let onlineUsersCount = 0;
+      try {
+        const response = await fetch('https://functions.poehali.dev/36da760a-f60b-4b9a-ab53-5fa753cf41a4?type=online');
+        if (response.ok) {
+          const data = await response.json();
+          onlineUsersCount = data.onlineUsers || 0;
+        }
+      } catch (error) {
+        console.error('Error fetching online users from API:', error);
+        // Fallback на localStorage
+        const now = Date.now();
+        const onlineTimeout = 5 * 60 * 1000;
+        const onlineUsers = users.filter((u: any) => {
+          const lastActivity = u.lastActivity || 0;
+          return (now - lastActivity) < onlineTimeout;
+        });
+        onlineUsersCount = onlineUsers.length;
+      }
 
       // Распределение по ролям (только если есть пользователи с этой ролью)
       const roleDistribution = [
@@ -98,7 +110,7 @@ const SiteStatistics = ({ onBack }: SiteStatisticsProps) => {
 
       setStats({
         totalUsers: users.length,
-        onlineUsers: onlineUsers.length,
+        onlineUsers: onlineUsersCount,
         totalMessages: messages.length,
         totalReadings: readings.length,
         totalVotings: votings.length,

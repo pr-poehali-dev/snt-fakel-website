@@ -20,6 +20,7 @@ import HolidayDecorManager from './HolidayDecorManager';
 import SiteStatistics from './SiteStatistics';
 import GalleryManager from './GalleryManager';
 import MigrateToDatabase from './MigrateToDatabase';
+import MigrateVotingsToDatabase from './MigrateVotingsToDatabase';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -188,6 +189,16 @@ const ContentSections = ({ activeSection, news, gallery, isLoggedIn, userRole, c
         </div>
         <MigrateToDatabase userEmail={currentUserEmail} userRole={userRole} />
       </div>
+    );
+  }
+
+  if (activeSection === 'migrate-votings' && (userRole === 'admin' || userRole === 'chairman')) {
+    return (
+      <MigrateVotingsToDatabase
+        userEmail={currentUserEmail}
+        userRole={userRole}
+        onBack={() => setActiveSection('profile')}
+      />
     );
   }
 

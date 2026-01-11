@@ -1,0 +1,47 @@
+{
+  "tests": [
+    {
+      "name": "Get online users count",
+      "method": "GET",
+      "path": "/?type=online",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "onlineUsers": 0
+      }
+    },
+    {
+      "name": "Update user online status",
+      "method": "POST",
+      "path": "/?type=online",
+      "body": {
+        "userEmail": "test@example.com",
+        "lastActivity": 1234567890000
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      }
+    },
+    {
+      "name": "Get all votings",
+      "method": "GET",
+      "path": "/?type=votings",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "votings": []
+      }
+    },
+    {
+      "name": "Get site statistics",
+      "method": "GET",
+      "path": "/?type=stats",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "onlineUsers": 0,
+        "totalUsers": 5,
+        "activeVotings": 0,
+        "totalVotings": 0
+      }
+    }
+  ]
+}

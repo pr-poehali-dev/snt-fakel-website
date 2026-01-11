@@ -4,9 +4,22 @@ export const useOnlineUsers = () => {
   const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
-    const updateOnlineStatus = () => {
+    const updateOnlineStatus = async () => {
+      // Пытаемся получить из БД
+      try {
+        const response = await fetch('https://functions.poehali.dev/36da760a-f60b-4b9a-ab53-5fa753cf41a4?type=online');
+        if (response.ok) {
+          const data = await response.json();
+          setOnlineCount(data.onlineUsers || 0);
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching online users from API:', error);
+      }
+      
+      // Fallback на localStorage
       const now = Date.now();
-      const onlineTimeout = 5 * 60 * 1000; // 5 минут
+      const onlineTimeout = 5 * 60 * 1000;
       
       const usersJSON = localStorage.getItem('snt_users');
       if (!usersJSON) return;
@@ -20,13 +33,10 @@ export const useOnlineUsers = () => {
       setOnlineCount(onlineUsers.length);
     };
 
-    // Обновляем при монтировании
     updateOnlineStatus();
 
-    // Обновляем каждую минуту
     const interval = setInterval(updateOnlineStatus, 60000);
 
-    // Слушаем изменения активности
     window.addEventListener('user-activity', updateOnlineStatus);
 
     return () => {
@@ -38,15 +48,30 @@ export const useOnlineUsers = () => {
   return onlineCount;
 };
 
-export const updateUserActivity = (email: string) => {
+export const updateUserActivity = async (email: string) => {
+  // Обновляем в localStorage (для старых компонентов)
   const usersJSON = localStorage.getItem('snt_users');
-  if (!usersJSON) return;
-
-  const users = JSON.parse(usersJSON);
-  const updatedUsers = users.map((u: any) =>
-    u.email === email ? { ...u, lastActivity: Date.now() } : u
-  );
-
-  localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
+  if (usersJSON) {
+    const users = JSON.parse(usersJSON);
+    const updatedUsers = users.map((u: any) =>
+      u.email === email ? { ...u, lastActivity: Date.now() } : u
+    );
+    localStorage.setItem('snt_users', JSON.stringify(updatedUsers));
+  }
+  
+  // Синхронизируем с БД
+  try {
+    await fetch('https://functions.poehali.dev/36da760a-f60b-4b9a-ab53-5fa753cf41a4?type=online', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userEmail: email,
+        lastActivity: Date.now()
+      })
+    });
+  } catch (error) {
+    console.error('Error syncing user activity to DB:', error);
+  }
+  
   window.dispatchEvent(new Event('user-activity'));
 };

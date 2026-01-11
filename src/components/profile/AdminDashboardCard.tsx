@@ -228,7 +228,15 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
                 onClick={() => onNavigate?.('migrate-to-db')}
               >
                 <Icon name="Database" size={18} className="mr-2" />
-                Миграция в БД
+                Миграция контента в БД
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start border-violet-500 text-violet-600 hover:bg-violet-50"
+                onClick={() => onNavigate?.('migrate-votings')}
+              >
+                <Icon name="Vote" size={18} className="mr-2" />
+                Миграция голосований в БД
               </Button>
               <Button 
                 variant="outline" 
