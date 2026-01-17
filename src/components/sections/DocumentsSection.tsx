@@ -76,18 +76,26 @@ const defaultDocuments: Document[] = [
   ];
 
 const DocumentsSection = ({ userRole, onNavigate }: DocumentsSectionProps) => {
-  const [documents, setDocuments] = useState<Document[]>(defaultDocuments);
+  const [documents, setDocuments] = useState<Document[]>([]);
 
   useEffect(() => {
-    const loadDocuments = () => {
-      const savedDocs = localStorage.getItem('snt_documents');
-      if (savedDocs) {
-        try {
-          setDocuments(JSON.parse(savedDocs));
-        } catch (e) {
-          console.error('Error loading documents:', e);
+    const loadDocuments = async () => {
+      try {
+        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=documents');
+        if (response.ok) {
+          const data = await response.json();
+          const docs = data.documents || [];
+          
+          if (docs.length > 0) {
+            setDocuments(docs);
+          } else {
+            setDocuments(defaultDocuments);
+          }
+        } else {
+          setDocuments(defaultDocuments);
         }
-      } else {
+      } catch (error) {
+        console.error('Error loading documents:', error);
         setDocuments(defaultDocuments);
       }
     };

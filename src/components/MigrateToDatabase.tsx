@@ -100,6 +100,43 @@ const MigrateToDatabase = ({ userEmail, userRole }: MigrateToDatabaseProps) => {
         }
       }
 
+      // Миграция документов
+      const documentsData = localStorage.getItem('snt_documents');
+      if (documentsData) {
+        try {
+          const docs = JSON.parse(documentsData);
+          for (const doc of docs) {
+            const response = await fetch(API_URL + '?type=documents', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-User-Email': userEmail,
+                'X-User-Role': userRole
+              },
+              body: JSON.stringify({
+                id: doc.id,
+                title: doc.title,
+                category: doc.category,
+                description: doc.description,
+                fileUrl: doc.fileUrl,
+                fileName: doc.fileName,
+                size: doc.size
+              })
+            });
+            
+            if (response.status === 409) {
+              migrated.push(`⚠️ Документ уже существует: ${doc.title}`);
+            } else if (response.ok) {
+              migrated.push(`✅ Документ: ${doc.title}`);
+            } else {
+              migrated.push(`❌ Ошибка миграции документа ${doc.title}`);
+            }
+          }
+        } catch (e) {
+          migrated.push(`❌ Ошибка миграции документов: ${e}`);
+        }
+      }
+
       setResults(migrated);
       
       if (migrated.length > 0) {

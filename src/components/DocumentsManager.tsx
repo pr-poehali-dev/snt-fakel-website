@@ -35,21 +35,17 @@ const DocumentsManager = () => {
     loadDocuments();
   }, []);
 
-  const loadDocuments = () => {
-    const savedDocs = localStorage.getItem('snt_documents');
-    if (savedDocs) {
-      try {
-        setDocuments(JSON.parse(savedDocs));
-      } catch (e) {
-        console.error('Error loading documents:', e);
+  const loadDocuments = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=documents');
+      if (response.ok) {
+        const data = await response.json();
+        setDocuments(data.documents || []);
       }
+    } catch (error) {
+      console.error('Error loading documents:', error);
+      toast.error('Ошибка загрузки документов');
     }
-  };
-
-  const saveDocuments = (updatedDocs: Document[]) => {
-    localStorage.setItem('snt_documents', JSON.stringify(updatedDocs));
-    setDocuments(updatedDocs);
-    window.dispatchEvent(new CustomEvent('documents-updated'));
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -69,49 +65,56 @@ const DocumentsManager = () => {
       return;
     }
 
-    let fileUrl = '';
-    let fileName = '';
-    let fileSize = '0 КБ';
+    try {
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userRole = localStorage.getItem('userRole') || 'member';
 
-    if (formData.file) {
-      fileName = formData.file.name;
-      fileSize = formatFileSize(formData.file.size);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        fileUrl = e.target?.result as string;
+      let fileUrl = '';
+      let fileName = '';
+      let fileSize = '0 КБ';
+
+      if (formData.file) {
+        fileName = formData.file.name;
+        fileSize = formatFileSize(formData.file.size);
         
-        const newDoc: Document = {
-          id: Date.now(),
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve) => {
+          reader.onload = (e) => resolve((e.target?.result as string).split(',')[1]);
+          reader.readAsDataURL(formData.file!);
+        });
+
+        fileUrl = `${fileName}|${base64}`;
+      }
+
+      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': userEmail,
+          'X-User-Role': userRole
+        },
+        body: JSON.stringify({
           title: formData.title,
           category: formData.category,
           description: formData.description,
-          date: new Date().toLocaleDateString('ru-RU'),
-          size: fileSize,
           fileUrl,
-          fileName
-        };
+          fileName,
+          size: fileSize
+        })
+      });
 
-        const updatedDocs = [newDoc, ...documents];
-        saveDocuments(updatedDocs);
+      if (response.ok) {
+        await loadDocuments();
+        window.dispatchEvent(new CustomEvent('documents-updated'));
         resetForm();
         toast.success('Документ добавлен');
-      };
-      reader.readAsDataURL(formData.file);
-    } else {
-      const newDoc: Document = {
-        id: Date.now(),
-        title: formData.title,
-        category: formData.category,
-        description: formData.description,
-        date: new Date().toLocaleDateString('ru-RU'),
-        size: fileSize
-      };
-
-      const updatedDocs = [newDoc, ...documents];
-      saveDocuments(updatedDocs);
-      resetForm();
-      toast.success('Документ добавлен');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Ошибка добавления документа');
+      }
+    } catch (error) {
+      console.error('Error adding document:', error);
+      toast.error('Ошибка добавления документа');
     }
   };
 
@@ -126,61 +129,99 @@ const DocumentsManager = () => {
     });
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!formData.title.trim() || !formData.description.trim()) {
       toast.error('Заполните все поля');
       return;
     }
 
-    if (formData.file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const fileUrl = e.target?.result as string;
-        const fileName = formData.file!.name;
-        const fileSize = formatFileSize(formData.file!.size);
+    try {
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userRole = localStorage.getItem('userRole') || 'member';
 
-        const updatedDocs = documents.map(doc =>
-          doc.id === editingId
-            ? { 
-                ...doc, 
-                title: formData.title, 
-                category: formData.category, 
-                description: formData.description,
-                fileUrl,
-                fileName,
-                size: fileSize
-              }
-            : doc
-        );
+      let fileUrl = '';
+      let fileName = '';
+      let fileSize = '';
 
-        saveDocuments(updatedDocs);
+      if (formData.file) {
+        fileName = formData.file.name;
+        fileSize = formatFileSize(formData.file.size);
+        
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve) => {
+          reader.onload = (e) => resolve((e.target?.result as string).split(',')[1]);
+          reader.readAsDataURL(formData.file!);
+        });
+
+        fileUrl = `${fileName}|${base64}`;
+      }
+
+      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=documents', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': userEmail,
+          'X-User-Role': userRole
+        },
+        body: JSON.stringify({
+          id: editingId,
+          title: formData.title,
+          category: formData.category,
+          description: formData.description,
+          fileUrl: fileUrl || undefined,
+          fileName: fileName || undefined,
+          size: fileSize || undefined
+        })
+      });
+
+      if (response.ok) {
+        await loadDocuments();
+        window.dispatchEvent(new CustomEvent('documents-updated'));
         resetForm();
         toast.success('Документ обновлён');
-      };
-      reader.readAsDataURL(formData.file);
-    } else {
-      const updatedDocs = documents.map(doc =>
-        doc.id === editingId
-          ? { ...doc, title: formData.title, category: formData.category, description: formData.description }
-          : doc
-      );
-
-      saveDocuments(updatedDocs);
-      resetForm();
-      toast.success('Документ обновлён');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Ошибка обновления документа');
+      }
+    } catch (error) {
+      console.error('Error updating document:', error);
+      toast.error('Ошибка обновления документа');
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     const doc = documents.find(d => d.id === id);
     if (!doc) return;
 
     const confirmed = window.confirm(`Удалить документ "${doc.title}"?`);
     if (!confirmed) return;
 
-    const updatedDocs = documents.filter(d => d.id !== id);
-    saveDocuments(updatedDocs);
-    toast.success('Документ удалён');
+    try {
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userRole = localStorage.getItem('userRole') || 'member';
+
+      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=documents', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': userEmail,
+          'X-User-Role': userRole
+        },
+        body: JSON.stringify({ id })
+      });
+
+      if (response.ok) {
+        await loadDocuments();
+        window.dispatchEvent(new CustomEvent('documents-updated'));
+        toast.success('Документ удалён');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Ошибка удаления документа');
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Ошибка удаления документа');
+    }
   };
 
   const handleDownload = (doc: Document) => {
