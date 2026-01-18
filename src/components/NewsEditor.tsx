@@ -105,56 +105,61 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     }
   }, []);
 
-  const loadNews = () => {
-    const savedNews = localStorage.getItem('snt_news');
-    if (savedNews) {
-      try {
-        setNews(JSON.parse(savedNews));
-      } catch (e) {
-        console.error('Error loading news:', e);
+  const loadNews = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news');
+      if (response.ok) {
+        const data = await response.json();
+        setNews(data.news || []);
       }
+    } catch (error) {
+      console.error('Error loading news:', error);
+      toast.error('Ошибка загрузки новостей');
     }
   };
 
-  const saveNews = (updatedNews: NewsItem[]) => {
-    localStorage.setItem('snt_news', JSON.stringify(updatedNews));
-    setNews(updatedNews);
-    window.dispatchEvent(new CustomEvent('news-updated'));
-  };
-
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!formData.title.trim() || !formData.text.trim()) {
       toast.error('Заполните все поля');
       return;
     }
 
-    const currentUser = getCurrentUser();
-    const now = new Date().toISOString();
+    try {
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userRole = localStorage.getItem('userRole') || 'member';
 
-    const newItem: NewsItem = {
-      id: Date.now(),
-      title: formData.title,
-      category: formData.category,
-      text: formData.text,
-      images: formData.images,
-      date: new Date().toLocaleDateString('ru-RU'),
-      showOnMainPage: formData.showOnMainPage,
-      mainPageExpiresAt: formData.showOnMainPage 
-        ? new Date(Date.now() + parseInt(formData.mainPageDuration) * 24 * 60 * 60 * 1000).toISOString()
-        : undefined,
-      createdBy: currentUser,
-      createdAt: now,
-      history: [{
-        date: now,
-        author: currentUser,
-        action: formData.showOnMainPage ? 'published' : 'created'
-      }]
-    };
+      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': userEmail,
+          'X-User-Role': userRole
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          category: formData.category,
+          text: formData.text,
+          images: formData.images,
+          showOnMainPage: formData.showOnMainPage,
+          mainPageExpiresAt: formData.showOnMainPage 
+            ? new Date(Date.now() + parseInt(formData.mainPageDuration) * 24 * 60 * 60 * 1000).toISOString()
+            : null
+        })
+      });
 
-    const updatedNews = [newItem, ...news];
-    saveNews(updatedNews);
-    resetForm();
-    toast.success(formData.showOnMainPage ? 'Новость добавлена и размещена на главной' : 'Новость добавлена');
+      if (response.ok) {
+        await loadNews();
+        window.dispatchEvent(new CustomEvent('news-updated'));
+        resetForm();
+        toast.success(formData.showOnMainPage ? 'Новость добавлена и размещена на главной' : 'Новость добавлена');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Ошибка добавления новости');
+      }
+    } catch (error) {
+      console.error('Error adding news:', error);
+      toast.error('Ошибка добавления новости');
+    }
   };
 
   const handleEdit = (item: NewsItem) => {
@@ -170,105 +175,140 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     });
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!formData.title.trim() || !formData.text.trim()) {
       toast.error('Заполните все поля');
       return;
     }
 
-    const currentUser = getCurrentUser();
-    const now = new Date().toISOString();
+    try {
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userRole = localStorage.getItem('userRole') || 'member';
 
-    const updatedNews = news.map(item => {
-      if (item.id === editingId) {
-        const historyEntry: NewsHistoryEntry = {
-          date: now,
-          author: currentUser,
-          action: 'edited'
-        };
-        
-        return { 
-          ...item, 
-          title: formData.title, 
-          category: formData.category, 
+      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': userEmail,
+          'X-User-Role': userRole
+        },
+        body: JSON.stringify({
+          id: editingId,
+          title: formData.title,
+          category: formData.category,
           text: formData.text,
           images: formData.images,
           showOnMainPage: formData.showOnMainPage,
           mainPageExpiresAt: formData.showOnMainPage 
             ? new Date(Date.now() + parseInt(formData.mainPageDuration) * 24 * 60 * 60 * 1000).toISOString()
-            : undefined,
-          lastEditedBy: currentUser,
-          lastEditedAt: now,
-          history: [...(item.history || []), historyEntry]
-        };
-      }
-      return item;
-    });
+            : null
+        })
+      });
 
-    saveNews(updatedNews);
-    resetForm();
-    toast.success('Новость обновлена');
+      if (response.ok) {
+        await loadNews();
+        window.dispatchEvent(new CustomEvent('news-updated'));
+        resetForm();
+        toast.success('Новость обновлена');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Ошибка обновления новости');
+      }
+    } catch (error) {
+      console.error('Error updating news:', error);
+      toast.error('Ошибка обновления новости');
+    }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     const item = news.find(n => n.id === id);
     if (!item) return;
 
     const confirmed = window.confirm(`Удалить новость "${item.title}"?`);
     if (!confirmed) return;
 
-    const updatedNews = news.filter(n => n.id !== id);
-    saveNews(updatedNews);
-    toast.success('Новость удалена');
+    try {
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userRole = localStorage.getItem('userRole') || 'member';
+
+      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news&id=' + id, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': userEmail,
+          'X-User-Role': userRole
+        }
+      });
+
+      if (response.ok) {
+        await loadNews();
+        window.dispatchEvent(new CustomEvent('news-updated'));
+        toast.success('Новость удалена');
+      } else {
+        toast.error('Ошибка удаления новости');
+      }
+    } catch (error) {
+      console.error('Error deleting news:', error);
+      toast.error('Ошибка удаления новости');
+    }
   };
 
-  const handleToggleMainPage = (id: number, customDuration?: number) => {
+  const handleToggleMainPage = async (id: number, customDuration?: number) => {
     const item = news.find(n => n.id === id);
     if (!item) return;
 
-    const currentUser = getCurrentUser();
-    const now = new Date().toISOString();
-    const isCurrentlyOnMain = item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date();
+    try {
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userRole = localStorage.getItem('userRole') || 'member';
+      const isCurrentlyOnMain = item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date();
 
-    if (isCurrentlyOnMain && customDuration === undefined) {
-      const historyEntry: NewsHistoryEntry = {
-        date: now,
-        author: currentUser,
-        action: 'unpublished'
-      };
-      
-      const updatedNews = news.map(n =>
-        n.id === id
-          ? { 
-              ...n, 
-              showOnMainPage: false, 
-              mainPageExpiresAt: undefined,
-              history: [...(n.history || []), historyEntry]
-            }
-          : n
-      );
-      saveNews(updatedNews);
-      toast.success('Новость убрана с главной страницы');
-    } else {
-      const duration = customDuration || 7;
-      const historyEntry: NewsHistoryEntry = {
-        date: now,
-        author: currentUser,
-        action: 'published'
-      };
-      
-      const updatedNews = news.map(n =>
-        n.id === id
-          ? { 
-              ...n, 
-              showOnMainPage: true, 
-              mainPageExpiresAt: new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString(),
-              history: [...(n.history || []), historyEntry]
-            }
-          : n
-      );
-      saveNews(updatedNews);
-      toast.success(`Новость размещена на главной на ${duration} ${duration === 1 ? 'день' : duration < 5 ? 'дня' : 'дней'}`);
+      if (isCurrentlyOnMain && customDuration === undefined) {
+        // Убрать с главной
+        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Email': userEmail,
+            'X-User-Role': userRole
+          },
+          body: JSON.stringify({
+            id: id,
+            showOnMainPage: false,
+            mainPageExpiresAt: null
+          })
+        });
+
+        if (response.ok) {
+          await loadNews();
+          window.dispatchEvent(new CustomEvent('news-updated'));
+          toast.success('Новость убрана с главной страницы');
+        }
+      } else {
+        // Разместить на главной
+        const duration = customDuration || 7;
+        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Email': userEmail,
+            'X-User-Role': userRole
+          },
+          body: JSON.stringify({
+            id: id,
+            showOnMainPage: true,
+            mainPageExpiresAt: new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString()
+          })
+        });
+
+        if (response.ok) {
+          await loadNews();
+          window.dispatchEvent(new CustomEvent('news-updated'));
+          toast.success(`Новость размещена на главной на ${duration} ${duration === 1 ? 'день' : duration < 5 ? 'дня' : 'дней'}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling main page:', error);
+      toast.error('Ошибка обновления новости');
     }
   };
 

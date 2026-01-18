@@ -32,27 +32,54 @@ const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionPro
     onNavigate?.('news-editor');
   };
   
-  const handleDelete = (item: NewsItem) => {
+  const handleDelete = async (item: NewsItem) => {
     const confirmed = window.confirm(`Удалить новость "${item.title}"?`);
     if (!confirmed) return;
     
-    const updatedNews = news.filter(n => n.id !== item.id);
-    localStorage.setItem('snt_news', JSON.stringify(updatedNews));
-    setNews(updatedNews);
-    window.dispatchEvent(new CustomEvent('news-updated'));
-    toast.success('Новость удалена');
+    try {
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userRole = localStorage.getItem('userRole') || 'member';
+
+      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news&id=' + item.id, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': userEmail,
+          'X-User-Role': userRole
+        }
+      });
+
+      if (response.ok) {
+        const updatedNews = news.filter(n => n.id !== item.id);
+        setNews(updatedNews);
+        window.dispatchEvent(new CustomEvent('news-updated'));
+        toast.success('Новость удалена');
+      } else {
+        toast.error('Ошибка удаления новости');
+      }
+    } catch (error) {
+      console.error('Error deleting news:', error);
+      toast.error('Ошибка удаления новости');
+    }
   };
 
   useEffect(() => {
-    const loadNews = () => {
-      const savedNews = localStorage.getItem('snt_news');
-      if (savedNews) {
-        try {
-          setNews(JSON.parse(savedNews));
-        } catch (e) {
-          console.error('Error loading news:', e);
+    const loadNews = async () => {
+      try {
+        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news');
+        if (response.ok) {
+          const data = await response.json();
+          const newsItems = data.news || [];
+          if (newsItems.length > 0) {
+            setNews(newsItems);
+          } else {
+            setNews(initialNews);
+          }
+        } else {
+          setNews(initialNews);
         }
-      } else {
+      } catch (error) {
+        console.error('Error loading news:', error);
         setNews(initialNews);
       }
     };
