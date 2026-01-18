@@ -131,14 +131,7 @@ const DocumentsSection = ({ userRole, onNavigate }: DocumentsSectionProps) => {
       return;
     }
 
-    // Скачиваем файл вместо просмотра
-    const link = document.createElement('a');
-    link.href = doc.fileUrl;
-    link.download = doc.fileName || doc.title;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    window.open(doc.fileUrl, '_blank');
   };
 
   return (
