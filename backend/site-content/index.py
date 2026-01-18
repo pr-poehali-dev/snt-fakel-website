@@ -120,10 +120,11 @@ def handler(event: dict, context) -> dict:
 
         # ============ POST - Создать контент ============
         elif method == 'POST':
-            if not can_edit:
-                return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
-
             body = json.loads(event.get('body', '{}'))
+            
+            # Для документов разрешаем всем авторизованным пользователям
+            if content_type != 'documents' and not can_edit:
+                return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
 
             if content_type == 'news':
                 title = body.get('title')
@@ -178,10 +179,18 @@ def handler(event: dict, context) -> dict:
                 title = body.get('title')
                 category = body.get('category')
                 description = body.get('description', '')
+                file_url_combined = body.get('fileUrl', '')
                 file_data = body.get('fileData')
-                file_name = body.get('fileName')
+                file_name = body.get('fileName', '')
+                file_size_str = body.get('size', '0 КБ')
+                doc_id = body.get('id')
 
-                if not file_data or not file_name:
+                # Поддержка двух форматов: fileUrl="name|base64" или fileData+fileName
+                if file_url_combined and '|' in file_url_combined:
+                    parts = file_url_combined.split('|', 1)
+                    file_name = parts[0]
+                    file_data = parts[1]
+                elif not file_data or not file_name:
                     return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'File data required'})}
 
                 # Загрузка в S3
@@ -196,7 +205,7 @@ def handler(event: dict, context) -> dict:
                         file_data = file_data.split(',')[1]
                     
                     file_bytes = base64.b64decode(file_data)
-                    file_size = len(file_bytes)
+                    file_size_bytes = len(file_bytes)
                     
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                     s3_key = f'documents/{timestamp}_{file_name}'
@@ -207,11 +216,26 @@ def handler(event: dict, context) -> dict:
                 except Exception as e:
                     return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': f'Upload failed: {str(e)}'})}
 
-                cur.execute("""
-                    INSERT INTO documents (title, category, description, file_url, file_name, file_size, uploaded_by)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    RETURNING id, title, category, date, file_size, description, file_url, file_name, uploaded_by, uploaded_at
-                """, (title, category, description, file_url, file_name, file_size, user_email))
+                # Проверка дубликатов при миграции
+                if doc_id:
+                    cur.execute("SELECT id FROM documents WHERE id = %s", (doc_id,))
+                    if cur.fetchone():
+                        return {
+                            'statusCode': 409,
+                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                            'body': json.dumps({'error': 'Document already exists', 'id': doc_id})
+                        }
+                    cur.execute("""
+                        INSERT INTO documents (id, title, category, description, file_url, file_name, file_size, uploaded_by)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        RETURNING id, title, category, date, file_size, description, file_url, file_name, uploaded_by, uploaded_at
+                    """, (doc_id, title, category, description, file_url, file_name, file_size_str, user_email))
+                else:
+                    cur.execute("""
+                        INSERT INTO documents (title, category, description, file_url, file_name, file_size, uploaded_by)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        RETURNING id, title, category, date, file_size, description, file_url, file_name, uploaded_by, uploaded_at
+                    """, (title, category, description, file_url, file_name, file_size_str, user_email))
                 row = cur.fetchone()
 
                 return {
@@ -233,10 +257,11 @@ def handler(event: dict, context) -> dict:
 
         # ============ PUT - Обновить контент ============
         elif method == 'PUT':
-            if not can_edit:
-                return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
-
             body = json.loads(event.get('body', '{}'))
+            
+            # Для документов разрешаем всем авторизованным пользователям
+            if content_type != 'documents' and not can_edit:
+                return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
 
             if content_type == 'news':
                 news_id = body.get('id')
@@ -261,6 +286,63 @@ def handler(event: dict, context) -> dict:
                 
                 return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True})}
 
+            elif content_type == 'documents':
+                doc_id = body.get('id')
+                updates = []
+                params = []
+
+                if 'title' in body:
+                    updates.append('title = %s')
+                    params.append(body['title'])
+                if 'category' in body:
+                    updates.append('category = %s')
+                    params.append(body['category'])
+                if 'description' in body:
+                    updates.append('description = %s')
+                    params.append(body['description'])
+                
+                # Обновление файла (если указан)
+                file_url_combined = body.get('fileUrl', '')
+                if file_url_combined and '|' in file_url_combined:
+                    parts = file_url_combined.split('|', 1)
+                    file_name = parts[0]
+                    file_data = parts[1]
+                    
+                    try:
+                        s3 = boto3.client('s3',
+                            endpoint_url='https://bucket.poehali.dev',
+                            aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                            aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
+                        )
+
+                        if ',' in file_data:
+                            file_data = file_data.split(',')[1]
+                        
+                        file_bytes = base64.b64decode(file_data)
+                        file_size_bytes = len(file_bytes)
+                        
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        s3_key = f'documents/{timestamp}_{file_name}'
+                        
+                        s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes)
+                        file_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
+                        
+                        updates.append('file_url = %s')
+                        params.append(file_url)
+                        updates.append('file_name = %s')
+                        params.append(file_name)
+                        if 'size' in body:
+                            updates.append('file_size = %s')
+                            params.append(body['size'])
+                    except Exception as e:
+                        return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': f'Upload failed: {str(e)}'})}
+
+                if updates:
+                    params.append(doc_id)
+                    cur.execute(f"UPDATE documents SET {', '.join(updates)} WHERE id = %s", params)
+                
+                return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True})}
+
             elif content_type == 'pages':
                 page_key = body.get('key')
                 content = body.get('content')
@@ -276,10 +358,12 @@ def handler(event: dict, context) -> dict:
 
         # ============ DELETE - Удалить контент ============
         elif method == 'DELETE':
-            if not can_edit:
+            body = json.loads(event.get('body', '{}'))
+            item_id = body.get('id') or query_params.get('id')
+            
+            # Для документов разрешаем всем авторизованным пользователям
+            if content_type != 'documents' and not can_edit:
                 return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
-
-            item_id = query_params.get('id')
 
             if content_type == 'news':
                 cur.execute("UPDATE news SET is_published = FALSE WHERE id = %s", (item_id,))
