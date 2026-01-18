@@ -38,20 +38,28 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
           }).length;
         }
         
-        // Загрузить новости
-        const newsJSON = localStorage.getItem('snt_news');
-        const newsCount = newsJSON ? JSON.parse(newsJSON).length : 0;
-        
-        // Загрузить документы
-        const docsJSON = localStorage.getItem('snt_documents');
-        let docsCount = 0;
-        if (docsJSON) {
-          try {
-            const docs = JSON.parse(docsJSON);
-            docsCount = Array.isArray(docs) ? docs.filter((d: any) => d && d.fileUrl).length : 0;
-          } catch (e) {
-            console.error('Error parsing documents:', e);
+        // Загрузить новости из БД
+        let newsCount = 0;
+        try {
+          const newsResponse = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news');
+          if (newsResponse.ok) {
+            const newsData = await newsResponse.json();
+            newsCount = newsData.news?.length || 0;
           }
+        } catch (e) {
+          console.error('Error loading news:', e);
+        }
+        
+        // Загрузить документы из БД
+        let docsCount = 0;
+        try {
+          const docsResponse = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=documents');
+          if (docsResponse.ok) {
+            const docsData = await docsResponse.json();
+            docsCount = docsData.documents?.length || 0;
+          }
+        } catch (e) {
+          console.error('Error loading documents:', e);
         }
         
         setStats({
