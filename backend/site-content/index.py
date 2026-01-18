@@ -5,6 +5,15 @@ import boto3
 import base64
 from datetime import datetime, date
 
+def format_file_size(bytes_size: int) -> str:
+    """Форматирует размер файла из байт в читаемый формат"""
+    if bytes_size < 1024:
+        return f"{bytes_size} Б"
+    elif bytes_size < 1024 * 1024:
+        return f"{bytes_size / 1024:.1f} КБ"
+    else:
+        return f"{bytes_size / (1024 * 1024):.1f} МБ"
+
 def handler(event: dict, context) -> dict:
     """Универсальное API для синхронизации контента сайта (новости, документы, страницы)"""
     method = event.get('httpMethod', 'GET')
@@ -83,7 +92,7 @@ def handler(event: dict, context) -> dict:
                         'title': row[1],
                         'category': row[2],
                         'date': row[3].isoformat() if row[3] else None,
-                        'size': row[4],
+                        'size': format_file_size(row[4]) if row[4] else '0 КБ',
                         'description': row[5],
                         'fileUrl': row[6],
                         'fileName': row[7],
@@ -182,39 +191,43 @@ def handler(event: dict, context) -> dict:
                 file_url_combined = body.get('fileUrl', '')
                 file_data = body.get('fileData')
                 file_name = body.get('fileName', '')
-                file_size_str = body.get('size', '0 КБ')
                 doc_id = body.get('id')
+
+                file_url = None
+                file_size_bytes = 0
 
                 # Поддержка двух форматов: fileUrl="name|base64" или fileData+fileName
                 if file_url_combined and '|' in file_url_combined:
                     parts = file_url_combined.split('|', 1)
                     file_name = parts[0]
                     file_data = parts[1]
-                elif not file_data or not file_name:
-                    return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'File data required'})}
+                
+                # Если есть данные файла - загружаем в S3
+                if file_data and file_name:
+                    try:
+                        s3 = boto3.client('s3',
+                            endpoint_url='https://bucket.poehali.dev',
+                            aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                            aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
+                        )
 
-                # Загрузка в S3
-                try:
-                    s3 = boto3.client('s3',
-                        endpoint_url='https://bucket.poehali.dev',
-                        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
-                        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
-                    )
-
-                    if ',' in file_data:
-                        file_data = file_data.split(',')[1]
-                    
-                    file_bytes = base64.b64decode(file_data)
-                    file_size_bytes = len(file_bytes)
-                    
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    s3_key = f'documents/{timestamp}_{file_name}'
-                    
-                    s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes)
-                    file_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
-                    
-                except Exception as e:
-                    return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': f'Upload failed: {str(e)}'})}
+                        if ',' in file_data:
+                            file_data = file_data.split(',')[1]
+                        
+                        file_bytes = base64.b64decode(file_data)
+                        file_size_bytes = len(file_bytes)
+                        
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        s3_key = f'documents/{timestamp}_{file_name}'
+                        
+                        s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes)
+                        file_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
+                        
+                    except Exception as e:
+                        return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': f'Upload failed: {str(e)}'})}
+                elif file_url_combined and not '|' in file_url_combined:
+                    # Миграция: fileUrl уже содержит прямую ссылку
+                    file_url = file_url_combined
 
                 # Проверка дубликатов при миграции
                 if doc_id:
@@ -229,13 +242,13 @@ def handler(event: dict, context) -> dict:
                         INSERT INTO documents (id, title, category, description, file_url, file_name, file_size, uploaded_by)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                         RETURNING id, title, category, date, file_size, description, file_url, file_name, uploaded_by, uploaded_at
-                    """, (doc_id, title, category, description, file_url, file_name, file_size_str, user_email))
+                    """, (doc_id, title, category, description, file_url, file_name, file_size_bytes, user_email))
                 else:
                     cur.execute("""
                         INSERT INTO documents (title, category, description, file_url, file_name, file_size, uploaded_by)
                         VALUES (%s, %s, %s, %s, %s, %s, %s)
                         RETURNING id, title, category, date, file_size, description, file_url, file_name, uploaded_by, uploaded_at
-                    """, (title, category, description, file_url, file_name, file_size_str, user_email))
+                    """, (title, category, description, file_url, file_name, file_size_bytes, user_email))
                 row = cur.fetchone()
 
                 return {
@@ -246,7 +259,7 @@ def handler(event: dict, context) -> dict:
                         'title': row[1],
                         'category': row[2],
                         'date': row[3].isoformat() if row[3] else None,
-                        'size': row[4],
+                        'size': format_file_size(row[4]) if row[4] else '0 КБ',
                         'description': row[5],
                         'fileUrl': row[6],
                         'fileName': row[7],

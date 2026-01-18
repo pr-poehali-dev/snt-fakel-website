@@ -119,8 +119,7 @@ const MigrateToDatabase = ({ userEmail, userRole }: MigrateToDatabaseProps) => {
                 category: doc.category,
                 description: doc.description,
                 fileUrl: doc.fileUrl,
-                fileName: doc.fileName,
-                size: doc.size
+                fileName: doc.fileName
               })
             });
             

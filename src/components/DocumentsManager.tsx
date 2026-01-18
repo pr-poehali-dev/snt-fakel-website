@@ -71,11 +71,9 @@ const DocumentsManager = () => {
 
       let fileUrl = '';
       let fileName = '';
-      let fileSize = '0 КБ';
 
       if (formData.file) {
         fileName = formData.file.name;
-        fileSize = formatFileSize(formData.file.size);
         
         const reader = new FileReader();
         const base64 = await new Promise<string>((resolve) => {
@@ -98,8 +96,7 @@ const DocumentsManager = () => {
           category: formData.category,
           description: formData.description,
           fileUrl,
-          fileName,
-          size: fileSize
+          fileName
         })
       });
 
@@ -141,11 +138,9 @@ const DocumentsManager = () => {
 
       let fileUrl = '';
       let fileName = '';
-      let fileSize = '';
 
       if (formData.file) {
         fileName = formData.file.name;
-        fileSize = formatFileSize(formData.file.size);
         
         const reader = new FileReader();
         const base64 = await new Promise<string>((resolve) => {
@@ -169,8 +164,7 @@ const DocumentsManager = () => {
           category: formData.category,
           description: formData.description,
           fileUrl: fileUrl || undefined,
-          fileName: fileName || undefined,
-          size: fileSize || undefined
+          fileName: fileName || undefined
         })
       });
 
