@@ -127,6 +127,8 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     try {
       const userEmail = localStorage.getItem('userEmail') || '';
       const userRole = localStorage.getItem('userRole') || 'member';
+      
+      console.log('[NewsEditor] Adding news with role:', userRole, 'email:', userEmail);
 
       const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
         method: 'POST',

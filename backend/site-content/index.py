@@ -38,6 +38,8 @@ def handler(event: dict, context) -> dict:
         user_role = event.get('headers', {}).get('X-User-Role', '').lower()
         user_email = event.get('headers', {}).get('X-User-Email', '')
         can_edit = user_role in ['admin', 'chairman', 'board_member']
+        
+        print(f"[DEBUG] user_role={user_role}, user_email={user_email}, can_edit={can_edit}")
 
         query_params = event.get('queryStringParameters', {}) or {}
         content_type = query_params.get('type')  # 'news', 'documents', 'pages'
