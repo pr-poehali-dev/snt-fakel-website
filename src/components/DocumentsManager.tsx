@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import { getCurrentUser } from '@/lib/session';
 
 interface Document {
   id: number;
@@ -66,8 +67,7 @@ const DocumentsManager = () => {
     }
 
     try {
-      const userEmail = localStorage.getItem('userEmail') || '';
-      const userRole = localStorage.getItem('userRole') || 'member';
+      const { email: userEmail, role: userRole } = getCurrentUser();
 
       let fileUrl = '';
       let fileName = '';
@@ -133,8 +133,7 @@ const DocumentsManager = () => {
     }
 
     try {
-      const userEmail = localStorage.getItem('userEmail') || '';
-      const userRole = localStorage.getItem('userRole') || 'member';
+      const { email: userEmail, role: userRole } = getCurrentUser();
 
       let fileUrl = '';
       let fileName = '';
@@ -191,8 +190,7 @@ const DocumentsManager = () => {
     if (!confirmed) return;
 
     try {
-      const userEmail = localStorage.getItem('userEmail') || '';
-      const userRole = localStorage.getItem('userRole') || 'member';
+      const { email: userEmail, role: userRole } = getCurrentUser();
 
       const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=documents', {
         method: 'DELETE',

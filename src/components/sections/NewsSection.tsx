@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import { getCurrentUser } from '@/lib/session';
 
 type UserRole = 'guest' | 'member' | 'board_member' | 'chairman' | 'admin';
 
@@ -37,8 +38,7 @@ const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionPro
     if (!confirmed) return;
     
     try {
-      const userEmail = localStorage.getItem('userEmail') || '';
-      const userRole = localStorage.getItem('userRole') || 'member';
+      const { email: userEmail, role: userRole } = getCurrentUser();
 
       const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news&id=' + item.id, {
         method: 'DELETE',

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import NewsEditorForm from './news-editor/NewsEditorForm';
 import NewsListItem from './news-editor/NewsListItem';
 import NewsHistoryDialog from './news-editor/NewsHistoryDialog';
+import { getCurrentUser } from '@/lib/session';
 
 interface NewsHistoryEntry {
   date: string;
@@ -125,10 +126,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     }
 
     try {
-      const userEmail = localStorage.getItem('userEmail') || '';
-      const userRole = localStorage.getItem('userRole') || 'member';
-      
-      console.log('[NewsEditor] Adding news with role:', userRole, 'email:', userEmail);
+      const { email: userEmail, role: userRole } = getCurrentUser();
 
       const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
         method: 'POST',
@@ -184,8 +182,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     }
 
     try {
-      const userEmail = localStorage.getItem('userEmail') || '';
-      const userRole = localStorage.getItem('userRole') || 'member';
+      const { email: userEmail, role: userRole } = getCurrentUser();
 
       const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
         method: 'PUT',
@@ -230,8 +227,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     if (!confirmed) return;
 
     try {
-      const userEmail = localStorage.getItem('userEmail') || '';
-      const userRole = localStorage.getItem('userRole') || 'member';
+      const { email: userEmail, role: userRole } = getCurrentUser();
 
       const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news&id=' + id, {
         method: 'DELETE',
@@ -260,8 +256,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     if (!item) return;
 
     try {
-      const userEmail = localStorage.getItem('userEmail') || '';
-      const userRole = localStorage.getItem('userRole') || 'member';
+      const { email: userEmail, role: userRole } = getCurrentUser();
       const isCurrentlyOnMain = item.showOnMainPage && item.mainPageExpiresAt && new Date(item.mainPageExpiresAt) > new Date();
 
       if (isCurrentlyOnMain && customDuration === undefined) {
