@@ -23,6 +23,12 @@
       "method": "GET",
       "path": "/?type=pages&key=rules",
       "expectedStatus": 200
+    },
+    {
+      "name": "Get appeals list",
+      "method": "GET",
+      "path": "/?type=appeals",
+      "expectedStatus": 200
     }
   ]
 }

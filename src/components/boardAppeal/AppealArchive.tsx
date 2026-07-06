@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import AppealFilters from './AppealFilters';
+import { getCurrentUser } from '@/lib/session';
+
+const API_URL = 'https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd';
 
 interface AppealResponse {
   id: number;
@@ -55,22 +58,24 @@ const AppealArchive = ({ currentUserEmail, userRole, onBack }: AppealArchiveProp
     return () => window.removeEventListener('board-appeals-updated', handleUpdate);
   }, []);
 
-  const loadArchivedAppeals = () => {
-    const saved = localStorage.getItem('snt_board_appeals');
-    if (saved) {
-      try {
-        const allAppeals: BoardAppeal[] = JSON.parse(saved);
-        const resolved = allAppeals.filter((appeal) => appeal.status === 'resolved');
-        
-        if (isBoardMember) {
-          setArchivedAppeals(resolved);
-        } else {
-          const userResolvedAppeals = resolved.filter((appeal) => appeal.fromEmail === currentUserEmail);
-          setArchivedAppeals(userResolvedAppeals);
+  const loadArchivedAppeals = async () => {
+    try {
+      const { email, role } = getCurrentUser();
+      const response = await fetch(`${API_URL}?type=appeals`, {
+        headers: {
+          'X-User-Email': email || currentUserEmail,
+          'X-User-Role': role || userRole
         }
-      } catch (e) {
-        console.error('Error loading archived appeals:', e);
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const allAppeals: BoardAppeal[] = data.appeals || [];
+        const resolved = allAppeals.filter((appeal) => appeal.status === 'resolved');
+        setArchivedAppeals(resolved);
       }
+    } catch (e) {
+      console.error('Error loading archived appeals:', e);
+      toast.error('Ошибка загрузки архива');
     }
   };
 
@@ -99,18 +104,30 @@ const AppealArchive = ({ currentUserEmail, userRole, onBack }: AppealArchiveProp
     setSortBy('date-desc');
   };
 
-  const handleDeleteAppeal = (appealId: number) => {
-    const saved = localStorage.getItem('snt_board_appeals');
-    if (!saved) return;
+  const handleDeleteAppeal = async (appealId: number) => {
+    try {
+      const { email, role } = getCurrentUser();
+      const response = await fetch(`${API_URL}?type=appeals`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': email || currentUserEmail,
+          'X-User-Role': role || userRole
+        },
+        body: JSON.stringify({ id: appealId })
+      });
 
-    const allAppeals: BoardAppeal[] = JSON.parse(saved);
-    const updatedAppeals = allAppeals.filter((appeal) => appeal.id !== appealId);
-
-    localStorage.setItem('snt_board_appeals', JSON.stringify(updatedAppeals));
-    window.dispatchEvent(new Event('board-appeals-updated'));
-
-    setDeleteConfirmId(null);
-    toast.success('Обращение удалено из архива');
+      if (response.ok) {
+        await loadArchivedAppeals();
+        setDeleteConfirmId(null);
+        toast.success('Обращение удалено из архива');
+      } else {
+        toast.error('Ошибка удаления обращения');
+      }
+    } catch (e) {
+      console.error('Error deleting appeal:', e);
+      toast.error('Ошибка удаления обращения');
+    }
   };
 
   return (

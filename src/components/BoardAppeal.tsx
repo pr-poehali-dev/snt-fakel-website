@@ -6,6 +6,9 @@ import { toast } from 'sonner';
 import AppealFilters from './boardAppeal/AppealFilters';
 import AppealForm from './boardAppeal/AppealForm';
 import AppealCard from './boardAppeal/AppealCard';
+import { getCurrentUser } from '@/lib/session';
+
+const API_URL = 'https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd';
 
 interface BoardAppeal {
   id: number;
@@ -90,148 +93,153 @@ const BoardAppeal = ({ currentUserEmail, userRole, onBack }: BoardAppealProps) =
     }
   };
 
-  const loadAppeals = () => {
-    const saved = localStorage.getItem('snt_board_appeals');
-    if (saved) {
-      try {
-        const allAppeals: BoardAppeal[] = JSON.parse(saved);
-        
-        if (isBoardMember) {
-          setAppeals(allAppeals);
-        } else {
-          const userAppeals = allAppeals.filter((appeal) => appeal.fromEmail === currentUserEmail);
-          setAppeals(userAppeals);
+  const loadAppeals = async () => {
+    try {
+      const { email, role } = getCurrentUser();
+      const response = await fetch(`${API_URL}?type=appeals`, {
+        headers: {
+          'X-User-Email': email || currentUserEmail,
+          'X-User-Role': role || userRole
         }
-      } catch (e) {
-        console.error('Error loading appeals:', e);
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAppeals(data.appeals || []);
       }
+    } catch (e) {
+      console.error('Error loading appeals:', e);
+      toast.error('Ошибка загрузки обращений');
     }
   };
 
-  const handleCreateAppeal = () => {
+  const handleCreateAppeal = async () => {
     if (!subject.trim() || !message.trim()) {
       toast.error('Заполните тему и сообщение');
       return;
     }
 
-    const saved = localStorage.getItem('snt_board_appeals');
-    const allAppeals: BoardAppeal[] = saved ? JSON.parse(saved) : [];
+    try {
+      const { email, role } = getCurrentUser();
+      const response = await fetch(`${API_URL}?type=appeals`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': email || currentUserEmail,
+          'X-User-Role': role || userRole
+        },
+        body: JSON.stringify({
+          action: 'create',
+          fromName: currentUserName,
+          plotNumber: currentUserPlot,
+          subject: subject.trim(),
+          message: message.trim()
+        })
+      });
 
-    const currentTime = new Date();
-    const timestamp = currentTime.toLocaleString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    const newAppeal: BoardAppeal = {
-      id: Date.now(),
-      fromEmail: currentUserEmail,
-      fromName: currentUserName,
-      plotNumber: currentUserPlot,
-      subject: subject.trim(),
-      message: message.trim(),
-      timestamp,
-      status: 'pending',
-      responses: []
-    };
-
-    allAppeals.push(newAppeal);
-    localStorage.setItem('snt_board_appeals', JSON.stringify(allAppeals));
-    window.dispatchEvent(new Event('board-appeals-updated'));
-
-    setSubject('');
-    setMessage('');
-    setShowNewAppeal(false);
-    toast.success('Обращение отправлено в правление');
+      if (response.ok) {
+        await loadAppeals();
+        setSubject('');
+        setMessage('');
+        setShowNewAppeal(false);
+        toast.success('Обращение отправлено в правление');
+      } else {
+        toast.error('Ошибка отправки обращения');
+      }
+    } catch (e) {
+      console.error('Error creating appeal:', e);
+      toast.error('Ошибка отправки обращения');
+    }
   };
 
-  const handleAddResponse = (appealId: number) => {
+  const handleAddResponse = async (appealId: number) => {
     if (!responseMessage.trim()) {
       toast.error('Введите текст ответа');
       return;
     }
 
-    const saved = localStorage.getItem('snt_board_appeals');
-    if (!saved) return;
+    try {
+      const { email, role } = getCurrentUser();
+      const response = await fetch(`${API_URL}?type=appeals`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': email || currentUserEmail,
+          'X-User-Role': role || userRole
+        },
+        body: JSON.stringify({
+          action: 'respond',
+          appealId,
+          fromName: currentUserName,
+          message: responseMessage.trim()
+        })
+      });
 
-    const allAppeals: BoardAppeal[] = JSON.parse(saved);
-    const currentTime = new Date();
-    const timestamp = currentTime.toLocaleString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    const roleNames: Record<string, string> = {
-      admin: 'Администратор',
-      chairman: 'Председатель',
-      board_member: 'Член правления'
-    };
-
-    const response: AppealResponse = {
-      id: Date.now(),
-      fromEmail: currentUserEmail,
-      fromName: currentUserName,
-      fromRole: roleNames[userRole] || userRole,
-      message: responseMessage.trim(),
-      timestamp
-    };
-
-    const updatedAppeals = allAppeals.map((appeal) => {
-      if (appeal.id === appealId) {
-        return {
-          ...appeal,
-          responses: [...appeal.responses, response],
-          status: 'in_progress' as const
-        };
+      if (response.ok) {
+        await loadAppeals();
+        setResponseMessage('');
+        toast.success('Ответ отправлен');
+      } else {
+        toast.error('Ошибка отправки ответа');
       }
-      return appeal;
-    });
-
-    localStorage.setItem('snt_board_appeals', JSON.stringify(updatedAppeals));
-    window.dispatchEvent(new Event('board-appeals-updated'));
-
-    setResponseMessage('');
-    toast.success('Ответ отправлен');
+    } catch (e) {
+      console.error('Error adding response:', e);
+      toast.error('Ошибка отправки ответа');
+    }
   };
 
-  const handleChangeStatus = (appealId: number, status: 'pending' | 'in_progress' | 'resolved') => {
-    const saved = localStorage.getItem('snt_board_appeals');
-    if (!saved) return;
+  const handleChangeStatus = async (appealId: number, status: 'pending' | 'in_progress' | 'resolved') => {
+    try {
+      const { email, role } = getCurrentUser();
+      const response = await fetch(`${API_URL}?type=appeals`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': email || currentUserEmail,
+          'X-User-Role': role || userRole
+        },
+        body: JSON.stringify({ id: appealId, status })
+      });
 
-    const allAppeals: BoardAppeal[] = JSON.parse(saved);
-    const updatedAppeals = allAppeals.map((appeal) =>
-      appeal.id === appealId ? { ...appeal, status } : appeal
-    );
-
-    localStorage.setItem('snt_board_appeals', JSON.stringify(updatedAppeals));
-    window.dispatchEvent(new Event('board-appeals-updated'));
-
-    const statusNames: Record<string, string> = {
-      pending: 'Ожидает рассмотрения',
-      in_progress: 'В работе',
-      resolved: 'Решено'
-    };
-
-    toast.success(`Статус изменён: ${statusNames[status]}`);
+      if (response.ok) {
+        await loadAppeals();
+        const statusNames: Record<string, string> = {
+          pending: 'Ожидает рассмотрения',
+          in_progress: 'В работе',
+          resolved: 'Решено'
+        };
+        toast.success(`Статус изменён: ${statusNames[status]}`);
+      } else {
+        toast.error('Ошибка изменения статуса');
+      }
+    } catch (e) {
+      console.error('Error changing status:', e);
+      toast.error('Ошибка изменения статуса');
+    }
   };
 
-  const handleDeleteAppeal = (appealId: number) => {
-    const saved = localStorage.getItem('snt_board_appeals');
-    if (!saved) return;
+  const handleDeleteAppeal = async (appealId: number) => {
+    try {
+      const { email, role } = getCurrentUser();
+      const response = await fetch(`${API_URL}?type=appeals`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': email || currentUserEmail,
+          'X-User-Role': role || userRole
+        },
+        body: JSON.stringify({ id: appealId })
+      });
 
-    const allAppeals: BoardAppeal[] = JSON.parse(saved);
-    const updatedAppeals = allAppeals.filter((appeal) => appeal.id !== appealId);
-
-    localStorage.setItem('snt_board_appeals', JSON.stringify(updatedAppeals));
-    window.dispatchEvent(new Event('board-appeals-updated'));
-
-    toast.success('Обращение удалено');
+      if (response.ok) {
+        await loadAppeals();
+        toast.success('Обращение удалено');
+      } else {
+        toast.error('Ошибка удаления обращения');
+      }
+    } catch (e) {
+      console.error('Error deleting appeal:', e);
+      toast.error('Ошибка удаления обращения');
+    }
   };
 
   const getStatusBadge = (status: string) => {

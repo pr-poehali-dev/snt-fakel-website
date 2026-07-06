@@ -127,12 +127,72 @@ def handler(event: dict, context) -> dict:
                         'body': json.dumps(pages)
                     }
 
+            elif content_type == 'appeals':
+                is_board = user_role in ['admin', 'chairman', 'board_member']
+
+                if is_board:
+                    cur.execute("""
+                        SELECT id, from_email, from_name, plot_number, subject, message,
+                               status, created_at, updated_at
+                        FROM board_appeals
+                        ORDER BY created_at DESC
+                    """)
+                else:
+                    cur.execute("""
+                        SELECT id, from_email, from_name, plot_number, subject, message,
+                               status, created_at, updated_at
+                        FROM board_appeals
+                        WHERE from_email = %s
+                        ORDER BY created_at DESC
+                    """, (user_email,))
+                rows = cur.fetchall()
+
+                appeals = []
+                appeal_ids = [row[0] for row in rows]
+                responses_by_appeal = {}
+                if appeal_ids:
+                    cur.execute("""
+                        SELECT id, appeal_id, from_email, from_name, from_role, message, created_at
+                        FROM board_appeal_responses
+                        WHERE appeal_id = ANY(%s)
+                        ORDER BY created_at ASC
+                    """, (appeal_ids,))
+                    for r in cur.fetchall():
+                        responses_by_appeal.setdefault(r[1], []).append({
+                            'id': r[0],
+                            'fromEmail': r[2],
+                            'fromName': r[3],
+                            'fromRole': r[4],
+                            'message': r[5],
+                            'timestamp': r[6].isoformat() if r[6] else None
+                        })
+
+                for row in rows:
+                    appeals.append({
+                        'id': row[0],
+                        'fromEmail': row[1],
+                        'fromName': row[2],
+                        'plotNumber': row[3],
+                        'subject': row[4],
+                        'message': row[5],
+                        'status': row[6],
+                        'timestamp': row[7].isoformat() if row[7] else None,
+                        'updatedAt': row[8].isoformat() if row[8] else None,
+                        'responses': responses_by_appeal.get(row[0], [])
+                    })
+
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'appeals': appeals})
+                }
+
         # ============ POST - Создать контент ============
         elif method == 'POST':
             body = json.loads(event.get('body', '{}'))
             
-            # Для документов разрешаем всем авторизованным пользователям
-            if content_type != 'documents' and not can_edit:
+            # Для документов и обращений разрешаем всем авторизованным пользователям
+            if content_type not in ('documents', 'appeals') and not can_edit:
                 return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
 
             if content_type == 'news':
@@ -268,6 +328,73 @@ def handler(event: dict, context) -> dict:
                     })
                 }
 
+            elif content_type == 'appeals':
+                action = body.get('action', 'create')
+
+                if action == 'create':
+                    from_name = body.get('fromName')
+                    plot_number = body.get('plotNumber', '')
+                    subject = body.get('subject')
+                    message = body.get('message')
+
+                    cur.execute("""
+                        INSERT INTO board_appeals (from_email, from_name, plot_number, subject, message)
+                        VALUES (%s, %s, %s, %s, %s)
+                        RETURNING id, from_email, from_name, plot_number, subject, message, status, created_at, updated_at
+                    """, (user_email, from_name, plot_number, subject, message))
+                    row = cur.fetchone()
+
+                    return {
+                        'statusCode': 201,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({
+                            'id': row[0],
+                            'fromEmail': row[1],
+                            'fromName': row[2],
+                            'plotNumber': row[3],
+                            'subject': row[4],
+                            'message': row[5],
+                            'status': row[6],
+                            'timestamp': row[7].isoformat() if row[7] else None,
+                            'updatedAt': row[8].isoformat() if row[8] else None,
+                            'responses': []
+                        })
+                    }
+
+                elif action == 'respond':
+                    if not can_edit:
+                        return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
+
+                    appeal_id = body.get('appealId')
+                    from_name = body.get('fromName')
+                    response_message = body.get('message')
+
+                    cur.execute("""
+                        INSERT INTO board_appeal_responses (appeal_id, from_email, from_name, from_role, message)
+                        VALUES (%s, %s, %s, %s, %s)
+                        RETURNING id, appeal_id, from_email, from_name, from_role, message, created_at
+                    """, (appeal_id, user_email, from_name, user_role, response_message))
+                    row = cur.fetchone()
+
+                    cur.execute("""
+                        UPDATE board_appeals SET status = 'in_progress', updated_at = CURRENT_TIMESTAMP
+                        WHERE id = %s
+                    """, (appeal_id,))
+
+                    return {
+                        'statusCode': 201,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({
+                            'id': row[0],
+                            'appealId': row[1],
+                            'fromEmail': row[2],
+                            'fromName': row[3],
+                            'fromRole': row[4],
+                            'message': row[5],
+                            'timestamp': row[6].isoformat() if row[6] else None
+                        })
+                    }
+
         # ============ PUT - Обновить контент ============
         elif method == 'PUT':
             body = json.loads(event.get('body', '{}'))
@@ -369,6 +496,23 @@ def handler(event: dict, context) -> dict:
 
                 return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True})}
 
+            elif content_type == 'appeals':
+                if not can_edit:
+                    return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
+
+                appeal_id = body.get('id')
+                status = body.get('status')
+
+                if status not in ('pending', 'in_progress', 'resolved'):
+                    return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Invalid status'})}
+
+                cur.execute("""
+                    UPDATE board_appeals SET status = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (status, appeal_id))
+
+                return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True})}
+
         # ============ DELETE - Удалить контент ============
         elif method == 'DELETE':
             body = json.loads(event.get('body', '{}'))
@@ -382,6 +526,11 @@ def handler(event: dict, context) -> dict:
                 cur.execute("UPDATE news SET is_published = FALSE WHERE id = %s", (item_id,))
             elif content_type == 'documents':
                 cur.execute("UPDATE documents SET is_visible = FALSE WHERE id = %s", (item_id,))
+            elif content_type == 'appeals':
+                if user_role != 'admin':
+                    return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
+                cur.execute("DELETE FROM board_appeal_responses WHERE appeal_id = %s", (item_id,))
+                cur.execute("DELETE FROM board_appeals WHERE id = %s", (item_id,))
 
             return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True})}
 
