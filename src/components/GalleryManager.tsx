@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
-const GALLERY_API_URL = 'https://functions.poehali.dev/d4a2053d-18ef-4fe7-9550-1dac64919f00';
+const GALLERY_API_URL = 'https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=gallery';
 
 interface GalleryPhoto {
   id: number;
@@ -161,12 +161,14 @@ const GalleryManager = ({ userEmail, userRole, onBack }: GalleryManagerProps) =>
     if (!confirm('Удалить эту фотографию из галереи?')) return;
 
     try {
-      const response = await fetch(`${GALLERY_API_URL}?id=${photoId}`, {
+      const response = await fetch(`${GALLERY_API_URL}&id=${photoId}`, {
         method: 'DELETE',
         headers: {
+          'Content-Type': 'application/json',
           'X-User-Email': userEmail,
           'X-User-Role': userRole
-        }
+        },
+        body: JSON.stringify({ id: photoId })
       });
 
       if (!response.ok) {

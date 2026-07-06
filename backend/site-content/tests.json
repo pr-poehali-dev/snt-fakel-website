@@ -29,6 +29,12 @@
       "method": "GET",
       "path": "/?type=appeals",
       "expectedStatus": 200
+    },
+    {
+      "name": "Get gallery photos",
+      "method": "GET",
+      "path": "/?type=gallery",
+      "expectedStatus": 200
     }
   ]
 }

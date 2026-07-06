@@ -78,7 +78,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     }
     
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -124,7 +124,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     }
     
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,7 +162,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     // Получаем роль пользователя, которого пытаемся заблокировать
     let targetUserRole: string | null = null;
     try {
-      const userResponse = await fetch(`https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35`);
+      const userResponse = await fetch(`https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51`);
       const userData = await userResponse.json();
       const targetUser = userData.users?.find((u: any) => u.email === userEmail);
       if (targetUser) {
@@ -184,7 +184,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     }
     
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -216,7 +216,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     }
     
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -293,7 +293,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     // Получить имя пользователя из БД
     let currentUserName = 'Пользователь';
     try {
-      const userResponse = await fetch(`https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35`);
+      const userResponse = await fetch(`https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51`);
       const userData = await userResponse.json();
       const user = userData.users?.find((u: any) => u.email === currentUserEmail);
       if (user) {
@@ -304,7 +304,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
     }
 
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -350,7 +350,7 @@ const Chat = ({ isLoggedIn, userRole, currentUserEmail }: ChatProps) => {
                           // Удалить все сообщения через API
                           const allMessages = messages.filter(m => !m.deleted);
                           for (const msg of allMessages) {
-                            await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+                            await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
                               method: 'PUT',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({

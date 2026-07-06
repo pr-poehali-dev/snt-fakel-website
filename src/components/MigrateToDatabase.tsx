@@ -19,7 +19,7 @@ const MigrateToDatabase = ({ userEmail, userRole }: MigrateToDatabaseProps) => {
     const migrated: string[] = [];
 
     try {
-      const API_URL = 'https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd';
+      const API_URL = 'https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892';
 
       // Миграция страниц (rules, contacts, gallery)
       const pagesData = localStorage.getItem('pages_content');

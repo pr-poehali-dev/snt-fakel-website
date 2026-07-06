@@ -86,7 +86,7 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
     const loadContent = async () => {
       try {
         // Загружаем из БД
-        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=pages');
+        const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=pages');
         const pagesData = await response.json();
         
         const loadedContent: PageContent = {
@@ -128,7 +128,7 @@ const InfoSections = ({ activeSection, gallery }: InfoSectionsProps) => {
     if (activeSection === 'gallery') {
       const loadPhotos = async () => {
         try {
-          const response = await fetch('https://functions.poehali.dev/d4a2053d-18ef-4fe7-9550-1dac64919f00');
+          const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=gallery');
           const data = await response.json();
           setPhotos(data.photos || []);
         } catch (error) {

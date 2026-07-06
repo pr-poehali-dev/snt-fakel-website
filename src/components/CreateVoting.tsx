@@ -82,18 +82,19 @@ const CreateVoting = ({ onBack }: CreateVotingProps) => {
 
     const sendNotifications = async () => {
       try {
-        const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        const usersResponse = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51');
         const usersData = await usersResponse.json();
         const activeUsers = usersData.users?.filter((u: any) => u.status === 'active' && u.email_verified) || [];
 
         for (const user of activeUsers) {
-          await fetch('https://functions.poehali.dev/2672fb97-4151-4228-bb1c-4d0b3a502216', {
+          await fetch('https://functions.poehali.dev/9aefaf8b-9148-4beb-9c52-15ec030e0a12', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              to: user.email,
+              type: 'single',
+              to_email: user.email,
               subject: `Новое голосование: ${title.trim()}`,
-              html: `
+              html_content: `
                 <!DOCTYPE html>
                 <html>
                 <head><meta charset="utf-8"></head>

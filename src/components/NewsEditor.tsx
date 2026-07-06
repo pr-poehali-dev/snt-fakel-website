@@ -108,7 +108,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
 
   const loadNews = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news');
+      const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=news');
       if (response.ok) {
         const data = await response.json();
         setNews(data.news || []);
@@ -128,7 +128,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     try {
       const { email: userEmail, role: userRole } = getCurrentUser();
 
-      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
+      const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=news', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -184,7 +184,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     try {
       const { email: userEmail, role: userRole } = getCurrentUser();
 
-      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
+      const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=news', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
     try {
       const { email: userEmail, role: userRole } = getCurrentUser();
 
-      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news&id=' + id, {
+      const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=news&id=' + id, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -261,7 +261,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
 
       if (isCurrentlyOnMain && customDuration === undefined) {
         // Убрать с главной
-        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
+        const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=news', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -283,7 +283,7 @@ const NewsEditor = ({ onNavigate }: NewsEditorProps) => {
       } else {
         // Разместить на главной
         const duration = customDuration || 7;
-        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news', {
+        const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=news', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

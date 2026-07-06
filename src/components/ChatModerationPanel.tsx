@@ -82,7 +82,7 @@ const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
 
   const loadBlockedUsers = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?action=chat_messages');
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51?action=chat_messages');
       const data = await response.json();
       
       if (data.blocked) {
@@ -122,7 +122,7 @@ const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
 
   const loadMessages = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?action=chat_messages');
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51?action=chat_messages');
       const data = await response.json();
       
       if (data.messages) {
@@ -169,7 +169,7 @@ const ChatModerationPanel = ({ onBack }: ChatModerationPanelProps) => {
 
   const handleUnblock = async (userEmail: string) => {
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

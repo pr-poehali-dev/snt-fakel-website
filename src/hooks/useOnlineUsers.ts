@@ -7,7 +7,7 @@ export const useOnlineUsers = () => {
     const updateOnlineStatus = async () => {
       // Пытаемся получить из БД
       try {
-        const response = await fetch('https://functions.poehali.dev/36da760a-f60b-4b9a-ab53-5fa753cf41a4?type=online');
+        const response = await fetch('https://functions.poehali.dev/7df5da0f-03ad-44be-92cc-3123468556ce?type=online');
         if (response.ok) {
           const data = await response.json();
           setOnlineCount(data.onlineUsers || 0);
@@ -61,7 +61,7 @@ export const updateUserActivity = async (email: string) => {
   
   // Синхронизируем с БД
   try {
-    await fetch('https://functions.poehali.dev/36da760a-f60b-4b9a-ab53-5fa753cf41a4?type=online', {
+    await fetch('https://functions.poehali.dev/7df5da0f-03ad-44be-92cc-3123468556ce?type=online', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

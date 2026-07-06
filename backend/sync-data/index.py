@@ -1,13 +1,13 @@
 import json
 import os
 import psycopg2
-from datetime import datetime
+from datetime import datetime, date
 
 def handler(event: dict, context) -> dict:
-    """API для синхронизации данных сайта: онлайн пользователи, голосования, статистика"""
+    """API для синхронизации данных сайта: онлайн пользователи, голосования, статистика, посетители"""
     method = event.get('httpMethod', 'GET')
     query_params = event.get('queryStringParameters') or {}
-    data_type = query_params.get('type')  # 'online', 'votings', 'stats'
+    data_type = query_params.get('type')  # 'online', 'votings', 'stats', 'visitor'
 
     if method == 'OPTIONS':
         return {
@@ -229,6 +229,71 @@ def handler(event: dict, context) -> dict:
                         'activeVotings': active_votings,
                         'totalVotings': total_votings
                     })
+                }
+
+        # === СЧЁТЧИК ПОСЕТИТЕЛЕЙ ===
+        elif data_type == 'visitor':
+            today = date.today()
+
+            if method == 'GET':
+                cur.execute("""
+                    SELECT daily_visitors, total_visitors FROM visitor_stats WHERE stat_date = %s
+                """, (today,))
+                row = cur.fetchone()
+
+                if row:
+                    daily, total = row[0], row[1]
+                else:
+                    cur.execute("""
+                        INSERT INTO visitor_stats (stat_date, daily_visitors, total_visitors)
+                        VALUES (%s, 0, 0)
+                        RETURNING daily_visitors, total_visitors
+                    """, (today,))
+                    row = cur.fetchone()
+                    daily, total = row[0], row[1]
+
+                cur.execute("SELECT COUNT(*) FROM users WHERE role != 'guest'")
+                registered = cur.fetchone()[0]
+
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'today': daily, 'total': total, 'registered': registered or 0})
+                }
+
+            elif method == 'POST':
+                cur.execute("SELECT total_visitors FROM visitor_stats WHERE stat_date = %s", (today,))
+                row = cur.fetchone()
+
+                if row:
+                    cur.execute("""
+                        UPDATE visitor_stats
+                        SET daily_visitors = daily_visitors + 1,
+                            total_visitors = total_visitors + 1,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE stat_date = %s
+                        RETURNING daily_visitors, total_visitors
+                    """, (today,))
+                else:
+                    cur.execute("SELECT total_visitors FROM visitor_stats ORDER BY stat_date DESC LIMIT 1")
+                    last_row = cur.fetchone()
+                    last_total = last_row[0] if last_row else 0
+
+                    cur.execute("""
+                        INSERT INTO visitor_stats (stat_date, daily_visitors, total_visitors)
+                        VALUES (%s, 1, %s)
+                        RETURNING daily_visitors, total_visitors
+                    """, (today, last_total + 1))
+
+                result = cur.fetchone()
+
+                cur.execute("SELECT COUNT(*) FROM users WHERE role != 'guest'")
+                registered = cur.fetchone()[0]
+
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'today': result[0], 'total': result[1], 'registered': registered or 0})
                 }
 
         return {

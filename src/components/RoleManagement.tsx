@@ -55,7 +55,7 @@ const RoleManagement = ({ onBack, currentUserRole = 'admin' }: RoleManagementPro
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51');
       const data = await response.json();
       if (data.users) {
         setUsers(data.users.map((u: any) => ({
@@ -107,7 +107,7 @@ const RoleManagement = ({ onBack, currentUserRole = 'admin' }: RoleManagementPro
     }
 
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,7 +162,7 @@ const RoleManagement = ({ onBack, currentUserRole = 'admin' }: RoleManagementPro
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35?id=${(user as any).id}`, {
+      const response = await fetch(`https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51?id=${(user as any).id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });

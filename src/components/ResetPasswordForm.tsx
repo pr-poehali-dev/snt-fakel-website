@@ -68,7 +68,7 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

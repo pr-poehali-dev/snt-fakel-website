@@ -23,7 +23,7 @@ export interface BlockedUser {
   reason?: string;
 }
 
-const API_URL = 'https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35';
+const API_URL = 'https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51';
 
 export const useChatState = () => {
   const [messages, setMessages] = useState<Message[]>([]);

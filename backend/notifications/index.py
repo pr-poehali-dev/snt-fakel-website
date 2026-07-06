@@ -51,6 +51,10 @@ def handler(event: dict, context) -> dict:
             return handle_admin_notification(body, smtp_host, smtp_port, smtp_user, smtp_password, from_email)
         elif notification_type == 'mass':
             return handle_mass_notification(body, smtp_host, smtp_port, smtp_user, smtp_password, from_email)
+        elif notification_type == 'single':
+            return handle_single_email(body, smtp_host, smtp_port, smtp_user, smtp_password, from_email)
+        elif notification_type == 'voting_complete':
+            return handle_voting_complete(body, smtp_host, smtp_port, smtp_user, smtp_password, from_email)
         else:
             return {
                 'statusCode': 400,
@@ -252,6 +256,147 @@ def handle_mass_notification(body: dict, smtp_host: str, smtp_port: int, smtp_us
             'sent': sent_count,
             'failed': failed_count,
             'errors': errors if errors else None
+        }),
+        'isBase64Encoded': False
+    }
+
+def handle_single_email(body: dict, smtp_host: str, smtp_port: int, smtp_user: str, smtp_password: str, from_email: str):
+    '''Отправка одиночного email (верификация, уведомление о голосовании и т.д.)'''
+    to_email = body.get('to_email') or body.get('to')
+    subject = body.get('subject')
+    html_content = body.get('html_content') or body.get('html')
+    text_content = body.get('text_content', '')
+
+    if not to_email or not subject or not html_content:
+        return {
+            'statusCode': 400,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Missing required fields: to_email, subject, html_content'}),
+            'isBase64Encoded': False
+        }
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = from_email
+    msg['To'] = to_email
+
+    if text_content:
+        msg.attach(MIMEText(text_content, 'plain', 'utf-8'))
+    msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+    if smtp_port == 465:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+    else:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps({'success': True, 'message': 'Email sent successfully'}),
+        'isBase64Encoded': False
+    }
+
+def handle_voting_complete(body: dict, smtp_host: str, smtp_port: int, smtp_user: str, smtp_password: str, from_email: str):
+    '''Отправка email-уведомлений всем пользователям о завершении голосования'''
+    voting_title = body.get('votingTitle', 'Голосование')
+    voting_id = body.get('votingId')
+    results = body.get('results', [])
+    users = body.get('users', [])
+
+    if not voting_id or not users:
+        return {
+            'statusCode': 400,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Missing required fields'}),
+            'isBase64Encoded': False
+        }
+
+    results_html = '<ul style="list-style: none; padding: 0;">'
+    for result in results:
+        results_html += f'''
+        <li style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+            <strong>{result['option']}</strong>: {result['votes']} голосов ({result['percentage']}%)
+        </li>
+        '''
+    results_html += '</ul>'
+
+    sent_count = 0
+    failed_count = 0
+
+    for user in users:
+        email = user.get('email')
+        if not email:
+            continue
+
+        html_content = f'''
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; }}
+                .footer {{ background: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 style="margin: 0;">🗳️ Голосование завершено</h1>
+                </div>
+                <div class="content">
+                    <p>Уважаемый(ая) {user.get('firstName', '')} {user.get('lastName', '')},</p>
+                    <p>Голосование "<strong>{voting_title}</strong>" завершено.</p>
+                    <h3>Результаты голосования:</h3>
+                    {results_html}
+                    <p>Всего участников: <strong>{len(users)}</strong></p>
+                </div>
+                <div class="footer">
+                    <p>СНТ "Факел" | Это автоматическое уведомление</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        '''
+
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = f'Завершено голосование: {voting_title}'
+            msg['From'] = from_email
+            msg['To'] = email
+            msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+            if smtp_port == 465:
+                with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+                    server.login(smtp_user, smtp_password)
+                    server.send_message(msg)
+            else:
+                with smtplib.SMTP(smtp_host, smtp_port) as server:
+                    server.starttls()
+                    server.login(smtp_user, smtp_password)
+                    server.send_message(msg)
+
+            sent_count += 1
+        except Exception as e:
+            print(f'Failed to send email to {email}: {str(e)}')
+            failed_count += 1
+
+    return {
+        'statusCode': 200,
+        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+        'body': json.dumps({
+            'success': True,
+            'sent': sent_count,
+            'failed': failed_count,
+            'message': f'Отправлено {sent_count} уведомлений'
         }),
         'isBase64Encoded': False
     }

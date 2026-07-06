@@ -198,7 +198,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
     };
 
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser)
@@ -219,7 +219,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
       console.log('Пользователь сохранен в БД:', data);
       
       // Отправляем уведомление администратору
-      fetch('https://functions.poehali.dev/92ff7699-756a-4d4c-b3ab-dceb5c33e4f8', {
+      fetch('https://functions.poehali.dev/9aefaf8b-9148-4beb-9c52-15ec030e0a12', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'admin_registration', user_data: newUser })
@@ -245,7 +245,7 @@ const Registration = ({ onSuccess, onCancel }: RegistrationProps) => {
 
     // КРИТИЧНО: Проверяем базу ПЕРЕД показом окна подтверждения email
     try {
-      const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const usersResponse = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51');
       const usersData = await usersResponse.json();
       const existingUsers = usersData.users || [];
       

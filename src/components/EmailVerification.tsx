@@ -70,10 +70,11 @@ const EmailVerification = ({ email, onVerified, onCancel }: EmailVerificationPro
     `;
 
     try {
-      const response = await fetch('https://functions.poehali.dev/2672fb97-4151-4228-bb1c-4d0b3a502216', {
+      const response = await fetch('https://functions.poehali.dev/9aefaf8b-9148-4beb-9c52-15ec030e0a12', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type: 'single',
           to_email: email,
           subject: 'Подтверждение email - СНТ Факел',
           html_content: htmlContent,

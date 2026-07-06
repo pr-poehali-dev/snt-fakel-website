@@ -81,7 +81,7 @@ const DocumentsSection = ({ userRole, onNavigate }: DocumentsSectionProps) => {
   useEffect(() => {
     const loadDocuments = async () => {
       try {
-        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=documents');
+        const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=documents');
         if (response.ok) {
           const data = await response.json();
           const docs = data.documents || [];

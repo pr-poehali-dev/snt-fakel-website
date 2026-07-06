@@ -71,7 +71,7 @@ const MassNotification = ({ onBack }: MassNotificationProps) => {
         plotNumber: u.plotNumber
       }));
 
-      const response = await fetch('https://functions.poehali.dev/92ff7699-756a-4d4c-b3ab-dceb5c33e4f8', {
+      const response = await fetch('https://functions.poehali.dev/9aefaf8b-9148-4beb-9c52-15ec030e0a12', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

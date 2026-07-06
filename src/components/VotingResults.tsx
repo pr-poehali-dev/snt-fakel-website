@@ -274,7 +274,7 @@ const VotingResults = ({ votingId, onBack }: VotingResultsProps) => {
             onClick={async () => {
               try {
                 // Получаем список всех пользователей
-                const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+                const usersResponse = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51');
                 const usersData = await usersResponse.json();
                 const users = usersData.users || [];
 

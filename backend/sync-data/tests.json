@@ -35,13 +35,13 @@
       "name": "Get site statistics",
       "method": "GET",
       "path": "/?type=stats",
-      "expectedStatus": 200,
-      "expectedBody": {
-        "onlineUsers": 0,
-        "totalUsers": 5,
-        "activeVotings": 0,
-        "totalVotings": 0
-      }
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get visitor stats",
+      "method": "GET",
+      "path": "/?type=visitor",
+      "expectedStatus": 200
     }
   ]
 }

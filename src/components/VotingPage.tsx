@@ -39,7 +39,7 @@ const VotingPage = ({ isLoggedIn, userRole, setActiveSection }: VotingPageProps)
 
   const loadVotings = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/36da760a-f60b-4b9a-ab53-5fa753cf41a4?type=votings');
+      const response = await fetch('https://functions.poehali.dev/7df5da0f-03ad-44be-92cc-3123468556ce?type=votings');
       if (response.ok) {
         const data = await response.json();
         const votings = data.votings || [];
@@ -133,7 +133,7 @@ const VotingPage = ({ isLoggedIn, userRole, setActiveSection }: VotingPageProps)
         return;
       }
 
-      const usersResponse = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+      const usersResponse = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51');
       const usersData = await usersResponse.json();
       const users = usersData.users || [];
 
@@ -144,10 +144,11 @@ const VotingPage = ({ isLoggedIn, userRole, setActiveSection }: VotingPageProps)
         return { option, votes, percentage };
       });
 
-      const response = await fetch('https://functions.poehali.dev/ba6cda1e-5207-4b2e-b0b9-30cce2155cd1', {
+      const response = await fetch('https://functions.poehali.dev/9aefaf8b-9148-4beb-9c52-15ec030e0a12', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type: 'voting_complete',
           votingTitle: voting.title,
           votingId: voting.id,
           results,

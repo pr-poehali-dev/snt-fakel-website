@@ -69,7 +69,7 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51');
         if (response.ok) {
           const data = await response.json();
           const users = data.users || [];
@@ -196,7 +196,7 @@ const ProfileSection = ({ userRole, currentUserEmail, onNavigate }: ProfileSecti
 
   const saveUserData = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35', {
+      const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

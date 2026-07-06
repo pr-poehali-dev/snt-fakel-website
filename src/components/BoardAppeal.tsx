@@ -8,7 +8,7 @@ import AppealForm from './boardAppeal/AppealForm';
 import AppealCard from './boardAppeal/AppealCard';
 import { getCurrentUser } from '@/lib/session';
 
-const API_URL = 'https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd';
+const API_URL = 'https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892';
 
 interface BoardAppeal {
   id: number;

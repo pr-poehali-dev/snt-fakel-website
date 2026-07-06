@@ -10,7 +10,7 @@ interface MigrateVotingsToDatabaseProps {
   onBack: () => void;
 }
 
-const API_URL = 'https://functions.poehali.dev/36da760a-f60b-4b9a-ab53-5fa753cf41a4';
+const API_URL = 'https://functions.poehali.dev/7df5da0f-03ad-44be-92cc-3123468556ce';
 
 const MigrateVotingsToDatabase = ({ userEmail, userRole, onBack }: MigrateVotingsToDatabaseProps) => {
   const [isMigrating, setIsMigrating] = useState(false);

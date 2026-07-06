@@ -187,12 +187,44 @@ def handler(event: dict, context) -> dict:
                     'body': json.dumps({'appeals': appeals})
                 }
 
+            elif content_type == 'gallery':
+                cur.execute("""
+                    SELECT id, title, description, image_url, season, display_order,
+                           is_visible, uploaded_by, created_at
+                    FROM gallery_photos
+                    WHERE is_visible = TRUE
+                    ORDER BY display_order ASC, created_at DESC
+                """)
+                rows = cur.fetchall()
+                photos = []
+                for row in rows:
+                    photos.append({
+                        'id': row[0],
+                        'title': row[1],
+                        'description': row[2],
+                        'imageUrl': row[3],
+                        'season': row[4],
+                        'displayOrder': row[5],
+                        'isVisible': row[6],
+                        'uploadedBy': row[7],
+                        'createdAt': row[8].isoformat() if row[8] else None
+                    })
+
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'photos': photos})
+                }
+
         # ============ POST - Создать контент ============
         elif method == 'POST':
             body = json.loads(event.get('body', '{}'))
             
             # Для документов и обращений разрешаем всем авторизованным пользователям
             if content_type not in ('documents', 'appeals') and not can_edit:
+                return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
+
+            if content_type == 'gallery' and user_role not in ('admin', 'chairman'):
                 return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
 
             if content_type == 'news':
@@ -395,12 +427,66 @@ def handler(event: dict, context) -> dict:
                         })
                     }
 
+            elif content_type == 'gallery':
+                title = body.get('title', 'Без названия')
+                description = body.get('description', '')
+                season = body.get('season', '')
+                image_base64 = body.get('imageData', '')
+
+                if not image_base64:
+                    return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Image data required'})}
+
+                try:
+                    s3 = boto3.client('s3',
+                        endpoint_url='https://bucket.poehali.dev',
+                        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
+                    )
+
+                    if ',' in image_base64:
+                        image_base64 = image_base64.split(',')[1]
+
+                    image_data = base64.b64decode(image_base64)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f'gallery/{timestamp}.jpg'
+
+                    s3.put_object(Bucket='files', Key=filename, Body=image_data, ContentType='image/jpeg')
+                    image_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{filename}"
+                except Exception as e:
+                    return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': f'Upload failed: {str(e)}'})}
+
+                cur.execute("""
+                    INSERT INTO gallery_photos (title, description, image_url, season, uploaded_by)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id, title, description, image_url, season, display_order, is_visible, uploaded_by, created_at
+                """, (title, description, image_url, season, user_email))
+                row = cur.fetchone()
+
+                return {
+                    'statusCode': 201,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({
+                        'id': row[0],
+                        'title': row[1],
+                        'description': row[2],
+                        'imageUrl': row[3],
+                        'season': row[4],
+                        'displayOrder': row[5],
+                        'isVisible': row[6],
+                        'uploadedBy': row[7],
+                        'createdAt': row[8].isoformat() if row[8] else None
+                    })
+                }
+
         # ============ PUT - Обновить контент ============
         elif method == 'PUT':
             body = json.loads(event.get('body', '{}'))
             
             # Для документов разрешаем всем авторизованным пользователям
-            if content_type != 'documents' and not can_edit:
+            if content_type not in ('documents', 'gallery') and not can_edit:
+                return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
+
+            if content_type == 'gallery' and user_role not in ('admin', 'chairman'):
                 return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
 
             if content_type == 'news':
@@ -513,13 +599,47 @@ def handler(event: dict, context) -> dict:
 
                 return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True})}
 
+            elif content_type == 'gallery':
+                photo_id = body.get('id')
+                if not photo_id:
+                    return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Photo ID required'})}
+
+                updates = []
+                params = []
+
+                if 'title' in body:
+                    updates.append('title = %s')
+                    params.append(body['title'])
+                if 'description' in body:
+                    updates.append('description = %s')
+                    params.append(body['description'])
+                if 'season' in body:
+                    updates.append('season = %s')
+                    params.append(body['season'])
+                if 'displayOrder' in body:
+                    updates.append('display_order = %s')
+                    params.append(body['displayOrder'])
+                if 'isVisible' in body:
+                    updates.append('is_visible = %s')
+                    params.append(body['isVisible'])
+
+                updates.append('updated_at = CURRENT_TIMESTAMP')
+                params.append(photo_id)
+
+                cur.execute(f"UPDATE gallery_photos SET {', '.join(updates)} WHERE id = %s", params)
+
+                return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True})}
+
         # ============ DELETE - Удалить контент ============
         elif method == 'DELETE':
             body = json.loads(event.get('body', '{}'))
             item_id = body.get('id') or query_params.get('id')
             
             # Для документов разрешаем всем авторизованным пользователям
-            if content_type != 'documents' and not can_edit:
+            if content_type not in ('documents', 'gallery') and not can_edit:
+                return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
+
+            if content_type == 'gallery' and user_role not in ('admin', 'chairman'):
                 return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
 
             if content_type == 'news':
@@ -531,6 +651,8 @@ def handler(event: dict, context) -> dict:
                     return {'statusCode': 403, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Access denied'})}
                 cur.execute("DELETE FROM board_appeal_responses WHERE appeal_id = %s", (item_id,))
                 cur.execute("DELETE FROM board_appeals WHERE id = %s", (item_id,))
+            elif content_type == 'gallery':
+                cur.execute("UPDATE gallery_photos SET is_visible = FALSE WHERE id = %s", (item_id,))
 
             return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True})}
 

@@ -40,7 +40,7 @@ const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionPro
     try {
       const { email: userEmail, role: userRole } = getCurrentUser();
 
-      const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news&id=' + item.id, {
+      const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=news&id=' + item.id, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ const NewsSection = ({ news: initialNews, userRole, onNavigate }: NewsSectionPro
   useEffect(() => {
     const loadNews = async () => {
       try {
-        const response = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news');
+        const response = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=news');
         if (response.ok) {
           const data = await response.json();
           const newsItems = data.news || [];

@@ -22,7 +22,7 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
     const loadStats = async () => {
       // Загрузить количество участников
       try {
-        const response = await fetch('https://functions.poehali.dev/32ad22ff-5797-4a0d-9192-2ca5dee74c35');
+        const response = await fetch('https://functions.poehali.dev/47c18793-f4fd-491f-a9da-f1ff24e64e51');
         const data = await response.json();
         const membersCount = data.users?.length || 0;
         
@@ -41,7 +41,7 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
         // Загрузить новости из БД
         let newsCount = 0;
         try {
-          const newsResponse = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=news');
+          const newsResponse = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=news');
           if (newsResponse.ok) {
             const newsData = await newsResponse.json();
             newsCount = newsData.news?.length || 0;
@@ -53,7 +53,7 @@ const AdminDashboardCard = ({ userRole, onNavigate }: AdminDashboardCardProps) =
         // Загрузить документы из БД
         let docsCount = 0;
         try {
-          const docsResponse = await fetch('https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd?type=documents');
+          const docsResponse = await fetch('https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892?type=documents');
           if (docsResponse.ok) {
             const docsData = await docsResponse.json();
             docsCount = docsData.documents?.length || 0;

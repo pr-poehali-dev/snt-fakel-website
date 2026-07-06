@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 
-const VISITOR_API_URL = 'https://functions.poehali.dev/e63739da-5843-4585-a3b9-acb1eb20ad0c';
+const VISITOR_API_URL = 'https://functions.poehali.dev/7df5da0f-03ad-44be-92cc-3123468556ce?type=visitor';
 
 const VisitorCounter = () => {
   const [visitors, setVisitors] = useState({ today: 0, total: 0, registered: 0 });

@@ -1,4 +1,4 @@
-const CONTENT_API_URL = 'https://functions.poehali.dev/75f35e00-3b1b-424f-8c93-684dfbd64afd';
+const CONTENT_API_URL = 'https://functions.poehali.dev/da8f7a1d-6999-4242-8153-3d4f8661d892';
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
